@@ -50,3 +50,4 @@ def test_pii_placeholder_restoration():
     res = response_inspector.inspect_and_restore(raw, request_mapping=mapping)
     assert res.restored_content == "Confirmation sent to aniket@example.com. Please verify account 9876543210."
     assert res.restoration_count == 2
+

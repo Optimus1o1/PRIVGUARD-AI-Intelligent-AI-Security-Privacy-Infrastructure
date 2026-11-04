@@ -64,3 +64,4 @@ Response        |
 - Scans model outputs for high-entropy secrets and credentials.
 - Replaces request-scoped placeholders (`<EMAIL_1>`) with the original values for the authorized client.
 - Computes SHA-256 fingerprint of the response for the content-free audit trail.
+

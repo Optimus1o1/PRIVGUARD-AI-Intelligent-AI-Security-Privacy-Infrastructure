@@ -118,3 +118,4 @@ async def test_model_response_blocked_audit_trail(
     assert ev.risk_level == "CRITICAL"
     assert leaked_secret not in str(ev.entity_counts)
     assert leaked_secret not in str(ev.content_fingerprint)
+

@@ -111,3 +111,4 @@ async def test_split_chunk_secret_blocked_before_client_delivery():
     err = exc_info.value
     assert err.error_code == "RESPONSE_SECURITY_VIOLATION"
     assert "OPENAI_API_KEY" in err.details["violation_type"]
+

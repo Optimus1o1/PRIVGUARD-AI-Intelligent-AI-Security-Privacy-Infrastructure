@@ -83,6 +83,41 @@ for chunk in stream:
         print(chunk.choices[0].delta.content, end="", flush=True)
 ```
 
+### Agent Tool Execution with Capabilities & Approvals
+```python
+import httpx
+
+# 1. Register agent & initialize task session
+# 2. Obtain temporary task-scoped capability token
+cap_res = httpx.post(
+    "http://127.0.0.1:8000/v1/capabilities/request",
+    headers={"X-API-Key": "your_privguard_api_key"},
+    json={
+        "agent_id": "agent_alpha",
+        "task_id": "task_001",
+        "tool_name": "send_email",
+        "max_uses": 1,
+    }
+).json()
+capability_token = cap_res["capability_token"]
+
+# 3. Attempt execution (High risk -> Held as PENDING approval)
+exec_res = httpx.post(
+    "http://127.0.0.1:8000/v1/tools/send_email/execute",
+    headers={"X-API-Key": "your_privguard_api_key"},
+    json={
+        "agent_id": "agent_alpha",
+        "task_id": "task_001",
+        "capability_token": capability_token,
+        "parameters": {"recipient": "client@enterprise.com", "subject": "Update", "body": "Report ready."}
+    }
+)
+# Returns 402 with approval_id
+
+# 4. Human operator approves exact action via dashboard / API
+# 5. Agent executes with approved ID (tamper-proof action hash verified)
+```
+
 ---
 
 ## Repository Structure
@@ -91,7 +126,9 @@ for chunk in stream:
 PRIVGUARD-AI/
 ├── backend/
 │   ├── app/
-│   │   ├── api/            # Gateway, Privacy, Policies, and Audit endpoints
+│   │   ├── api/            # Gateway, Privacy, Policies, Audit, Agents, Tasks, Capabilities, Approvals, Tools
+│   │   ├── agent_security/ # Identity, Task Manager, Capability Manager, Permission Engine, Tool Registry, Broker, Sandbox
+│   │   ├── approvals/      # Cryptographic Action-Binding, Approval Engine, Anti-Replay
 │   │   ├── core/           # Config, Authentication, Security, Exceptions
 │   │   ├── gateway/        # Upstream proxy, response inspector, secure streaming
 │   │   ├── providers/      # Provider abstraction, OpenAI-compatible, registry
@@ -99,8 +136,8 @@ PRIVGUARD-AI/
 │   │   ├── policies/       # Deterministic Policy Engine
 │   │   ├── monitoring/     # Content-free Audit Logger
 │   │   └── database/       # Async SQLite models and connection
-│   └── tests/              # 48 automated security, upstream, and unit tests
-├── docs/                   # Architecture, Threat Model, API Reference, Stage 2
+│   └── tests/              # 61 automated security, adversarial, and unit tests
+├── docs/                   # Architecture, Threat Model, API Reference, Stage 2 & 3 specs
 └── README.md
 ```
 
@@ -111,7 +148,7 @@ PRIVGUARD-AI/
 - [x] **Stage 0:** Architecture, Threat Model & Specification
 - [x] **Stage 1:** Backend Foundation, API Contracts, Secret Scanner, PII Redaction, Fail-Closed Pipeline
 - [x] **Stage 2:** Live Upstream Model Proxying & Secure Streaming
-- [ ] **Stage 3:** Agent Security Broker, Capability Tokens & Human Approvals
+- [x] **Stage 3:** Agent Security Broker, Capability Tokens & Human Approvals
 - [ ] **Stage 4:** Advanced Threat Detection (Prompt Injection Signals)
 - [ ] **Stage 5:** Next.js Security Dashboard & Real-Time Monitoring
 

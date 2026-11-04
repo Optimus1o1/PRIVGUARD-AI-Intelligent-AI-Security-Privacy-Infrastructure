@@ -160,3 +160,4 @@ async def test_gateway_with_mock_provider_and_response_restoration(
     assert "aniket@example.com" in data["choices"][0]["message"]["content"]
     assert data["privguard_meta"]["tokens_restored"] == 1
     assert data["privguard_meta"]["security_action"] == "REDACT"
+

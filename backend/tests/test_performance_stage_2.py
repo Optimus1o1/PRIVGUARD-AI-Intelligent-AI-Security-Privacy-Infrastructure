@@ -69,3 +69,4 @@ async def test_buffered_streaming_assembly_benchmark():
     # The buffering overhead for 20 chunks must be well below 50ms
     assert elapsed_ms < 50.0
     assert len(chunks) > 20
+

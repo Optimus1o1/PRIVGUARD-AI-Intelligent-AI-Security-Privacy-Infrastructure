@@ -16,6 +16,11 @@
 | **Split-Chunk Token Exfiltration** | Secure Streaming Handler | Buffer-Before-Stream architecture: buffers entire stream and reconstructs payload before emitting SSE chunks to client. |
 | **SSRF / Malicious Upstream Injection** | Provider Registry | Strict server-side registry: client cannot specify upstream base URLs. |
 | **Upstream Key Exposure** | Upstream Provider Client | Server-side credential isolation: provider keys never appear in client responses, error traces, or audit logs. |
+| **Parameter Tampering after Approval** | Approval Engine | Cryptographic action binding (`action_hash = SHA256(canonical_params)`); detects parameter changes and returns 403. |
+| **Approval Replay Attacks** | Approval Engine | Atomic state transition `APPROVED -> CONSUMED`; second invocation rejected with 403 `APPROVAL_ALREADY_CONSUMED`. |
+| **Capability Race Conditions** | Capability Manager | Atomic usage checks and increments prevent double-spend of single-use capability tokens. |
+| **Sandbox Path Traversal** | Tool Executor | Strict path resolution against `./sandbox/`; path traversal (`..`, root paths) returns 403 `PATH_TRAVERSAL_DETECTED`. |
+| **Arbitrary Code Execution** | Tool Registry | Critical risk tool `execute_code` is disabled by default in v0.1. |
 
 ## Defense-in-Depth Principle
 

@@ -28,3 +28,4 @@ Measured on local test run (`test_performance_stage_2.py`):
    * In v0.1, buffering the entire upstream response before emitting SSE chunks ensures zero token leakage for split-chunk secrets.
    * *Tradeoff:* Time-to-first-token is bound by total generation time of the upstream model.
    * *Future Evolution (Stage 4+):* Windowed streaming token inspection with n-token lookahead buffer for lower TTFT.
+

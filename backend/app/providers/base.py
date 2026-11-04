@@ -27,3 +27,4 @@ class BaseProvider(ABC):
     async def stream(self, request_payload: Dict[str, Any]) -> AsyncIterator[str]:
         """Sends a streaming chat completion request and yields raw SSE event chunks."""
         pass
+

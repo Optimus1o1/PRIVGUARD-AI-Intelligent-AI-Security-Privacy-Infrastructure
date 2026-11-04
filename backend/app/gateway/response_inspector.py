@@ -75,3 +75,4 @@ class ResponseSecurityInspector:
 
 # Shared response inspector instance
 response_inspector = ResponseSecurityInspector()
+

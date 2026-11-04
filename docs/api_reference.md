@@ -76,3 +76,48 @@ All protected endpoints require an Application API key supplied in one of two fo
   Retrieves content-free audit trail events.
   **Query Parameters:** `event_type`, `limit` (1-200), `offset`.
 
+### 6. Agent Identity & Registration
+- `POST /v1/agents/register`
+  Registers a new agent bound to the authenticated application.
+  Body: `{"name": "...", "description": "...", "allowed_tools": ["read_file", "search_web"]}`
+- `GET /v1/agents`
+  Lists all registered agents belonging to caller application.
+- `GET /v1/agents/{agent_id}`
+  Retrieves agent details.
+- `POST /v1/agents/{agent_id}/disable`
+  Disables agent, blocking all further tool executions.
+- `POST /v1/agents/{agent_id}/revoke`
+  Permanently revokes agent.
+
+### 7. Task Management
+- `POST /v1/tasks`
+  Initializes a task session. Body: `{"agent_id": "...", "description": "...", "ttl_seconds": 600}`
+- `GET /v1/tasks/{task_id}`
+  Retrieves task session status.
+- `POST /v1/tasks/{task_id}/cancel`
+  Cancels task and auto-revokes all associated capability grants.
+
+### 8. Temporary Capabilities
+- `POST /v1/capabilities/request`
+  Requests a task-scoped capability token.
+  Body: `{"agent_id": "...", "task_id": "...", "tool_name": "...", "resource": "...", "max_uses": 1, "ttl_seconds": 300}`
+  Returns: One-time opaque `capability_token` (`pg_cap_...`).
+- `POST /v1/capabilities/{capability_id}/revoke`
+  Instantly revokes capability.
+
+### 9. Human-in-the-Loop Approvals
+- `GET /v1/approvals/pending`
+  Lists pending approval requests.
+- `POST /v1/approvals/{approval_id}/approve`
+  Grants human authorization for the exact proposed action.
+- `POST /v1/approvals/{approval_id}/reject`
+  Rejects proposed action.
+
+### 10. Controlled Tool Execution Broker
+- `GET /v1/tools`
+  Lists registered tools with schemas and risk classifications.
+- `POST /v1/tools/{tool_name}/execute`
+  Executes a registered tool through the broker.
+  Body: `{"agent_id": "...", "task_id": "...", "capability_token": "...", "parameters": {...}, "approval_id": "..."}`
+  Enforces identity, tool allowlist, schema, sandboxing, capability consumption, and human approvals.
+

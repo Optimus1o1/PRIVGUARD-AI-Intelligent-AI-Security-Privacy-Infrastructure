@@ -68,6 +68,8 @@ USER / DEVELOPER
    - **Boundary B: Agent Broker Tool Execution.** Mediates every tool execution through task-scoped capability tokens. Prompt injection defense is secondary to Broker authorization.
 2. **Buffer-Before-Stream Invariant:** In streaming mode, upstream SSE events are completely buffered and reconstructed before response security inspection. Tokens are only emitted to the client after inspection passes, preventing split-chunk token leaks.
 3. **SSRF & Provider Isolation:** Upstream endpoints are resolved exclusively through server-side trusted configuration (`app/providers/registry.py`). Clients cannot specify arbitrary remote destinations.
-4. **Fail-Closed Default:** Unrecognized data categories, response security violations, or subsystem failures trigger immediate execution denial.
-5. **Zero Content Retention:** Audit logs store entity categories, action codes, risk levels, and SHA-256 content fingerprints. Raw prompts and completions are never written to disk.
+4. **Cryptographic Action-Binding for Approvals:** Approvals compute `action_hash = SHA256(canonical_json(tool, resource, params))`. Any parameter alteration between approval and execution is detected and rejected.
+5. **Opaque Revocable Capabilities:** Capability tokens (`pg_cap_...`) are high-entropy opaque secrets whose SHA-256 hashes are verified against the database on every invocation. Revoking a capability or cancelling a task takes effect instantaneously.
+6. **Fail-Closed Default:** Unrecognized data categories, response security violations, or subsystem failures trigger immediate execution denial.
+7. **Zero Content Retention:** Audit logs store entity categories, action codes, risk levels, and SHA-256 content fingerprints. Raw prompts and completions are never written to disk.
 
