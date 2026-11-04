@@ -7,8 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import desc, select
 
 from app.core.authentication import get_current_app
+from app.core.exceptions import PrivGuardException
 from app.database.connection import get_db_session
-from app.database.models import Application, ThreatEvent
+from app.database.models import AgentTask, Application, ThreatEvent
 from app.threat_detection import (
     behavior_analyzer,
     content_analyzer,
@@ -89,8 +90,18 @@ async def inspect_content(
 async def evaluate_task_behavior(
     payload: EvaluateBehaviorRequest,
     app: Application = Depends(get_current_app),
+    db: AsyncSession = Depends(get_db_session),
 ) -> ThreatAssessment:
     """Evaluates the sliding-window tool invocation pattern for an active task."""
+    stmt = select(AgentTask).where(AgentTask.id == payload.task_id, AgentTask.app_id == app.id)
+    res = await db.execute(stmt)
+    task = res.scalar_one_or_none()
+    if not task:
+        raise PrivGuardException(
+            message=f"Task '{payload.task_id}' not found or access denied.",
+            status_code=404,
+            error_code="TASK_NOT_FOUND",
+        )
     return behavior_analyzer.evaluate_behavior(payload.task_id)
 
 
@@ -98,8 +109,18 @@ async def evaluate_task_behavior(
 async def get_task_taints(
     task_id: str,
     app: Application = Depends(get_current_app),
+    db: AsyncSession = Depends(get_db_session),
 ) -> Dict[str, Any]:
     """Returns active taint propagation status for an autonomous task context."""
+    stmt = select(AgentTask).where(AgentTask.id == task_id, AgentTask.app_id == app.id)
+    res = await db.execute(stmt)
+    task = res.scalar_one_or_none()
+    if not task:
+        raise PrivGuardException(
+            message=f"Task '{task_id}' not found or access denied.",
+            status_code=404,
+            error_code="TASK_NOT_FOUND",
+        )
     is_tainted = exfiltration_detector.is_task_tainted(task_id)
     taints = exfiltration_detector.get_task_taints(task_id)
     return {

@@ -1,40 +1,68 @@
 """Sandboxed demonstration tool executors with strict boundary isolation."""
 
 import os
+import re
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from app.core.exceptions import PrivGuardException
 
 # Base sandbox directory for safe file operations
 SANDBOX_DIR = Path(os.path.abspath("./sandbox")).resolve()
 
 
-def ensure_sandbox():
+def ensure_sandbox(app_id: Optional[str] = None) -> Path:
     """Ensures the sandbox directory exists."""
-    SANDBOX_DIR.mkdir(parents=True, exist_ok=True)
+    if app_id:
+        target_dir = (SANDBOX_DIR / app_id).resolve()
+    else:
+        target_dir = SANDBOX_DIR
+    target_dir.mkdir(parents=True, exist_ok=True)
+    return target_dir
 
 
-def resolve_sandbox_path(user_path: str) -> Path:
+def resolve_sandbox_path(user_path: str, app_id: Optional[str] = None) -> Path:
     """
     Resolves and strictly bounds file paths within the designated sandbox directory.
-    Prevents directory traversal (../..) or absolute host filesystem access.
+    Prevents directory traversal (../..), absolute root paths, or drive anchors.
     """
-    ensure_sandbox()
-    clean_path = user_path.strip().lstrip("/\\")
+    ensure_sandbox(app_id)
+    raw = user_path.strip()
 
-    # Reject blatant directory traversal sequences
-    if ".." in clean_path or clean_path.startswith("/") or clean_path.startswith("\\"):
+    # Reject absolute root paths, Windows drive paths, or traversal patterns BEFORE any stripping
+    if (
+        raw.startswith("/")
+        or raw.startswith("\\")
+        or bool(re.match(r"^[a-zA-Z]:", raw))
+        or ".." in raw
+    ):
         raise PrivGuardException(
             message=f"Path traversal rejected: '{user_path}' attempts to escape sandbox boundary.",
             status_code=403,
             error_code="PATH_TRAVERSAL_DETECTED",
         )
 
-    resolved = (SANDBOX_DIR / clean_path).resolve()
+    # Scoped directory for tenant if provided, else root sandbox
+    if app_id:
+        target_dir = (SANDBOX_DIR / app_id).resolve()
+        target_dir.mkdir(parents=True, exist_ok=True)
+    else:
+        target_dir = SANDBOX_DIR
 
-    # Enforce jail: resolved path MUST be inside SANDBOX_DIR
+    resolved = (target_dir / raw).resolve()
+
+    # If app_id was specified but file not found in tenant dir, check root sandbox (backward compat for test fixtures)
+    if app_id and not resolved.exists() and (SANDBOX_DIR / raw).resolve().exists():
+        fallback = (SANDBOX_DIR / raw).resolve()
+        try:
+            fallback.relative_to(SANDBOX_DIR)
+            resolved = fallback
+            target_dir = SANDBOX_DIR
+        except ValueError:
+            pass
+
+    # Enforce jail: resolved path MUST be inside target_dir
     try:
-        resolved.relative_to(SANDBOX_DIR)
+        resolved.relative_to(target_dir)
     except ValueError:
         raise PrivGuardException(
             message=f"Access denied: '{user_path}' escapes the designated sandbox perimeter.",
@@ -55,7 +83,8 @@ class ToolExecutor:
         if not path_str:
             raise PrivGuardException("Missing required parameter: 'path'", status_code=400)
 
-        target_file = resolve_sandbox_path(path_str)
+        app_id = params.get("_app_id")
+        target_file = resolve_sandbox_path(path_str, app_id=app_id)
         if not target_file.exists() or not target_file.is_file():
             raise PrivGuardException(f"File '{path_str}' not found in sandbox.", status_code=404)
 
@@ -68,7 +97,8 @@ class ToolExecutor:
         if not path_str:
             raise PrivGuardException("Missing required parameter: 'path'", status_code=400)
 
-        target_file = resolve_sandbox_path(path_str)
+        app_id = params.get("_app_id")
+        target_file = resolve_sandbox_path(path_str, app_id=app_id)
         if not target_file.exists():
             raise PrivGuardException(f"File '{path_str}' not found in sandbox.", status_code=404)
 

@@ -126,3 +126,4 @@ export const ThreatForecastChart: React.FC<ThreatForecastChartProps> = ({ data }
     </div>
   );
 };
+

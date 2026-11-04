@@ -30,6 +30,14 @@ class InjectionDetector:
         self.canary_registry.add(canary)
         return canary
 
+    def register_canary_token(self, canary: str) -> None:
+        """Registers a canary token into the active registry for extraction monitoring."""
+        self.canary_registry.add(canary)
+
+    def detect(self, text: str, source_trust: str = "UNTRUSTED") -> ThreatAssessment:
+        """Alias for inspect to support diverse detection callers."""
+        return self.inspect(text, source_trust)
+
     def normalize_text(self, text: str) -> str:
         """Normalizes Unicode (NFKC), removes invisible chars and zero-width spaces."""
         if not text:

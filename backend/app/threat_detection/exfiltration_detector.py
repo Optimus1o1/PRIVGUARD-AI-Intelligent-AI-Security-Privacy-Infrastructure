@@ -42,6 +42,17 @@ class ExfiltrationDetector:
         res_lower = resource.lower()
         return any(pat in res_lower for pat in CONFIDENTIAL_RESOURCE_PATTERNS)
 
+    def register_confidential_resource(self, resource: str) -> None:
+        """Registers a resource pattern as explicitly confidential."""
+        if resource.lower() not in CONFIDENTIAL_RESOURCE_PATTERNS:
+            CONFIDENTIAL_RESOURCE_PATTERNS.append(resource.lower())
+
+    def propagate_taint(self, task_id: str, resource: str) -> None:
+        """Synchronously taints an in-memory task session with a confidential resource."""
+        if task_id not in self._tainted_tasks:
+            self._tainted_tasks[task_id] = set()
+        self._tainted_tasks[task_id].add(resource)
+
     async def record_access(
         self,
         db: AsyncSession,

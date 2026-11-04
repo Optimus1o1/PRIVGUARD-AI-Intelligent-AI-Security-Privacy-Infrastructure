@@ -65,8 +65,25 @@ async def chat_completions(
             current_app=current_app,
             db=db,
         )
+
+        # Pre-flight pull first chunk before committing StreamingResponse headers.
+        # This guarantees that if Buffer-Before-Stream detects a secret/violation,
+        # ResponseSecurityViolationError is raised before HTTP 200 headers are sent,
+        # allowing FastAPI's exception handler to return an HTTP 502 error response.
+        first_chunk = None
+        try:
+            first_chunk = await anext(stream_iter)
+        except StopAsyncIteration:
+            pass
+
+        async def combined_stream():
+            if first_chunk is not None:
+                yield first_chunk
+            async for chunk in stream_iter:
+                yield chunk
+
         return StreamingResponse(
-            stream_iter,
+            combined_stream(),
             media_type="text/event-stream",
             headers={
                 "Cache-Control": "no-cache",

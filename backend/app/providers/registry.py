@@ -81,18 +81,33 @@ class ProviderRegistry:
     def get_provider(self, model: str) -> BaseProvider:
         """
         Resolves the appropriate server-side provider for the given model.
-        Strictly prevents client-supplied arbitrary URLs.
+        Strictly prevents client-supplied arbitrary URLs or SSRF vectors.
         """
+        # Reject SSRF, path traversal, or port binding attempts immediately
+        if (
+            not model
+            or "://" in model
+            or "/" in model
+            or "\\" in model
+            or ":" in model
+            or ".." in model
+            or any(c.isspace() for c in model)
+        ):
+            raise ModelNotConfiguredError(model)
+
         if model in self._providers:
             return self._providers[model]
 
-        # Check prefix match (e.g. "gpt-" -> openai)
+        # Check prefix match in explicitly registered providers (e.g. "gpt-*" -> openai)
         for pattern, provider in self._providers.items():
             if pattern.endswith("*") and model.startswith(pattern[:-1]):
                 return provider
 
-        if self._default_provider:
-            return self._default_provider
+        # Allowed standard LLM prefix patterns for the default provider
+        allowed_default_prefixes = ("gpt-", "mock-", "text-", "claude-", "o1-", "o3-", "dall-e-")
+        if model == "default" or any(model.startswith(prefix) for prefix in allowed_default_prefixes):
+            if self._default_provider:
+                return self._default_provider
 
         raise ModelNotConfiguredError(model)
 

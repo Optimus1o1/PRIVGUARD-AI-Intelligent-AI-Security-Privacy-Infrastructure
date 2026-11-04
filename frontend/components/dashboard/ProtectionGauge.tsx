@@ -118,3 +118,4 @@ export const ProtectionGauge: React.FC<ProtectionGaugeProps> = ({ score, status 
     </div>
   );
 };
+

@@ -7,8 +7,10 @@ import uuid
 from typing import Any, AsyncIterator, Dict, List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import (
+    PrivGuardException,
     ResponseSecurityViolationError,
     SecretDetectedError,
+    UpstreamProviderError,
 )
 from app.database.models import Application
 from app.gateway.response_inspector import response_inspector
@@ -86,7 +88,16 @@ class UpstreamCoordinator:
         upstream_payload["messages"] = sanitized_messages
 
         # 5. Upstream Provider Execution
-        provider_res = await provider.complete(upstream_payload)
+        try:
+            provider_res = await provider.complete(upstream_payload)
+        except PrivGuardException:
+            raise
+        except Exception as e:
+            raise UpstreamProviderError(
+                message="Upstream model provider encountered an internal communication error.",
+                status_code=502,
+                details={"error_type": type(e).__name__},
+            )
 
         # 6. Response Inspection & Placeholder Restoration
         try:

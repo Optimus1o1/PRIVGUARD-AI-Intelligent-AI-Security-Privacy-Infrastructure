@@ -120,3 +120,4 @@ export const Header: React.FC<HeaderProps> = ({ onRefresh, onOpenInspectModal })
     </header>
   );
 };
+

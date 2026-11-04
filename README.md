@@ -148,12 +148,12 @@ PRIVGUARD-AI/
 │   │   ├── policies/         # Deterministic Policy Engine
 │   │   ├── monitoring/       # Content-free Audit Logger
 │   │   └── database/         # Async SQLite models, migrations, WAL mode
-│   └── tests/                # 103 automated security, adversarial, performance, and API tests
+│   └── tests/                # 142 automated security, red-team, adversarial, load, and API tests
 ├── frontend/                 # Next.js 14 App Router, TypeScript, Tailwind CSS, BFF Security Proxy
 │   ├── app/                  # Security Overview, Approvals, Agents, Topology Map, Threats, Privacy, Tasks, Activity, Diagnostics
 │   ├── components/           # Radial Segmented Protection Gauge, Metric Cards, Forecast Charts, Tables, Modals
 │   └── lib/                  # Type-safe API client, types, BFF handlers
-├── docs/                     # Architecture, Threat Model, API Reference, Stage specs, User Guides
+├── docs/                     # Architecture, Threat Model, AISVS Assessment, Red Team Report, Attack Scenarios, Performance Benchmark
 └── README.md
 ```
 
@@ -167,6 +167,6 @@ PRIVGUARD-AI/
 - [x] **Stage 3:** Agent Security Broker, Capability Tokens & Human Approvals
 - [x] **Stage 4:** Advanced Threat Detection (Prompt Injection, Behavioral Analysis, Exfiltration Defense)
 - [x] **Stage 5:** Privacy & Security Control Center (Next.js 14 App Router, BFF Security Proxy, OWASP 2026 Telemetry)
-- [ ] **Stage 6:** End-to-End Integration, Red Teaming & Security Validation
+- [x] **Stage 6:** End-to-End Integration, Red Teaming & Security Validation (OWASP AISVS 1.0, 142 Automated Tests)
 
 

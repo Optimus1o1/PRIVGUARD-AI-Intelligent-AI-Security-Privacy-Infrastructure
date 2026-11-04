@@ -20,7 +20,7 @@ OVERRIDE_RULES = [
     InjectionPattern(
         rule_id="INJ_OVERRIDE_001",
         pattern=re.compile(
-            r"\b(ignore|disregard|forget|override|bypass)\s+(all\s+)?(previous|prior|above|system|initial)\s+(instructions|prompts|directions|rules|guidelines|constraints)\b",
+            r"\b(ignore|disregard|forget|override|bypass)\s+(?:all\s+)?(?:(?:previous|prior|above|system|initial)\s+)?(instructions|prompts|directions|rules|guidelines|constraints)\b",
             re.IGNORECASE,
         ),
         threat_type=ThreatType.DIRECT_PROMPT_INJECTION,
@@ -128,13 +128,25 @@ DELIMITER_RULES = [
     InjectionPattern(
         rule_id="INJ_DELIM_002",
         pattern=re.compile(
-            r"(-{3,}\s*BEGIN\s+(SYSTEM\s+PROMPT|INSTRUCTIONS|ADMIN\s+MODE)\s*-{3,})",
+            r"(-{3,}\s*(BEGIN|END)\s+(OF\s+)?(SYSTEM\s+(CONTEXT|PROMPT)|INSTRUCTIONS|ADMIN\s+MODE)\s*-{3,})",
             re.IGNORECASE,
         ),
         threat_type=ThreatType.DIRECT_PROMPT_INJECTION,
         severity=ThreatSeverity.HIGH,
         confidence=0.92,
         description="Structured fake instruction boundary delimiter detected.",
+        recommended_action=ThreatAction.BLOCK,
+    ),
+    InjectionPattern(
+        rule_id="INJ_DELIM_003",
+        pattern=re.compile(
+            r"(```\s*system|###\s*(End\s+of\s+Prompt|New\s+Task|Admin\s+Instruction)\s*###?)",
+            re.IGNORECASE,
+        ),
+        threat_type=ThreatType.DIRECT_PROMPT_INJECTION,
+        severity=ThreatSeverity.HIGH,
+        confidence=0.95,
+        description="Markdown system block or section boundary hijacking detected.",
         recommended_action=ThreatAction.BLOCK,
     ),
 ]

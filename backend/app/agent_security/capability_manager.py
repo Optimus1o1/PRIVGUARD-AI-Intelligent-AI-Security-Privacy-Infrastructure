@@ -157,21 +157,45 @@ class CapabilityManager:
 
         # Atomically increment usage if consume is requested
         if consume:
-            grant.uses_count += 1
+            stmt = (
+                update(CapabilityGrant)
+                .where(
+                    CapabilityGrant.id == grant.id,
+                    CapabilityGrant.uses_count < CapabilityGrant.max_uses,
+                    CapabilityGrant.is_revoked == False,
+                )
+                .values(uses_count=CapabilityGrant.uses_count + 1)
+            )
+            res = await db.execute(stmt)
             await db.commit()
+            if res.rowcount == 0:
+                raise PrivGuardException(
+                    message=f"Capability token maximum use limit ({grant.max_uses}) exceeded.",
+                    status_code=403,
+                    error_code="CAPABILITY_MAX_USES_EXCEEDED",
+                )
             await db.refresh(grant)
         return grant
 
     async def consume_use(self, db: AsyncSession, grant: CapabilityGrant) -> CapabilityGrant:
         """Atomically increments the usage counter on an already-validated capability."""
-        if grant.uses_count >= grant.max_uses:
+        stmt = (
+            update(CapabilityGrant)
+            .where(
+                CapabilityGrant.id == grant.id,
+                CapabilityGrant.uses_count < CapabilityGrant.max_uses,
+                CapabilityGrant.is_revoked == False,
+            )
+            .values(uses_count=CapabilityGrant.uses_count + 1)
+        )
+        res = await db.execute(stmt)
+        await db.commit()
+        if res.rowcount == 0:
             raise PrivGuardException(
                 message=f"Capability token maximum use limit ({grant.max_uses}) exceeded.",
                 status_code=403,
                 error_code="CAPABILITY_MAX_USES_EXCEEDED",
             )
-        grant.uses_count += 1
-        await db.commit()
         await db.refresh(grant)
         return grant
 

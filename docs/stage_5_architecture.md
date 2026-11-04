@@ -87,3 +87,4 @@ The visual design system implements Moon Sanctum Labs' cybersecurity aesthetic:
   - Connected multi-phase timeline tracking Ingestion Vector $\to$ Indicators Flagged $\to$ Defensive Verdict.
 - **Agent Access Map (`/agents/[id]`):**
   - Visual node topology graph representing the execution path: `Autonomous Agent -> PRIVGUARD Broker -> Permitted Tools`.
+

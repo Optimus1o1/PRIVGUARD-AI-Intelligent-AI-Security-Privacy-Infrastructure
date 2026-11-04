@@ -210,8 +210,10 @@ class ToolBroker:
         # 8. Sandboxed Execution with Enforced Timeout
         handler = self.registry.get_handler(tool_name)
         try:
+            exec_params = dict(parameters)
+            exec_params["_app_id"] = app.id
             raw_output = await asyncio.wait_for(
-                handler(parameters),
+                handler(exec_params),
                 timeout=tool.timeout_seconds,
             )
         except asyncio.TimeoutError:

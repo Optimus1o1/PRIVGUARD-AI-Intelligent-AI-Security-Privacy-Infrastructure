@@ -35,26 +35,30 @@ class SecureStreamingHandler:
         try:
             async for raw_line in upstream_stream:
                 line = raw_line.strip() if isinstance(raw_line, str) else raw_line.decode("utf-8").strip()
-                if not line or not line.startswith("data:"):
+                if not line:
                     continue
 
-                data_str = line[len("data:"):].strip()
-                if data_str == "[DONE]":
-                    break
+                if line.startswith("data:"):
+                    data_str = line[len("data:"):].strip()
+                    if data_str == "[DONE]":
+                        break
 
-                try:
-                    chunk_json = json.loads(data_str)
-                    choices = chunk_json.get("choices", [])
-                    if choices:
-                        delta = choices[0].get("delta", {})
-                        content_piece = delta.get("content")
-                        if content_piece:
-                            accumulated_text.append(content_piece)
-                        if choices[0].get("finish_reason"):
-                            finish_reason = choices[0]["finish_reason"]
-                except json.JSONDecodeError:
-                    # Ignore malformed non-JSON lines or heartbeats
-                    continue
+                    try:
+                        chunk_json = json.loads(data_str)
+                        choices = chunk_json.get("choices", [])
+                        if choices:
+                            delta = choices[0].get("delta", {})
+                            content_piece = delta.get("content")
+                            if content_piece:
+                                accumulated_text.append(content_piece)
+                            if choices[0].get("finish_reason"):
+                                finish_reason = choices[0]["finish_reason"]
+                    except json.JSONDecodeError:
+                        # Ignore malformed non-JSON lines or heartbeats
+                        continue
+                else:
+                    # Plain string chunks or non-SSE streams
+                    accumulated_text.append(line)
 
         except Exception as e:
             if not isinstance(e, UpstreamProviderError):

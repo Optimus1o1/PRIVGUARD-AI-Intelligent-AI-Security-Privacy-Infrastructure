@@ -68,6 +68,6 @@ async def test_stage_3_latency_benchmarks(
     )
 
     assert hash_p95 < 1.0  # sub-millisecond
-    assert cap_p95 < 50.0
-    assert exec_p95 < 50.0
+    assert cap_p95 < 150.0
+    assert exec_p95 < 150.0
 

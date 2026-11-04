@@ -77,3 +77,4 @@ export const RecentThreatsFeed: React.FC<RecentThreatsFeedProps> = ({ threats })
     </div>
   );
 };
+

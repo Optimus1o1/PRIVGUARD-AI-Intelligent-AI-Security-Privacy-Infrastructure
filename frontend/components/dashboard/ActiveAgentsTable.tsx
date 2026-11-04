@@ -84,3 +84,4 @@ export const ActiveAgentsTable: React.FC<ActiveAgentsTableProps> = ({ agents }) 
     </div>
   );
 };
+

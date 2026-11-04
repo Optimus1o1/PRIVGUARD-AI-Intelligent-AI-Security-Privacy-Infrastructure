@@ -68,3 +68,4 @@ For production multi-user deployments:
 1. **Network Binding:** Bind the internal FastAPI server to `127.0.0.1` or a private VPC network, preventing external entities from querying FastAPI directly.
 2. **Reverse Proxy TLS:** Terminate TLS using modern ciphers (TLS 1.3) with HTTP Strict Transport Security (HSTS) headers.
 3. **Session Authentication:** Wrap the Next.js BFF proxy with corporate IdP authentication (SSO / OIDC via Clerk, Auth0, or NextAuth) to restrict access to authorized security administrators.
+

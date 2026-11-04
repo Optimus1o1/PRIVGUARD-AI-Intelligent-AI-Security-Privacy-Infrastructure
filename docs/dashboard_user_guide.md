@@ -86,3 +86,4 @@ The Control Center interface is divided into seven core modules:
 ### G. System Diagnostics (`/system-health`)
 - Live component status and microsecond latencies for AI Gateway, Privacy Engine, Agent Broker, Threat Detector, and SQLite WAL database.
 - Distinguishes operational uptime from security effectiveness.
+

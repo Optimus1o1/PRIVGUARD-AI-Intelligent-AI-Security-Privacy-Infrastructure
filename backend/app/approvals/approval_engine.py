@@ -1,11 +1,13 @@
 """Human-in-the-Loop Approval Engine with Cryptographic Action Binding."""
 
 import hashlib
+import hmac
 import json
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, update
+from app.core.config import settings
 from app.core.exceptions import ApprovalRequiredError, PrivGuardException
 from app.database.models import ApprovalRequest, ensure_utc, utcnow
 
@@ -16,12 +18,16 @@ def compute_action_hash(
     parameters: Dict[str, Any],
 ) -> str:
     """
-    Computes a deterministic cryptographic SHA-256 fingerprint of the exact proposed action.
-    Binds tool name, target resource, and canonical JSON parameters.
+    Computes a deterministic cryptographic HMAC-SHA-256 fingerprint of the exact proposed action.
+    Binds tool name, target resource, and canonical JSON parameters with the master key.
     """
     canonical_params = json.dumps(parameters, sort_keys=True, separators=(",", ":"))
     payload = f"{tool_name.strip()}|{(target_resource or '').strip()}|{canonical_params}"
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+    return hmac.new(
+        settings.PRIVGUARD_MASTER_KEY.encode("utf-8"),
+        payload.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
 
 
 class ApprovalEngine:
@@ -205,10 +211,24 @@ class ApprovalEngine:
                 error_code="APPROVAL_TAMPERING_DETECTED",
             )
 
-        # Atomic State Transition: APPROVED -> CONSUMED
-        req.status = "CONSUMED"
-        req.consumed_at = now
+        # Atomic State Transition: APPROVED -> CONSUMED via Compare-And-Swap
+        stmt = (
+            update(ApprovalRequest)
+            .where(
+                ApprovalRequest.id == approval_id,
+                ApprovalRequest.app_id == app_id,
+                ApprovalRequest.status == "APPROVED",
+            )
+            .values(status="CONSUMED", consumed_at=now)
+        )
+        res = await db.execute(stmt)
         await db.commit()
+        if res.rowcount == 0:
+            raise PrivGuardException(
+                message="Approval has already been consumed (anti-replay violation).",
+                status_code=403,
+                error_code="APPROVAL_ALREADY_CONSUMED",
+            )
         return True
 
     async def list_pending(

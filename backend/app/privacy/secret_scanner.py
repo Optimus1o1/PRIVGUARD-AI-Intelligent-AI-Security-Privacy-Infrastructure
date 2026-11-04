@@ -37,7 +37,7 @@ SECRET_PATTERNS = [
     # OpenAI API Keys (legacy, project, user)
     (
         "OPENAI_API_KEY",
-        re.compile(r"\b(?:sk-proj-[a-zA-Z0-9_-]{48,}|sk-[a-zA-Z0-9]{20,48})\b"),
+        re.compile(r"\b(?:sk-proj-[a-zA-Z0-9_-]{20,}|sk-[a-zA-Z0-9]{20,48})\b"),
     ),
 
     # Anthropic API Keys

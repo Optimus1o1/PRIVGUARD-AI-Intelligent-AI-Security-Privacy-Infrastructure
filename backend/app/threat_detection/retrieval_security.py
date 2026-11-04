@@ -60,6 +60,24 @@ class RetrievalSecurityValidator:
             )
 
         # 3. Poisoning & indirect prompt injection scan
+        import re
+        html_poisoning_pattern = re.compile(
+            r"(<script\b[^>]*>|javascript:|display\s*:\s*none|visibility\s*:\s*hidden|color\s*:\s*(white|transparent)|<!--.*?-->)",
+            re.IGNORECASE | re.DOTALL,
+        )
+        if html_poisoning_pattern.search(chunk.content):
+            signals.append(
+                ThreatSignal(
+                    threat_type=ThreatType.INDIRECT_PROMPT_INJECTION,
+                    severity=ThreatSeverity.HIGH,
+                    confidence=0.94,
+                    rule_id="RAG_HTML_POISONING_001",
+                    description="Hidden HTML element, script tag, or hidden CSS styling detected in retrieved knowledge chunk.",
+                    indicators=["hidden_html_tag"],
+                    recommended_action=ThreatAction.QUARANTINE,
+                )
+            )
+
         injection_eval = self.injection_detector.inspect(chunk.content)
         if injection_eval.is_threat:
             for sig in injection_eval.signals:
