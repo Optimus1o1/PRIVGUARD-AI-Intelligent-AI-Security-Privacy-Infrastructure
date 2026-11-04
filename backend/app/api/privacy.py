@@ -97,3 +97,4 @@ async def redact_data(
         mapping=verdict.redaction_mapping if payload.reversible else {},
         entity_counts=verdict.entity_counts,
     )
+

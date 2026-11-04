@@ -53,3 +53,4 @@ def test_pipeline_hard_blocks_on_secret():
     assert verdict.category.value == "CRITICAL"
     assert verdict.risk_level.value == "CRITICAL"
     assert len(verdict.detected_secrets) >= 1
+

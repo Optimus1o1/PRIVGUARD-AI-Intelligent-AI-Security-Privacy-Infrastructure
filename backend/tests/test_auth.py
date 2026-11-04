@@ -91,3 +91,4 @@ async def test_inactive_application_rejected(
     )
     assert res.status_code == 401
     assert "disabled" in res.json()["error"]["message"]
+

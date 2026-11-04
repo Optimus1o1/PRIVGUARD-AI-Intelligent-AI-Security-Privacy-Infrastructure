@@ -209,3 +209,4 @@ class InspectionPipeline:
 
 # Shared pipeline instance
 inspection_pipeline = InspectionPipeline()
+

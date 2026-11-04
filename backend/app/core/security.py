@@ -35,3 +35,4 @@ def mask_secret(secret_val: str, keep_start: int = 4, keep_end: int = 4) -> str:
     suffix = secret_val[-keep_end:]
     masked_middle = "*" * min(8, len(secret_val) - keep_start - keep_end)
     return f"{prefix}{masked_middle}{suffix}"
+

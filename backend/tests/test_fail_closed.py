@@ -47,3 +47,4 @@ async def test_secret_hidden_in_system_prompt_blocked(
     res = await client.post("/v1/chat/completions", json=payload, headers=auth_headers)
     assert res.status_code == 403
     assert res.json()["error"]["code"] == "CRITICAL_SECRET_DETECTED"
+

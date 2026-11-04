@@ -78,3 +78,4 @@ async def test_audit_query_endpoint(
         assert "content_fingerprint" in ev
         assert "raw_prompt" not in ev
         assert "text" not in ev
+

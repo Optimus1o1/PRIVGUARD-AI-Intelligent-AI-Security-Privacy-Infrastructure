@@ -91,3 +91,4 @@ class ApprovalRequest(Base):
     status = Column(String(20), default="PENDING", nullable=False) # PENDING, APPROVED, REJECTED, EXPIRED
     created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
     resolved_at = Column(DateTime(timezone=True), nullable=True)
+

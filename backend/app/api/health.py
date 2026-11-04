@@ -24,3 +24,4 @@ async def readiness_check():
         "fail_closed_mode": settings.FAIL_CLOSED_MODE,
         "audit_content_storage": settings.AUDIT_CONTENT_STORAGE_ENABLED,
     }
+

@@ -23,13 +23,26 @@ All protected endpoints require an Application API key supplied in one of two fo
 ### 2. OpenAI-Compatible Chat Gateway
 - `POST /v1/chat/completions`
   Drop-in replacement for OpenAI `/v1/chat/completions`.
-  **Request:** Standard OpenAI payload (`model`, `messages`, `temperature`, `max_tokens`).
+  **Request:** Standard OpenAI payload (`model`, `messages`, `temperature`, `max_tokens`, `stream: bool`).
   **Behavior:**
-  - Blocks with HTTP 403 `CRITICAL_SECRET_DETECTED` if API keys or credentials are in messages.
-  - Redacts PII (emails, phone numbers, SSNs, credit cards) into tokens (`<EMAIL_1>`).
-  - Forwards sanitized payload to upstream model or returns mock completion in local test mode.
-  - Restores de-redacted tokens in response content before returning to authorized client.
-  - Appends `privguard_meta` with latency and audit correlation ID.
+  - **Prompt Inspection:** Blocks with HTTP 403 `CRITICAL_SECRET_DETECTED` if credentials are in messages.
+  - **PII Minimization:** Redacts PII (emails, phone numbers, SSNs, credit cards) into tokens (`<EMAIL_1>`).
+  - **Live Upstream Routing:** Forwards sanitized messages to server-configured model provider.
+  - **Response Security Inspection:** Inspects model output before transmission. If model leaks credentials, blocks with HTTP 502 `RESPONSE_SECURITY_VIOLATION`.
+  - **PII Restoration:** Restores authorized placeholders (`<EMAIL_1>`) for authorized clients.
+  - **Streaming Mode (`stream: true`):**
+    - Enforces Buffer-Before-Stream: Buffers upstream SSE events, inspects entire response, and emits compliant OpenAI SSE chunks (`data: {...}`, `finish_reason: "stop"`, `data: [DONE]`).
+    - Media Type: `text/event-stream`.
+  - **Non-Streaming Mode (`stream: false`):**
+    - Returns JSON `ChatCompletionResponse` with `privguard_meta` (audit ID, tokens restored, latency).
+
+**Error Responses:**
+- `400 Bad Request`: `MODEL_NOT_CONFIGURED` (SSRF prevention)
+- `401 Unauthorized`: `AUTHENTICATION_FAILED` (missing or invalid client key)
+- `403 Forbidden`: `CRITICAL_SECRET_DETECTED` (secret in input prompt)
+- `429 Too Many Requests`: `UPSTREAM_RATE_LIMITED`
+- `502 Bad Gateway`: `RESPONSE_SECURITY_VIOLATION` (model generated secrets) or `UPSTREAM_PROVIDER_ERROR`
+- `504 Gateway Timeout`: `UPSTREAM_TIMEOUT` (upstream provider exceeded timeout)
 
 ### 3. Privacy Inspection
 - `POST /v1/privacy/inspect`
@@ -62,3 +75,4 @@ All protected endpoints require an Application API key supplied in one of two fo
 - `GET /v1/audit/events`
   Retrieves content-free audit trail events.
   **Query Parameters:** `event_type`, `limit` (1-200), `offset`.
+

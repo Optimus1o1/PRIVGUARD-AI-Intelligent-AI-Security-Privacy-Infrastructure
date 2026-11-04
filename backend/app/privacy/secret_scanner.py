@@ -167,3 +167,4 @@ class SecretScanner:
 
 # Default shared scanner instance
 secret_scanner = SecretScanner()
+

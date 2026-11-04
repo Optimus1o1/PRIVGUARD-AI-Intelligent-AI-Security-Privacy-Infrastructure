@@ -64,7 +64,10 @@ USER / DEVELOPER
 ## 2. Security Boundaries & Invariants
 
 1. **Two Core Security Boundaries:**
-   - **Boundary A: Model Ingress/Egress Gateway.** Sanitizes context before upstream delivery; blocks credentials from entering model context.
+   - **Boundary A: Model Ingress/Egress Gateway.** Sanitizes context before upstream delivery; blocks credentials from entering model context; inspects model output for leaked secrets before client delivery.
    - **Boundary B: Agent Broker Tool Execution.** Mediates every tool execution through task-scoped capability tokens. Prompt injection defense is secondary to Broker authorization.
-2. **Fail-Closed Default:** Unrecognized data categories or subsystem failures trigger immediate execution denial.
-3. **Zero Content Retention:** Audit logs store entity categories, action codes, risk levels, and SHA-256 content fingerprints. Raw prompts and completions are never written to disk.
+2. **Buffer-Before-Stream Invariant:** In streaming mode, upstream SSE events are completely buffered and reconstructed before response security inspection. Tokens are only emitted to the client after inspection passes, preventing split-chunk token leaks.
+3. **SSRF & Provider Isolation:** Upstream endpoints are resolved exclusively through server-side trusted configuration (`app/providers/registry.py`). Clients cannot specify arbitrary remote destinations.
+4. **Fail-Closed Default:** Unrecognized data categories, response security violations, or subsystem failures trigger immediate execution denial.
+5. **Zero Content Retention:** Audit logs store entity categories, action codes, risk levels, and SHA-256 content fingerprints. Raw prompts and completions are never written to disk.
+

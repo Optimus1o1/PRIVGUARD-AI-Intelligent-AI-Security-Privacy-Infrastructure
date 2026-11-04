@@ -44,3 +44,4 @@ def test_pipeline_redaction_flow():
     assert "<EMAIL_1>" in verdict.sanitized_text
     assert "john.doe@acme.org" not in verdict.sanitized_text
     assert verdict.entity_counts.get("EMAIL") == 1
+

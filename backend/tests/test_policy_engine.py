@@ -31,3 +31,4 @@ def test_public_allowed():
     assert decision.action == PolicyAction.ALLOW
     assert decision.risk_level == "LOW"
     assert decision.allow_execution is True
+

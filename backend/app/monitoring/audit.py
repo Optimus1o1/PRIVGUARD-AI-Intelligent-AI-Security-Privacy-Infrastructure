@@ -68,3 +68,4 @@ class AuditLogger:
 
 # Shared audit logger instance
 audit_logger = AuditLogger()
+

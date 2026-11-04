@@ -14,6 +14,10 @@ PRIVGUARD AI is an independent security and privacy enforcement layer positioned
 4. **Content-Free Audit Trails:** Raw prompts, completions, and sensitive strings are never stored in audit logs. Logs store cryptographic SHA-256 fingerprints, timestamps, and entity counts.
 5. **Ultra-Low Latency Overhead:** Inspection pipeline operates at under **0.25ms P95 latency** locally.
 
+6. **Buffer-Before-Stream SSE Streaming:** Streams are buffered and reconstructed to detect credentials split across chunks before emitting SSE events to the client.
+7. **Bidirectional Response Inspection:** Model outputs are treated as untrusted data and scanned for leaked secrets and prompt extraction attacks.
+8. **SSRF-Proof Provider Isolation:** Client cannot specify remote upstream URLs; all endpoints resolve through server-side provider registry.
+
 ---
 
 ## Quickstart
@@ -46,8 +50,7 @@ Interactive API documentation will be available at:
 
 ## Integration with OpenAI SDK
 
-Point your OpenAI client base URL to PRIVGUARD Gateway:
-
+### Non-Streaming Mode
 ```python
 from openai import OpenAI
 
@@ -65,6 +68,21 @@ response = client.chat.completions.create(
 print(response.choices[0].message.content)
 ```
 
+### Streaming Mode (Secure Buffer-Before-Stream)
+```python
+stream = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[
+        {"role": "user", "content": "Explain secure streaming in detail."}
+    ],
+    stream=True,
+)
+
+for chunk in stream:
+    if chunk.choices and chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="", flush=True)
+```
+
 ---
 
 ## Repository Structure
@@ -75,12 +93,14 @@ PRIVGUARD-AI/
 │   ├── app/
 │   │   ├── api/            # Gateway, Privacy, Policies, and Audit endpoints
 │   │   ├── core/           # Config, Authentication, Security, Exceptions
+│   │   ├── gateway/        # Upstream proxy, response inspector, secure streaming
+│   │   ├── providers/      # Provider abstraction, OpenAI-compatible, registry
 │   │   ├── privacy/        # Secret Scanner, PII Detector, Redactor, Classifier
 │   │   ├── policies/       # Deterministic Policy Engine
 │   │   ├── monitoring/     # Content-free Audit Logger
 │   │   └── database/       # Async SQLite models and connection
-│   └── tests/              # 30 automated security and unit tests
-├── docs/                   # Architecture, Threat Model, API Reference
+│   └── tests/              # 48 automated security, upstream, and unit tests
+├── docs/                   # Architecture, Threat Model, API Reference, Stage 2
 └── README.md
 ```
 
@@ -90,6 +110,8 @@ PRIVGUARD-AI/
 
 - [x] **Stage 0:** Architecture, Threat Model & Specification
 - [x] **Stage 1:** Backend Foundation, API Contracts, Secret Scanner, PII Redaction, Fail-Closed Pipeline
-- [ ] **Stage 2:** Live Upstream Model Proxying & Streaming
+- [x] **Stage 2:** Live Upstream Model Proxying & Secure Streaming
 - [ ] **Stage 3:** Agent Security Broker, Capability Tokens & Human Approvals
-- [ ] **Stage 4:** Next.js Security Dashboard & Real-Time Monitoring
+- [ ] **Stage 4:** Advanced Threat Detection (Prompt Injection Signals)
+- [ ] **Stage 5:** Next.js Security Dashboard & Real-Time Monitoring
+

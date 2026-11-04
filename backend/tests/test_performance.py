@@ -33,3 +33,4 @@ def test_inspection_pipeline_latency_benchmark():
     # Invariant: P95 latency must be under 50ms (target was < 300ms)
     assert p95 < 50.0, f"P95 latency {p95}ms exceeded 50ms threshold!"
     assert verdict.action.value == "REDACT"
+

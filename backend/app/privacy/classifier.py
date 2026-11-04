@@ -133,3 +133,4 @@ def classify_entities(detected_entities: List[str]) -> ClassificationResult:
         entity_counts=entity_counts,
         is_safe_to_forward=True,
     )
+

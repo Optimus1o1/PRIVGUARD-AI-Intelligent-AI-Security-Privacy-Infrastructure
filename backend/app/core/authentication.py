@@ -50,3 +50,4 @@ async def get_current_app(
         raise AuthenticationError("Application account is disabled.")
 
     return app
+

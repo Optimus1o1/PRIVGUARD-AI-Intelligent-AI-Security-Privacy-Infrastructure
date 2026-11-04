@@ -104,3 +104,81 @@ class FailClosedError(PrivGuardException):
             error_code="SECURITY_FAIL_CLOSED",
             details={"subsystem": subsystem, "reason": reason},
         )
+
+
+class UpstreamProviderError(PrivGuardException):
+    """Raised when communication with the upstream LLM provider fails."""
+
+    def __init__(self, message: str = "Upstream model provider encountered an error", status_code: int = 502, details: Optional[Dict[str, Any]] = None):
+        super().__init__(
+            message=message,
+            status_code=status_code,
+            error_code="UPSTREAM_PROVIDER_ERROR",
+            details=details or {},
+        )
+
+
+class UpstreamTimeoutError(PrivGuardException):
+    """Raised when the upstream LLM provider exceeds the timeout limit."""
+
+    def __init__(self, timeout_seconds: float):
+        super().__init__(
+            message=f"Upstream model provider timed out after {timeout_seconds} seconds.",
+            status_code=504,
+            error_code="UPSTREAM_TIMEOUT",
+            details={"timeout_seconds": timeout_seconds},
+        )
+
+
+class UpstreamAuthenticationError(PrivGuardException):
+    """Raised when the gateway cannot authenticate with the upstream provider."""
+
+    def __init__(self, message: str = "Upstream provider authentication failed. Check server-side configuration."):
+        super().__init__(
+            message=message,
+            status_code=502,
+            error_code="UPSTREAM_AUTHENTICATION_ERROR",
+        )
+
+
+class UpstreamRateLimitError(PrivGuardException):
+    """Raised when the upstream provider rate-limits requests."""
+
+    def __init__(self, retry_after: Optional[str] = None):
+        details = {"retry_after": retry_after} if retry_after else {}
+        super().__init__(
+            message="Upstream model provider rate limit exceeded.",
+            status_code=429,
+            error_code="UPSTREAM_RATE_LIMITED",
+            details=details,
+        )
+
+
+class ResponseSecurityViolationError(PrivGuardException):
+    """Raised when the model output contains a detected secret or violates policy."""
+
+    def __init__(self, violation_type: str, preview: str, reason: str):
+        super().__init__(
+            message=f"Model response blocked: {reason} Detected type: '{violation_type}'.",
+            status_code=502,
+            error_code="RESPONSE_SECURITY_VIOLATION",
+            details={
+                "violation_type": violation_type,
+                "preview": preview,
+                "reason": reason,
+            },
+        )
+
+
+class ModelNotConfiguredError(PrivGuardException):
+    """Raised when a requested model is not registered or supported."""
+
+    def __init__(self, model_name: str):
+        super().__init__(
+            message=f"Model '{model_name}' is not configured in the server provider registry.",
+            status_code=400,
+            error_code="MODEL_NOT_CONFIGURED",
+            details={"model": model_name},
+        )
+
+

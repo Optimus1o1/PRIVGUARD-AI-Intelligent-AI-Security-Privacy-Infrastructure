@@ -117,3 +117,4 @@ class DataRedactor:
 
 # Default shared redactor instance
 redactor = DataRedactor()
+
