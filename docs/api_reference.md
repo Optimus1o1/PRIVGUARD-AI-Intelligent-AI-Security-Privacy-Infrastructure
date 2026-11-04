@@ -137,4 +137,18 @@ All protected endpoints require an Application API key supplied in one of two fo
   Retrieves content-free audit records of threat signals and defense interventions.
   Query params: `limit`, `offset`, `severity`, `threat_type`.
 
+### 12. Dashboard & Telemetry Aggregation
+- `GET /v1/dashboard/summary`
+  Aggregates real-time security posture KPIs directly from the SQLite database:
+  Returns: `{"security_status": "PROTECTED", "protection_score": 98.5, "total_requests": 1420, "blocked_requests": 18, "pii_redactions": 112, "threats_detected": 14, "critical_threats": 2, "active_agents": 4, "running_tasks": 3, "pending_approvals": 1, "last_updated": "..."}`
+- `GET /v1/dashboard/threat-statistics`
+  Returns aggregated threat distribution by severity, by threat type, and historical 7-day request/threat volume buckets.
+- `GET /v1/dashboard/system-health`
+  Returns sub-millisecond execution probe latencies and operational statuses for AI Gateway, Privacy Engine, Agent Broker, Threat Detector, and SQLite WAL database.
+- `GET /v1/tasks`
+  Lists task sessions with optional filtering by status (`RUNNING`, `WAITING_FOR_APPROVAL`, `COMPLETED`, `CANCELLED`) and agent ID.
+- `POST /v1/policies`, `PUT /v1/policies/{rule_id}`, `DELETE /v1/policies/{rule_id}`
+  Manage custom policy rules with audit logging and protection against invariant violations (e.g. blocking attempts to set `CRITICAL` severity to `ALLOW`).
+
+
 

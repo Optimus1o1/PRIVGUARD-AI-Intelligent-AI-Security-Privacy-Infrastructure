@@ -45,3 +45,4 @@ Stage 4 aligns PRIVGUARD AI directly against the **OWASP 2026 Top 10 for Large L
 2. On the 3rd consecutive identical invocation, `BehaviorAnalyzer` detects identical parameter fingerprints in the sliding window.
 3. The event triggers `ThreatAction.REQUIRE_APPROVAL` or halts execution.
 4. If the agent exceeds 50 total tool calls, `ThreatAction.TERMINATE_TASK` triggers an automatic task cancellation via `task_manager.cancel_task`.
+

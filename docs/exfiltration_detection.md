@@ -59,3 +59,4 @@ PRIVGUARD AI solves this by introducing **Dynamic Context Taint Propagation**.
    If a task is tainted, outbound calls are permitted **only to explicitly allowlisted domains** (e.g., `api.privguard.internal`). Calls to external domains or arbitrary webhooks trigger `ThreatAction.BLOCK`.
 4. **Zero-Secret Payload Guarantee:**
    Regardless of destination or taint status, all arguments destined for outbound tools are scanned for credentials and private keys using [SecretScanner](file:///C:/Users/ANIKET/OneDrive/Documents/RIVA_AI/backend/app/privacy/secret_scanner.py). Any matched secret triggers an immediate hard block.
+

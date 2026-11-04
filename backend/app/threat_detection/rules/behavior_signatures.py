@@ -39,3 +39,4 @@ DEFAULT_ALLOWLISTED_DOMAINS: Set[str] = {
     "localhost",
     "127.0.0.1",
 }
+

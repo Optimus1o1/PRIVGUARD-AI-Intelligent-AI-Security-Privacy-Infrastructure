@@ -88,3 +88,4 @@ def test_indirect_prompt_injection_in_retrieved_webpage(analyzer: ContentAnalyze
     assert assessment.is_threat
     assert "[PRIVGUARD SECURITY NOTICE:" in envelope.content
     assert assessment.action == ThreatAction.QUARANTINE
+

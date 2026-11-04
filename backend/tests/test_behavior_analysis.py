@@ -146,3 +146,4 @@ def test_runaway_agent_loop_terminates_task(analyzer: BehaviorAnalyzer):
     assert assessment.action == ThreatAction.TERMINATE_TASK
     assert assessment.max_severity == ThreatSeverity.CRITICAL
     assert any(s.rule_id == "BEHAVIOR_MAX_CALLS_001" for s in assessment.signals)
+

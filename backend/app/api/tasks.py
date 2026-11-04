@@ -1,14 +1,15 @@
 """Task Management Endpoints."""
 
 from datetime import datetime
-from typing import Optional
-from fastapi import APIRouter, Depends
+from typing import List, Optional
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import desc, select
 from app.agent_security.task_manager import task_manager
 from app.core.authentication import get_current_app
 from app.database.connection import get_db_session
-from app.database.models import Application
+from app.database.models import AgentTask, Application
 
 router = APIRouter(prefix="/v1/tasks", tags=["Agent Security - Tasks"])
 
@@ -54,6 +55,44 @@ async def create_task(
     )
 
 
+@router.get("", response_model=List[TaskResponse])
+async def list_tasks(
+    status: Optional[str] = Query(None, description="Filter by status"),
+    agent_id: Optional[str] = Query(None, description="Filter by agent ID"),
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    current_app: Application = Depends(get_current_app),
+    db: AsyncSession = Depends(get_db_session),
+) -> List[TaskResponse]:
+    """Lists task sessions for the authenticated application."""
+    stmt = (
+        select(AgentTask)
+        .where(AgentTask.app_id == current_app.id)
+        .order_by(desc(AgentTask.created_at))
+        .limit(limit)
+        .offset(offset)
+    )
+    if status:
+        stmt = stmt.where(AgentTask.status == status.upper())
+    if agent_id:
+        stmt = stmt.where(AgentTask.agent_id == agent_id)
+
+    res = await db.execute(stmt)
+    tasks = res.scalars().all()
+    return [
+        TaskResponse(
+            id=t.id,
+            agent_id=t.agent_id,
+            status=t.status,
+            description=t.description,
+            created_at=t.created_at,
+            expires_at=t.expires_at,
+            completed_at=t.completed_at,
+        )
+        for t in tasks
+    ]
+
+
 @router.get("/{task_id}", response_model=TaskResponse)
 async def get_task(
     task_id: str,
@@ -90,4 +129,3 @@ async def cancel_task(
         expires_at=task.expires_at,
         completed_at=task.completed_at,
     )
-

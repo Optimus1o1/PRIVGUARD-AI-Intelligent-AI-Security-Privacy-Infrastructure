@@ -93,3 +93,4 @@ A fundamental invariant of PRIVGUARD AI is that **detection modules never direct
 - Detectors emit `ThreatAssessment` structures containing confidence-weighted `ThreatSignal` items.
 - The [PolicyEngine](file:///C:/Users/ANIKET/OneDrive/Documents/RIVA_AI/backend/app/policies/engine.py) and [ToolBroker](file:///C:/Users/ANIKET/OneDrive/Documents/RIVA_AI/backend/app/agent_security/tool_broker.py) consume these assessments and enforce appropriate controls (`ALLOW`, `FLAG`, `QUARANTINE`, `BLOCK`, `TERMINATE_TASK`).
 - Even if an adversarial prompt evades injection rules, least-privilege tool allowlists and capability token verifications still enforce authorization.
+

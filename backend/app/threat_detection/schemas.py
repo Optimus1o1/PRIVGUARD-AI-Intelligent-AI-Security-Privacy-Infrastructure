@@ -136,3 +136,4 @@ class RetrievedDocumentChunk(BaseModel):
     content: str
     expected_hash: Optional[str] = None
     metadata: Dict[str, Any] = Field(default_factory=dict)
+

@@ -143,3 +143,4 @@ def test_poisoned_rag_chunk_injection_quarantined(retrieval_validator: Retrieval
     assert assessment.is_threat
     assert assessment.action == ThreatAction.QUARANTINE
     assert any(s.threat_type == ThreatType.INDIRECT_PROMPT_INJECTION for s in assessment.signals)
+

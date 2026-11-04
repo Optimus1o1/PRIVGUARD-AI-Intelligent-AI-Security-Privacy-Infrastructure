@@ -103,3 +103,4 @@ class RetrievalSecurityValidator:
             reason=max_sig.description,
         )
         return False, assessment
+

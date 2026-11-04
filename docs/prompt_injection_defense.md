@@ -39,3 +39,4 @@ PRIVGUARD AI implements **fast, deterministic, zero-dependency token and structu
 Technical or pedagogical queries often discuss injection terms (e.g. `What does "ignore previous instructions" mean?`).
 - **Contextual Discounting:** When injection phrases appear within quotation marks and are preceded by pedagogical inquiry verbs (`how to defend against`, `what does`, `explain`, `define`), confidence is discounted and the action is downgraded from `BLOCK` to `FLAG`.
 - **Whitelisted Testing:** Admins can designate trusted evaluation test suites via `TrustLevel.TRUSTED`.
+

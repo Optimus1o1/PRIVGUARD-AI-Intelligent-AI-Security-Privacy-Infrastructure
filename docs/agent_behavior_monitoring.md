@@ -53,3 +53,4 @@ Sliding Window Evaluator (Last 20 Events):
 ### 3.4 Hard Execution Bounds
 - **Signature:** Total tool calls for a task exceeding `max_tool_calls_per_task` (default 50).
 - **Action:** `ThreatAction.TERMINATE_TASK` (`CRITICAL` severity) — cancels the task in the database and invalidates all associated capabilities.
+

@@ -113,3 +113,4 @@ def test_benign_pedagogical_query_not_hard_blocked(detector: InjectionDetector):
     assessment = detector.inspect(pedagogical)
     # Should not be hard blocked (action should be ALLOW or FLAG)
     assert assessment.action != ThreatAction.BLOCK
+

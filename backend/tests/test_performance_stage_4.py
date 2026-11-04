@@ -117,3 +117,4 @@ def test_exfiltration_detector_latency_benchmark():
     print(f"\n[BENCHMARK] ExfiltrationDetector: Avg={avg_latency:.3f}ms, P95={p95_latency:.3f}ms")
     assert avg_latency < 2.0, f"Exfiltration detector average latency {avg_latency}ms exceeded 2.0ms"
     assert p95_latency < 5.0, f"Exfiltration detector P95 latency {p95_latency}ms exceeded 5.0ms"
+

