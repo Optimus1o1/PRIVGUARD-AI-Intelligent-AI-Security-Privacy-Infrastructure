@@ -17,6 +17,7 @@ PRIVGUARD AI is an independent security and privacy enforcement layer positioned
 6. **Buffer-Before-Stream SSE Streaming:** Streams are buffered and reconstructed to detect credentials split across chunks before emitting SSE events to the client.
 7. **Bidirectional Response Inspection:** Model outputs are treated as untrusted data and scanned for leaked secrets and prompt extraction attacks.
 8. **SSRF-Proof Provider Isolation:** Client cannot specify remote upstream URLs; all endpoints resolve through server-side provider registry.
+9. **Autonomous AI Threat Defense:** Deterministic prompt injection detection, untrusted content sanitization, sliding-window agent behavior monitoring, and MITRE ATT&CK T1700 exfiltration taint tracking.
 
 ---
 
@@ -126,18 +127,19 @@ exec_res = httpx.post(
 PRIVGUARD-AI/
 ├── backend/
 │   ├── app/
-│   │   ├── api/            # Gateway, Privacy, Policies, Audit, Agents, Tasks, Capabilities, Approvals, Tools
-│   │   ├── agent_security/ # Identity, Task Manager, Capability Manager, Permission Engine, Tool Registry, Broker, Sandbox
-│   │   ├── approvals/      # Cryptographic Action-Binding, Approval Engine, Anti-Replay
-│   │   ├── core/           # Config, Authentication, Security, Exceptions
-│   │   ├── gateway/        # Upstream proxy, response inspector, secure streaming
-│   │   ├── providers/      # Provider abstraction, OpenAI-compatible, registry
-│   │   ├── privacy/        # Secret Scanner, PII Detector, Redactor, Classifier
-│   │   ├── policies/       # Deterministic Policy Engine
-│   │   ├── monitoring/     # Content-free Audit Logger
-│   │   └── database/       # Async SQLite models and connection
-│   └── tests/              # 61 automated security, adversarial, and unit tests
-├── docs/                   # Architecture, Threat Model, API Reference, Stage 2 & 3 specs
+│   │   ├── api/              # Gateway, Privacy, Policies, Audit, Agents, Tasks, Capabilities, Approvals, Tools, Threats
+│   │   ├── agent_security/   # Identity, Task Manager, Capability Manager, Permission Engine, Tool Registry, Broker, Sandbox
+│   │   ├── approvals/        # Cryptographic Action-Binding, Approval Engine, Anti-Replay
+│   │   ├── threat_detection/ # Injection Detector, Content Analyzer, Behavior Analyzer, Exfiltration Taint Tracker, Memory & Retrieval Security
+│   │   ├── core/             # Config, Authentication, Security, Exceptions
+│   │   ├── gateway/          # Upstream proxy, response inspector, secure streaming
+│   │   ├── providers/        # Provider abstraction, OpenAI-compatible, registry
+│   │   ├── privacy/          # Secret Scanner, PII Detector, Redactor, Classifier
+│   │   ├── policies/         # Deterministic Policy Engine
+│   │   ├── monitoring/       # Content-free Audit Logger
+│   │   └── database/         # Async SQLite models, migrations, WAL mode
+│   └── tests/                # 97 automated security, adversarial, and unit tests
+├── docs/                     # Architecture, Threat Model, API Reference, Stage specs
 └── README.md
 ```
 
@@ -149,6 +151,7 @@ PRIVGUARD-AI/
 - [x] **Stage 1:** Backend Foundation, API Contracts, Secret Scanner, PII Redaction, Fail-Closed Pipeline
 - [x] **Stage 2:** Live Upstream Model Proxying & Secure Streaming
 - [x] **Stage 3:** Agent Security Broker, Capability Tokens & Human Approvals
-- [ ] **Stage 4:** Advanced Threat Detection (Prompt Injection Signals)
+- [x] **Stage 4:** Advanced Threat Detection (Prompt Injection, Behavioral Analysis, Exfiltration Defense)
 - [ ] **Stage 5:** Next.js Security Dashboard & Real-Time Monitoring
+
 

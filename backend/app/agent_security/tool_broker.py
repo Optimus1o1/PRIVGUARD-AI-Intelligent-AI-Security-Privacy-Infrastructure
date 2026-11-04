@@ -19,6 +19,15 @@ from app.core.security import content_hash
 from app.database.models import Application, ToolExecutionRecord, utcnow
 from app.monitoring.audit import audit_logger
 from app.privacy.secret_scanner import secret_scanner
+from app.threat_detection import (
+    behavior_analyzer,
+    exfiltration_detector,
+    threat_response_engine,
+)
+from app.threat_detection.schemas import (
+    BehavioralEvent,
+    ThreatAction,
+)
 
 
 class ToolBroker:
@@ -32,6 +41,10 @@ class ToolBroker:
         self.caps = capability_manager
         self.approvals = approval_engine
         self.secrets = secret_scanner
+        self.behavior_analyzer = behavior_analyzer
+        self.exfiltration_detector = exfiltration_detector
+        self.threat_response = threat_response_engine
+
 
     async def execute(
         self,
@@ -81,6 +94,66 @@ class ToolBroker:
             resource=target_resource,
             consume=False,
         )
+
+        # 5b. Record Behavioral Event & Sequence Evaluation (Stage 4)
+        params_fp = content_hash(str(parameters))
+        self.behavior_analyzer.record_event(
+            BehavioralEvent(
+                agent_id=agent_id,
+                task_id=task_id,
+                tool_name=tool_name,
+                target_resource=target_resource,
+                status="ATTEMPTED",
+                timestamp=utcnow(),
+                parameters_fingerprint=params_fp,
+            )
+        )
+
+        behavior_assessment = self.behavior_analyzer.evaluate_behavior(task_id)
+        if behavior_assessment.is_threat:
+            await self.threat_response.log_threat_event(
+                db=db,
+                application_id=app.id,
+                assessment=behavior_assessment,
+                task_id=task_id,
+                agent_id=agent_id,
+                content_for_hash=str(parameters),
+            )
+            if behavior_assessment.action == ThreatAction.TERMINATE_TASK:
+                await self.task_mgr.cancel_task(db, task_id, app.id)
+                raise PrivGuardException(
+                    message=behavior_assessment.reason or "Task terminated due to anomalous runaway behavior.",
+                    status_code=403,
+                    error_code="TASK_TERMINATED_DUE_TO_THREAT",
+                )
+            elif behavior_assessment.action == ThreatAction.BLOCK:
+                raise PrivGuardException(
+                    message=behavior_assessment.reason or "Operation blocked due to anomalous tool sequence.",
+                    status_code=403,
+                    error_code="BEHAVIORAL_THREAT_BLOCKED",
+                )
+
+        # 5c. Outbound Sink & Exfiltration Defense (MITRE T1700)
+        exfil_assessment = self.exfiltration_detector.evaluate_outbound_tool(
+            task_id=task_id,
+            tool_name=tool_name,
+            params=parameters,
+        )
+        if exfil_assessment.is_threat and exfil_assessment.action == ThreatAction.BLOCK:
+            await self.threat_response.log_threat_event(
+                db=db,
+                application_id=app.id,
+                assessment=exfil_assessment,
+                task_id=task_id,
+                agent_id=agent_id,
+                content_for_hash=str(parameters),
+            )
+            raise PrivGuardException(
+                message=exfil_assessment.reason or "Outbound data exfiltration attempt blocked (MITRE T1700).",
+                status_code=403,
+                error_code="DATA_EXFILTRATION_BLOCKED",
+            )
+
 
         # 6. Human-in-the-Loop Approval Check (for High/Critical risk actions)
         if tool.requires_approval:
@@ -210,6 +283,15 @@ class ToolBroker:
             status="SUCCESS",
         )
         await db.commit()
+
+        # 11. Taint Tracking for Sensitive Resource Access (Stage 4)
+        await self.exfiltration_detector.record_access(
+            db=db,
+            task_id=task_id,
+            tool_name=tool_name,
+            resource=target_resource,
+        )
+
 
         return {
             "execution_id": exec_record.id,

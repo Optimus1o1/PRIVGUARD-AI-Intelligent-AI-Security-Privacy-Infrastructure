@@ -12,6 +12,8 @@ from app.privacy.redactor import RedactionResult, redactor
 from app.privacy.secret_scanner import SecretMatch, secret_scanner
 from app.policies.engine import policy_engine
 from app.policies.schemas import PolicyAction, PolicyDecision
+from app.threat_detection import injection_detector
+from app.threat_detection.schemas import ThreatAction
 
 
 class InspectionVerdict(BaseModel):
@@ -25,6 +27,7 @@ class InspectionVerdict(BaseModel):
     blocking_reason: Optional[str] = None
     detected_secrets: List[Dict[str, Any]] = Field(default_factory=list)
     detected_pii: List[Dict[str, Any]] = Field(default_factory=list)
+    threat_signals: List[Dict[str, Any]] = Field(default_factory=list)
     entity_counts: Dict[str, int] = Field(default_factory=dict)
     redaction_mapping: Dict[str, str] = Field(default_factory=dict)
     content_fingerprint: str
@@ -38,11 +41,12 @@ class InspectionPipeline:
         self.pii_detector = pii_detector
         self.redactor = redactor
         self.policy_engine = policy_engine
+        self.injection_detector = injection_detector
 
     def inspect_text(self, text: str) -> InspectionVerdict:
         """
         Inspects raw text through the full defense-in-depth pipeline.
-        Enforces fail-closed: secrets trigger immediate hard block.
+        Enforces fail-closed: secrets and prompt injections trigger immediate hard block.
         """
         fingerprint = content_hash(text)
 
@@ -74,10 +78,32 @@ class InspectionPipeline:
                 blocking_reason=f"Sensitive secret detected: {first_secret.secret_type} ({first_secret.preview})",
                 detected_secrets=secrets_info,
                 detected_pii=[],
+                threat_signals=[],
                 entity_counts=counts,
                 redaction_mapping={},
                 content_fingerprint=fingerprint,
             )
+
+        # 2. Second Defense: Threat & Prompt Injection Scanning (Hard fail-closed)
+        threat_eval = self.injection_detector.inspect(text)
+        if threat_eval.is_threat and threat_eval.action == ThreatAction.BLOCK:
+            first_sig = threat_eval.signals[0] if threat_eval.signals else None
+            return InspectionVerdict(
+                original_text=text,
+                sanitized_text="",
+                action=PolicyAction.BLOCK,
+                category=DataCategory.CRITICAL,
+                risk_level=RiskLevel.CRITICAL,
+                is_blocked=True,
+                blocking_reason=threat_eval.reason or (f"Threat blocked: {first_sig.description}" if first_sig else "Adversarial input"),
+                detected_secrets=[],
+                detected_pii=[],
+                threat_signals=[s.model_dump() for s in threat_eval.signals],
+                entity_counts={"THREAT": len(threat_eval.signals)},
+                redaction_mapping={},
+                content_fingerprint=fingerprint,
+            )
+
 
         # 2. Second Defense: PII Detection
         pii_matches = self.pii_detector.detect(text)

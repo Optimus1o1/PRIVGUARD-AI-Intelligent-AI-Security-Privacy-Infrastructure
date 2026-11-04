@@ -5,6 +5,7 @@ from app.core.exceptions import ResponseSecurityViolationError
 from app.core.security import content_hash
 from app.privacy.redactor import redactor
 from app.privacy.secret_scanner import secret_scanner
+from app.threat_detection import injection_detector
 
 
 class InspectedResponse(NamedTuple):
@@ -17,11 +18,12 @@ class InspectedResponse(NamedTuple):
 
 
 class ResponseSecurityInspector:
-    """Inspects raw model output for leaked credentials and restores authorized placeholders."""
+    """Inspects raw model output for leaked credentials, canary leaks, and restores authorized placeholders."""
 
     def __init__(self):
         self.secret_scanner = secret_scanner
         self.redactor = redactor
+        self.injection_detector = injection_detector
 
     def inspect_and_restore(
         self,
@@ -30,7 +32,7 @@ class ResponseSecurityInspector:
     ) -> InspectedResponse:
         """
         Validates model output against secret scanning rules and restores authorized tokens.
-        Raises ResponseSecurityViolationError if the model generated credentials.
+        Raises ResponseSecurityViolationError if the model generated credentials or leaked canaries.
         """
         if not raw_model_content:
             return InspectedResponse(
@@ -53,7 +55,17 @@ class ResponseSecurityInspector:
                 reason="Model output contained sensitive credentials or secrets.",
             )
 
-        # 2. Second Step: Reversible PII Restoration
+        # 2. Canary Token Leak Inspection
+        for canary in self.injection_detector.canary_registry:
+            if canary in raw_model_content:
+                raise ResponseSecurityViolationError(
+                    violation_type="SYSTEM_PROMPT_CANARY_LEAK",
+                    preview=f"{canary[:16]}...",
+                    reason="Model output leaked internal system prompt canary token.",
+                )
+
+        # 3. Third Step: Reversible PII Restoration
+
         restored_text = raw_model_content
         restoration_count = 0
 

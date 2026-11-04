@@ -119,5 +119,22 @@ All protected endpoints require an Application API key supplied in one of two fo
 - `POST /v1/tools/{tool_name}/execute`
   Executes a registered tool through the broker.
   Body: `{"agent_id": "...", "task_id": "...", "capability_token": "...", "parameters": {...}, "approval_id": "..."}`
-  Enforces identity, tool allowlist, schema, sandboxing, capability consumption, and human approvals.
+  Enforces identity, tool allowlist, schema, sandboxing, capability consumption, behavioral monitoring, taint tracking, and human approvals.
+
+### 11. Threat Detection & Defense
+- `POST /v1/threats/inspect`
+  Inspects arbitrary text or untrusted documents for prompt injection, hidden CSS directives, and active scripts.
+  Body: `{"text": "...", "source_type": "USER_INPUT"}`
+  Returns: `{"assessment": {...}, "trust_level": "UNTRUSTED", "sanitized_content": "...", "is_quarantined": false}`
+- `POST /v1/threats/evaluate-behavior`
+  Evaluates the sliding-window tool invocation sequence for an active task.
+  Body: `{"task_id": "..."}`
+  Returns: `ThreatAssessment` with anomalies, risk score, and recommended action.
+- `GET /v1/threats/taints/{task_id}`
+  Queries active data taint propagation status on an autonomous task.
+  Returns: `{"task_id": "...", "is_tainted": true, "tainted_resources": ["..."]}`
+- `GET /v1/threats/events`
+  Retrieves content-free audit records of threat signals and defense interventions.
+  Query params: `limit`, `offset`, `severity`, `threat_type`.
+
 

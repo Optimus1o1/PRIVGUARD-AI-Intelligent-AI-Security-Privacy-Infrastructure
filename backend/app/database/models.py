@@ -158,3 +158,34 @@ class AuditEvent(Base):
     __table_args__ = (
         Index("idx_audit_app_timestamp", "app_id", "timestamp"),
     )
+
+
+class ThreatEvent(Base):
+    """Content-free record of detected threats and defense interventions."""
+
+    __tablename__ = "threat_events"
+
+    id = Column(String(64), primary_key=True, default=lambda: f"threat_{uuid.uuid4().hex[:12]}")
+    application_id = Column(String(36), ForeignKey("applications.id"), nullable=False, index=True)
+    task_id = Column(String(64), nullable=True, index=True)
+    agent_id = Column(String(64), nullable=True, index=True)
+    threat_type = Column(String(64), nullable=False, index=True)
+    severity = Column(String(20), nullable=False, index=True)  # LOW, MEDIUM, HIGH, CRITICAL
+    confidence = Column(Float, nullable=False, default=1.0)
+    rule_id = Column(String(100), nullable=False)
+    action_taken = Column(String(30), nullable=False)  # ALLOW, FLAG, QUARANTINE, REQUIRE_APPROVAL, BLOCK, REVOKE, TERMINATE
+    content_hash = Column(String(64), nullable=False)  # SHA-256 fingerprint (strictly no raw text)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False, index=True)
+
+
+class ActiveTaint(Base):
+    """Active data taint tracked on a running task (MITRE T1700 defense)."""
+
+    __tablename__ = "active_taints"
+
+    id = Column(String(64), primary_key=True, default=lambda: f"taint_{uuid.uuid4().hex[:12]}")
+    task_id = Column(String(64), ForeignKey("agent_tasks.id"), nullable=False, index=True)
+    resource = Column(String(255), nullable=False)
+    taint_level = Column(String(50), default="CONFIDENTIAL", nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
