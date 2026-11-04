@@ -100,3 +100,4 @@ async def test_concurrent_single_use_approval_consumption(
     statuses = [res1.status_code, res2.status_code]
     assert 200 in statuses
     assert 403 in statuses
+

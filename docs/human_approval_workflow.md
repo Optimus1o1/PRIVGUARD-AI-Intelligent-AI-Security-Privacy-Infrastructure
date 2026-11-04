@@ -47,3 +47,4 @@ $$\text{action\_hash} = \text{SHA256}(\text{canonical\_json}(\text{tool\_name}, 
 * **Tamper Prevention:** Any modification of tool parameters between approval and execution triggers `APPROVAL_TAMPERING_DETECTED` (403).
 * **Anti-Replay Protection:** Once transitioned to `CONSUMED`, an approval cannot be reused; subsequent calls trigger `APPROVAL_ALREADY_CONSUMED` (403).
 * **Time Expiration:** Approvals expire after a configurable TTL (default 300s). Expired approvals cannot be executed.
+

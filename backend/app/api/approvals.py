@@ -126,3 +126,4 @@ async def reject_request(
         resolved_at=req.resolved_at,
         approver_id=req.approver_id,
     )
+

@@ -141,3 +141,4 @@ async def test_tool_output_secret_leak_blocked(
     finally:
         if leaked_file.exists():
             leaked_file.unlink()
+

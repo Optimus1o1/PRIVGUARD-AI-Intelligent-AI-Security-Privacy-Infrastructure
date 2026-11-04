@@ -73,3 +73,4 @@ async def test_cross_application_agent_isolation(
     )
     assert res_cross.status_code == 404
     assert res_cross.json()["error"]["code"] == "AGENT_NOT_FOUND"
+

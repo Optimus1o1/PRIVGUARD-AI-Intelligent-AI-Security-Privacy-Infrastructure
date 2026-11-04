@@ -22,3 +22,4 @@ Measured on local test run (`test_performance_stage_3.py`):
 * **Capability Issuance Latency:** `< 8.5 ms` P95 (DB write + token generation)
 * **Full Tool Broker Mediation Latency:** `< 12.0 ms` P95 (Identity + Tool + Capability + Output Scan + Audit DB Write)
 * All latencies well within the < 50 ms development target.
+

@@ -115,3 +115,4 @@ async def test_capability_max_uses_and_immediate_revocation(
     res_exec3 = await client.post("/v1/tools/search_web/execute", json=exec_payload2, headers=auth_headers)
     assert res_exec3.status_code == 403
     assert res_exec3.json()["error"]["code"] == "CAPABILITY_REVOKED"
+

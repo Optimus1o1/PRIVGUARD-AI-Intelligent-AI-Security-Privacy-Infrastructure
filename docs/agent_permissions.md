@@ -23,3 +23,4 @@ PRIVGUARD AI enforces a strict **Default DENY** policy for autonomous AI agent a
 | `send_email` | `HIGH` | `REQUIRE_APPROVAL` | Quarantine dispatch; requires human approval bound to recipient and body. |
 | `delete_file` | `HIGH` | `REQUIRE_APPROVAL` | Jailed strictly inside `./sandbox/`; requires human approval. |
 | `execute_code` | `CRITICAL` | `BLOCK` | Disabled in v0.1 pending containerized gVisor isolation. |
+

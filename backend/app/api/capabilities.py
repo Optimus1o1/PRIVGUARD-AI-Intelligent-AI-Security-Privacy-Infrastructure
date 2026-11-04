@@ -104,3 +104,4 @@ async def revoke_capability(
         expires_at=grant.expires_at,
         capability_token=None,
     )
+

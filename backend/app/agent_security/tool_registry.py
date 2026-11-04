@@ -157,3 +157,4 @@ class ToolRegistry:
 
 # Shared tool registry instance
 tool_registry = ToolRegistry()
+

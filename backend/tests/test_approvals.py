@@ -130,3 +130,4 @@ async def test_action_parameter_tampering_attack_detected(
     res_tamper = await client.post("/v1/tools/send_email/execute", json=tampered_payload, headers=auth_headers)
     assert res_tamper.status_code == 403
     assert res_tamper.json()["error"]["code"] == "APPROVAL_TAMPERING_DETECTED"
+

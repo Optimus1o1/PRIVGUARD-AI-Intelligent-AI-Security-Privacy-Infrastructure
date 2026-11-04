@@ -60,3 +60,4 @@ PRIVGUARD API (/v1/tools/{name}/execute)
 * **Human Approval Engine (`app/approvals/approval_engine.py`):** Binds approvals to exact action parameters via cryptographic hashing (`action_hash`). Eliminates tampering and replay attacks.
 * **Tool Registry & Executor (`app/agent_security/tool_registry.py`, `app/agent_security/executor.py`):** Central allowlist with strict parameter schemas and jailed execution handlers.
 * **Tool Broker (`app/agent_security/tool_broker.py`):** Mediates the entire execution lifecycle and scans tool outputs for secret leakage before client return.
+

@@ -16,3 +16,4 @@ Unlike self-contained, unrevocable JWTs, PRIVGUARD capability tokens are **opaqu
 2. **Usage Limits:** Enforces strict execution quotas (`max_uses`). Once the quota is exhausted, subsequent execution attempts are rejected with `CAPABILITY_MAX_USES_EXCEEDED`.
 3. **Instant Revocation:** Calling `/v1/capabilities/{id}/revoke` immediately sets `is_revoked = True`. All subsequent calls with the token fail closed instantly.
 4. **Boundary Isolation:** A capability token issued for `agent_A` cannot be used by `agent_B`, nor can a token issued for `read_file` be reused on `delete_file`.
+
