@@ -91,27 +91,10 @@ async def resolve_tenant_context(
         bearer_token = authorization.split("Bearer ", 1)[1].strip()
         api_key = bearer_token
 
-    # 1. Master Development Key (dev environment bypass with bounded scope)
-    if settings.DEBUG and api_key == settings.PRIVGUARD_MASTER_KEY:
-        tenant_id = x_tenant_id if x_tenant_id else "default_tenant"
-        ctx = TenantContext(
-            tenant_id=tenant_id,
-            organization_id=tenant_id,
-            workspace_id=x_workspace_id,
-            user_id="master_admin",
-            email="admin@privguard.internal",
-            role="ORGANIZATION_OWNER",
-            app_id="app_master_admin",
-            authenticated_via="master_key",
-            permissions=["*"],
-        )
-        set_current_tenant(ctx)
-        return ctx
-
     if not api_key:
         raise AuthenticationError("Authentication required. Provide 'X-API-Key' or 'Authorization: Bearer <token>'.")
 
-    # 2. Check for Application API Key
+    # 1. Check for Application API Key (No DEBUG backdoor)
     hashed_key = hash_api_key(api_key)
     app_query = select(Application).where(Application.api_key_hash == hashed_key)
     app_res = await db.execute(app_query)

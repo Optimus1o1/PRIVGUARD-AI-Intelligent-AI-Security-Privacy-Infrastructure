@@ -43,6 +43,11 @@
 | **Audit Ledger Tampering** | Hash-Chained Audit Ledger | Cryptographic SHA-256 hash chaining (`prev_hash || record_hash`); detects any row mutation, deletion, or insertion. |
 | **SIEM Webhook SSRF Exfiltration** | SIEM Exporter | Destination IP validation blocks internal/private subnets and loopback addresses from export destinations. |
 | **Stale Fleet Policy Desync** | Fleet Sync & Heartbeat Engine | Central authoritative broker-side revocation immediately terminates access regardless of agent heartbeat status. |
+| **Permissive CORS Credential Exposure** | CORS Middleware & Config Validator | Strict origin whitelisting (`CORS_ALLOWED_ORIGINS`); production fails closed if wildcard `*` is configured with credentials. |
+| **Accidental DEBUG Admin Bypass** | Authentication Handler & Core Config | Elimination of master key backdoor under `DEBUG`; production startup rejects `DEBUG=True` fail-closed. |
+| **Public Database / Cache Direct Probing** | Multi-Tier Network Topology | PostgreSQL and Redis isolated on `internal: true` data network with zero public port publishing. |
+| **Container Breakout & Host Filesystem Write** | Multi-Stage Dockerfiles & Compose | Non-root users (`privguard:privguard`, `nextjs:nodejs`), `no-new-privileges:true`, and read-only root filesystems with tmpfs scratch space. |
+| **Database Superuser RLS Subversion** | PostgreSQL Role Separation | Runtime application role `privguard_app` runs with `NOBYPASSRLS` and `NOSUPERUSER`; migrations execute under separate role. |
 
 ## Defense-in-Depth Principle
 

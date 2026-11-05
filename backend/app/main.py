@@ -22,8 +22,9 @@ from app.database.connection import init_db
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application startup and shutdown lifecycle management."""
-    # Initialize SQLite tables and WAL mode
-    await init_db()
+    # In development/test mode, auto-create SQLite tables; in production, Alembic handles migrations
+    if settings.ENVIRONMENT.lower() not in ("production", "prod"):
+        await init_db()
     yield
 
 
@@ -32,17 +33,28 @@ app = FastAPI(
     description="Independent security and privacy enforcement layer between AI applications, data sources, models, and tools.",
     version=settings.VERSION,
     lifespan=lifespan,
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url="/docs" if settings.ENVIRONMENT.lower() not in ("production", "prod") else None,
+    redoc_url="/redoc" if settings.ENVIRONMENT.lower() not in ("production", "prod") else None,
 )
 
-# CORS Middleware for Dashboard / Local Developer Client
+# CORS Middleware: strictly bounded origin whitelist, restricted methods and headers
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.CORS_ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=[
+        "Content-Type",
+        "Authorization",
+        "X-API-Key",
+        "X-Tenant-ID",
+        "X-Workspace-ID",
+        "X-User-ID",
+        "mcp-version",
+        "mcp-method",
+        "mcp-name",
+    ],
+    max_age=600,
 )
 
 

@@ -21,30 +21,43 @@ PRIVGUARD AI is an independent security and privacy enforcement layer positioned
 10. **Secure Personal AI Memory Vault:** User-controlled personal memory protected by AES-256-GCM envelope encryption, HKDF-SHA256 derived KEKs, staged human consent proposals, and irreversible cryptographic erasure. Zero AI training usage.
 11. **MCP 2026-07-28 Security Gateway:** Zero-trust enforcement layer mediating autonomous AI agents and external tools connected via the Model Context Protocol. Enforces Streamable HTTP header routing, destination SSRF validation, tool description poisoning defense, catalog drift quarantine, and sandboxed stdio isolation.
 12. **Enterprise Multi-Tenancy & Fleet Governance:** Complete organization-level data isolation via PostgreSQL Row-Level Security (`FORCE ROW LEVEL SECURITY`), enterprise SSO (OIDC/SAML2), SCIM 2.0 provisioning with immediate revocation, 8-role RBAC with separation of duties, departmental workspaces, central Ed25519-signed policy bundles with anti-downgrade defense, fleet drift monitoring, and tamper-evident SHA-256 hash-chained audit ledgers.
+13. **Hardened Docker & Production Deployment Packaging:** Multi-stage, non-root container images (`privguard:privguard`, `nextjs:nodejs`), three-tier isolated networks (`edge`, `application`, `data`), one-shot Alembic schema migration runner, PostgreSQL 16 with RLS and non-superuser runtime role (`privguard_app`), Redis 7.x, Caddy reverse proxy with automated TLS, and Docker Compose secret file management.
 
 ---
 
 ## Quickstart
 
-### 1. Requirements
-- Python 3.10+
-- SQLite (built-in WAL mode)
+### Option A: Docker Deployment (Recommended)
+```bash
+# 1. Initialize cryptographically secure deployment secrets
+python scripts/init_secrets.py --dir ./secrets
 
-### 2. Setup Environment
+# 2. Start the isolated multi-service stack
+docker compose up -d --build
+```
+Access the Control Center at `https://localhost` or `http://localhost`.
+
+### Option B: Local Python Development
+
+#### 1. Requirements
+- Python 3.12+
+- SQLite (built-in WAL mode) or PostgreSQL 16
+
+#### 2. Setup Environment
 ```bash
 python -m venv .venv
 .\.venv\Scripts\activate
 pip install -r backend/requirements.txt
 ```
 
-### 3. Run Test Suite
+#### 3. Run Test Suite
 ```bash
-pytest backend/tests -v --cov=app
+pytest backend/tests -q
 ```
 
-### 4. Start the Security Gateway
+#### 4. Start the Security Gateway
 ```bash
-uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
+uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
 Interactive API documentation will be available at:

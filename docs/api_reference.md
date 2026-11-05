@@ -14,11 +14,11 @@ All protected endpoints require an Application API key supplied in one of two fo
 
 ## Endpoints
 
-### 1. Health & Liveness
-- `GET /health`
-  Returns service health and version.
-- `GET /ready`
-  Returns operational status and fail-closed flags.
+### 1. Health, Liveness & Readiness Probes
+- `GET /health/live` (alias: `GET /health`)
+  Process liveness probe for container orchestrators (Docker, Kubernetes). Returns `{"status": "healthy", "service": "...", "version": "...", "environment": "..."}` without failing when downstream databases are temporarily connecting.
+- `GET /health/ready` (alias: `GET /ready`)
+  Infrastructure readiness probe. Confirms active connectivity to the underlying PostgreSQL database (`SELECT 1`). Returns HTTP 200 `ready: true` on success, or HTTP 503 Service Unavailable `ready: false` fail-closed without leaking sensitive connection strings.
 
 ### 2. OpenAI-Compatible Chat Gateway
 - `POST /v1/chat/completions`
