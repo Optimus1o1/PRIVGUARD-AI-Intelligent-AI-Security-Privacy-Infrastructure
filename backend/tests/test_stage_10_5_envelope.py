@@ -143,10 +143,11 @@ def test_ciphertext_tampering_rejected():
         tenant_id=tenant_id,
     )
 
-    # Mutate character of base64 ciphertext
-    tampered_b64 = list(payload.ciphertext_b64)
-    tampered_b64[-2] = "A" if tampered_b64[-2] != "A" else "B"
-    tampered_payload = payload._replace(ciphertext_b64="".join(tampered_b64))
+    # Mutate raw ciphertext bytes to strictly invalidate AES-GCM auth tag
+    import base64
+    raw_ct = bytearray(base64.b64decode(payload.ciphertext_b64))
+    raw_ct[0] ^= 0xFF
+    tampered_payload = payload._replace(ciphertext_b64=base64.b64encode(raw_ct).decode("ascii"))
 
     with pytest.raises(MemoryTamperingError):
         envelope_encryption.decrypt(
