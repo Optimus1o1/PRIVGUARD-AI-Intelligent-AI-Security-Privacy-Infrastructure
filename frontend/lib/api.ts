@@ -215,4 +215,63 @@ export const api = {
     const q = sp.toString();
     return fetchJson<MCPAuditEvent[]>(`/mcp/activity${q ? `?${q}` : ""}`);
   },
+
+  // Enterprise Governance & Fleet APIs
+  getOrganizations: () =>
+    fetchJson<any[]>("/organizations"),
+  getOrganization: (id: string) =>
+    fetchJson<any>(`/organizations/${id}`),
+  getGovernanceSummary: (id: string) =>
+    fetchJson<any>(`/organizations/${id}/governance-summary`),
+  getOrganizationMembers: (id: string) =>
+    fetchJson<any[]>(`/organizations/${id}/members`),
+  inviteMember: (id: string, payload: { email: string; role: string }) =>
+    fetchJson<any>(`/organizations/${id}/members/invite`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  getWorkspaces: (orgId: string) =>
+    fetchJson<any[]>(`/organizations/${orgId}/workspaces`),
+  createWorkspace: (orgId: string, payload: { name: string; slug?: string; description?: string }) =>
+    fetchJson<any>(`/organizations/${orgId}/workspaces`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  getOrganizationPolicies: (orgId: string) =>
+    fetchJson<any[]>(`/organizations/${orgId}/policies`),
+  createPolicyBundle: (orgId: string, payload: { rules: any[]; workspace_id?: string }) =>
+    fetchJson<any>(`/organizations/${orgId}/policies`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  deployPolicyBundle: (orgId: string, bundleId: string, rolloutStage: string = "ORG_WIDE") =>
+    fetchJson<any>(`/organizations/${orgId}/policies/${bundleId}/deploy`, {
+      method: "POST",
+      body: JSON.stringify({ rollout_stage: rolloutStage }),
+    }),
+  rollbackPolicyBundle: (orgId: string, bundleId: string) =>
+    fetchJson<any>(`/organizations/${orgId}/policies/${bundleId}/rollback`, {
+      method: "POST",
+    }),
+  getFleet: (orgId: string) =>
+    fetchJson<any[]>(`/organizations/${orgId}/fleet`),
+  revokeFleetResource: (orgId: string, resourceId: string, reason: string = "Administrative revocation") =>
+    fetchJson<any>(`/organizations/${orgId}/fleet/${resourceId}/revoke`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    }),
+  getPolicySyncStatus: (orgId: string) =>
+    fetchJson<any>(`/organizations/${orgId}/policy-sync`),
+  getEnterpriseAuditTrail: (orgId: string, limit: number = 50) =>
+    fetchJson<any[]>(`/organizations/${orgId}/audit?limit=${limit}`),
+  verifyAuditIntegrity: (orgId: string) =>
+    fetchJson<{ is_valid: boolean; violations_detected: number; details: string[] }>(
+      `/organizations/${orgId}/audit/verify-integrity`
+    ),
+  exportAuditToSIEM: (orgId: string, destinationUrl: string) =>
+    fetchJson<any>(`/organizations/${orgId}/audit/export`, {
+      method: "POST",
+      body: JSON.stringify({ destination_url: destinationUrl, destination_type: "SIEM_WEBHOOK" }),
+    }),
 };
+

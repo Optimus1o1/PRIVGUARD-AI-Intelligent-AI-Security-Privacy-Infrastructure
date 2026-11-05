@@ -20,6 +20,7 @@ PRIVGUARD AI is an independent security and privacy enforcement layer positioned
 9. **Autonomous AI Threat Defense:** Deterministic prompt injection detection, untrusted content sanitization, sliding-window agent behavior monitoring, and MITRE ATT&CK T1700 exfiltration taint tracking.
 10. **Secure Personal AI Memory Vault:** User-controlled personal memory protected by AES-256-GCM envelope encryption, HKDF-SHA256 derived KEKs, staged human consent proposals, and irreversible cryptographic erasure. Zero AI training usage.
 11. **MCP 2026-07-28 Security Gateway:** Zero-trust enforcement layer mediating autonomous AI agents and external tools connected via the Model Context Protocol. Enforces Streamable HTTP header routing, destination SSRF validation, tool description poisoning defense, catalog drift quarantine, and sandboxed stdio isolation.
+12. **Enterprise Multi-Tenancy & Fleet Governance:** Complete organization-level data isolation via PostgreSQL Row-Level Security (`FORCE ROW LEVEL SECURITY`), enterprise SSO (OIDC/SAML2), SCIM 2.0 provisioning with immediate revocation, 8-role RBAC with separation of duties, departmental workspaces, central Ed25519-signed policy bundles with anti-downgrade defense, fleet drift monitoring, and tamper-evident SHA-256 hash-chained audit ledgers.
 
 ---
 

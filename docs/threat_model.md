@@ -36,6 +36,13 @@
 | **stdio Shell Injection & Privilege Escalation** | MCP stdio Sandbox | Enforces approved binary allowlist (`node`, `npx`, `python`, `uvx`), zero `shell=True`, and stripped environment. |
 | **Inbound Token Forwarding Across MCP Boundary** | Protected MCP Client | Inbound agent tokens are audience-checked for PRIVGUARD and never forwarded to upstream servers. |
 | **Upstream Tool Response Poisoning & Leakage** | MCP Security Proxy | Response scanning intercepts leaked credentials and prompt injection payloads before returning to agent. |
+| **Cross-Tenant Data Exposure** | Database RLS & Tenant Scoper | App-level query filtering combined with PostgreSQL `FORCE ROW LEVEL SECURITY`; queries scoped to `tenant_id` context. |
+| **Unauthorized Role Elevation** | RBAC Engine & Separation of Duties | Strict 8-role RBAC enforcement; bounded admin authority prevents lowering platform security invariants. |
+| **Policy Downgrade & Replay** | Ed25519 Policy Signer & Bundle Verifier | Monotonically-increasing versions, anti-downgrade enforcement, and canonical RFC 8785 Ed25519 signature checks. |
+| **Unverified SSO Domain Hijacking** | Enterprise Identity Service | Requires cryptographic DNS TXT verification token prior to enabling SSO domain auto-join. |
+| **Audit Ledger Tampering** | Hash-Chained Audit Ledger | Cryptographic SHA-256 hash chaining (`prev_hash || record_hash`); detects any row mutation, deletion, or insertion. |
+| **SIEM Webhook SSRF Exfiltration** | SIEM Exporter | Destination IP validation blocks internal/private subnets and loopback addresses from export destinations. |
+| **Stale Fleet Policy Desync** | Fleet Sync & Heartbeat Engine | Central authoritative broker-side revocation immediately terminates access regardless of agent heartbeat status. |
 
 ## Defense-in-Depth Principle
 

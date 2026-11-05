@@ -326,4 +326,29 @@ class MCPStdioSandboxError(MCPSecurityError):
         )
 
 
+class AuthorizationError(PrivGuardException):
+    """Raised when an actor lacks permission to perform a requested action."""
+
+    def __init__(self, message: str = "Access forbidden.", details: Optional[Dict[str, Any]] = None):
+        super().__init__(
+            message=message,
+            status_code=403,
+            error_code="FORBIDDEN",
+            details=details or {},
+        )
+
+
+class SecurityPolicyViolationError(PrivGuardException):
+    """Raised when an operation violates cryptographic integrity or an enterprise security policy."""
+
+    def __init__(self, message: str = "Security policy violation.", details: Optional[Dict[str, Any]] = None):
+        super().__init__(
+            message=message,
+            status_code=403,
+            error_code="SECURITY_POLICY_VIOLATION",
+            details=details or {},
+        )
+
+
+
 

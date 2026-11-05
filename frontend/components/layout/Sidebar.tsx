@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Activity,
   Bot,
+  Building2,
   CheckCircle2,
   Database,
   FileText,
@@ -22,6 +23,7 @@ import { api } from "@/lib/api";
 
 const NAV_ITEMS = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
+  { href: "/organization", label: "Enterprise Control", icon: Building2 },
   { href: "/threats", label: "Threat Monitor", icon: ShieldAlert, hasBadge: true },
   { href: "/privacy", label: "Privacy Center", icon: Lock },
   { href: "/memory", label: "Memory Vault", icon: Database },

@@ -223,6 +223,72 @@ All protected endpoints require an Application API key supplied in one of two fo
   2026-07-28 Protected MCP Server Facade. Standard Streamable HTTP JSON-RPC 2.0 endpoint for AI applications.
   Headers: `mcp-version: 2026-07-28`, `mcp-method: tools/list|tools/call|resources/list|resources/read`, `mcp-name: <tool_name>`.
 
+### 15. Enterprise Multi-Tenancy & Governance
+- `POST /v1/organizations`
+  Creates a new isolated organization tenant with default workspace and admin role assignment.
+  Body: `{"name": "...", "slug": "...", "tier": "ENTERPRISE"}`
+- `GET /v1/organizations/{org_id}`
+  Retrieves organization metadata, subscription tier, and governance summary.
+- `GET /v1/organizations/{org_id}/members`
+  Lists organization members with their RBAC role mappings.
+- `POST /v1/organizations/{org_id}/members/invite`
+  Issues a cryptographically signed email invitation for organization membership.
+  Body: `{"email": "...", "role": "DEVELOPER", "workspace_ids": [...]}`
+- `POST /v1/organizations/{org_id}/domain/verify`
+  Generates or validates DNS TXT verification token for SSO auto-provisioning domain claim.
+
+### 16. Departmental Workspaces
+- `POST /v1/organizations/{org_id}/workspaces`
+  Creates an isolated departmental workspace within the organization boundary.
+  Body: `{"name": "Engineering", "description": "...", "data_boundary_strict": true}`
+- `GET /v1/organizations/{org_id}/workspaces`
+  Lists departmental workspaces accessible to the authenticated caller.
+- `GET /v1/organizations/{org_id}/workspaces/{workspace_id}`
+  Retrieves workspace details, assigned members, and active agent count.
+
+### 17. Ed25519 Cryptographic Policy Governance
+- `GET /v1/organizations/{org_id}/policies/bundles`
+  Lists active and historical policy bundles for the organization.
+- `POST /v1/organizations/{org_id}/policies/bundles`
+  Authors, validates, canonicalizes, and Ed25519-signs a new monotonically-versioned policy bundle.
+  Body: `{"name": "...", "version": 2, "rules": [...], "target_workspaces": [...]}`
+- `POST /v1/organizations/{org_id}/policies/bundles/{bundle_id}/rollback`
+  Executes an audited, cryptographically verified rollback to a prior valid policy bundle.
+  Body: `{"reason": "...", "target_bundle_id": "..."}`
+- `GET /v1/organizations/{org_id}/policies/effective`
+  Resolves deterministic 5-layer effective policy hierarchy (Platform -> Org -> Workspace -> Agent -> Task).
+
+### 18. Fleet Management & Policy Synchronization
+- `GET /v1/organizations/{org_id}/fleet`
+  Returns central fleet inventory across registered agents and MCP servers with drift and health metrics.
+- `POST /v1/organizations/{org_id}/fleet/register`
+  Registers a new fleet agent or MCP host with ephemeral or permanent registration token.
+- `POST /v1/organizations/{org_id}/fleet/{resource_id}/heartbeat`
+  Processes heartbeat from fleet agent, returning policy bundle hash, sync status, and active killswitch commands.
+- `POST /v1/organizations/{org_id}/fleet/{resource_id}/sync`
+  Fetches full Ed25519-signed policy bundle for local agent verification and enforcement.
+- `POST /v1/organizations/{org_id}/fleet/{resource_id}/revoke`
+  Executes central authoritative broker-side revocation, immediately disabling agent/server execution.
+
+### 19. SCIM 2.0 Identity Provisioning
+- `GET /v1/scim/v2/Users`
+  SCIM 2.0 user directory query endpoint for IdPs (Okta, Entra ID, Ping).
+- `POST /v1/scim/v2/Users`
+  Provisions a new user from IdP with auto-role mapping based on SCIM groups.
+- `PATCH /v1/scim/v2/Users/{user_id}`
+  Applies incremental user attribute updates or suspends user access.
+- `DELETE /v1/scim/v2/Users/{user_id}`
+  Deprovisions user, immediately revoking active sessions, approvals, and capability tokens.
+
+### 20. Tamper-Evident Audit Ledger & SIEM Export
+- `GET /v1/organizations/{org_id}/audit/ledger`
+  Retrieves sequential SHA-256 hash-chained enterprise audit ledger records.
+- `POST /v1/organizations/{org_id}/audit/verify`
+  Scans full audit ledger and cryptographically verifies hash-chain integrity from genesis.
+- `POST /v1/organizations/{org_id}/audit/export`
+  Dispatches tamper-evident audit records to external SIEM destination (Splunk, Datadog, Webhook) with SSRF loopback defense.
+
+
 
 
 
