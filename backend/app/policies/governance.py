@@ -157,6 +157,24 @@ class PolicyGovernanceManager:
         bundle.rollout_stage = rollout_stage
         bundle.activated_at = utcnow()
 
+        # Emit transactional outbox event for distributed policy synchronization
+        from app.infrastructure.outbox import emit_outbox_event
+        emit_outbox_event(
+            session=db,
+            event_type="POLICY_ACTIVATED",
+            aggregate_id=bundle.id,
+            payload={
+                "organization_id": bundle.organization_id,
+                "workspace_id": bundle.workspace_id,
+                "version": bundle.version,
+                "policy_hash": bundle.policy_hash,
+                "rollout_stage": rollout_stage,
+            },
+            tenant_id=bundle.organization_id,
+            workspace_id=bundle.workspace_id,
+            aggregate_version=bundle.version,
+        )
+
         await db.commit()
         await db.refresh(bundle)
         return bundle
@@ -195,6 +213,23 @@ class PolicyGovernanceManager:
         target.status = "ACTIVE"
         target.deployed_by = deployed_by
         target.activated_at = utcnow()
+
+        # Emit transactional outbox event for distributed policy rollback
+        from app.infrastructure.outbox import emit_outbox_event
+        emit_outbox_event(
+            session=db,
+            event_type="POLICY_ROLLED_BACK",
+            aggregate_id=target.id,
+            payload={
+                "organization_id": target.organization_id,
+                "workspace_id": target.workspace_id,
+                "version": target.version,
+                "policy_hash": target.policy_hash,
+            },
+            tenant_id=target.organization_id,
+            workspace_id=target.workspace_id,
+            aggregate_version=target.version,
+        )
 
         await db.commit()
         await db.refresh(target)

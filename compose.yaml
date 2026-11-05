@@ -112,6 +112,40 @@ services:
       - migration_password
 
   # ----------------------------------------------------------------------------
+  # 4b. Background Event Worker (Distributed Outbox & Stream Processing)
+  # ----------------------------------------------------------------------------
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: privguard/backend:0.1.0
+    container_name: privguard-worker
+    restart: unless-stopped
+    command: ["python", "-m", "app.infrastructure.event_worker"]
+    networks:
+      - application
+      - data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    environment:
+      - ENVIRONMENT=production
+      - DEBUG=false
+      - DATABASE_URL=postgresql+asyncpg://privguard_app:${DATABASE_PASSWORD}@postgres:5432/privguard_db
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - PRIVGUARD_MASTER_KEY_FILE=/run/secrets/privguard_master_key
+      - DATABASE_PASSWORD_FILE=/run/secrets/postgres_password
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
+    secrets:
+      - privguard_master_key
+      - postgres_password
+      - redis_password
+
+  # ----------------------------------------------------------------------------
   # 5. Database Tier: PostgreSQL 16 with Row-Level Security
   # ----------------------------------------------------------------------------
   postgres:

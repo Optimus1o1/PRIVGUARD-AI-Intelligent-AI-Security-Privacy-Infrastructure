@@ -48,6 +48,11 @@
 | **Public Database / Cache Direct Probing** | Multi-Tier Network Topology | PostgreSQL and Redis isolated on `internal: true` data network with zero public port publishing. |
 | **Container Breakout & Host Filesystem Write** | Multi-Stage Dockerfiles & Compose | Non-root users (`privguard:privguard`, `nextjs:nodejs`), `no-new-privileges:true`, and read-only root filesystems with tmpfs scratch space. |
 | **Database Superuser RLS Subversion** | PostgreSQL Role Separation | Runtime application role `privguard_app` runs with `NOBYPASSRLS` and `NOSUPERUSER`; migrations execute under separate role. |
+| **Distributed Rate Limit Bypass** | Distributed Rate Limiter | Atomic Redis Lua sliding-window rate limiting evaluates cluster-wide quotas; local fail-safe enforces sensitive quotas on outage. |
+| **Dual-Write State Desynchronization** | Transactional Outbox | Atomic SQL transaction bundles state mutations with `OutboxEvent`; outbox relay ensures at-least-once Redis Stream delivery. |
+| **Stale Cross-Replica Revocation Window** | Agent Security Broker | Tool execution verifies agent and capability status against PostgreSQL authority at dispatch time; sub-millisecond Redis invalidation. |
+| **Cross-Node Covert Exfiltration** | Distributed Taint Store | Monotonic task taint persistence in PostgreSQL `active_taints` and Redis sets prevents exfiltration across multi-replica clusters. |
+| **Connection Pool Tenant Contamination** | Database Session Manager | Transaction-scoped `SET LOCAL app.current_tenant_id` combined with deterministic `finally: RESET` prevents cross-tenant RLS leakage across pooled connections. |
 
 ## Defense-in-Depth Principle
 

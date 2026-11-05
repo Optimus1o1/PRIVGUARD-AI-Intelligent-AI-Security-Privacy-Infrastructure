@@ -9,12 +9,25 @@ from app.core.config import settings
 Base = declarative_base()
 
 # Async DB engine
-engine = create_async_engine(
-    settings.DATABASE_URL,
-    echo=settings.DEBUG,
-    future=True,
-    connect_args={"check_same_thread": False, "timeout": 60.0} if "sqlite" in settings.DATABASE_URL else {},
-)
+is_postgres = "postgres" in settings.DATABASE_URL
+engine_kwargs = {
+    "echo": settings.DEBUG,
+    "future": True,
+}
+if is_postgres:
+    engine_kwargs.update({
+        "pool_size": 20,
+        "max_overflow": 10,
+        "pool_timeout": 30.0,
+        "pool_recycle": 1800,
+        "pool_pre_ping": True,
+    })
+else:
+    engine_kwargs.update({
+        "connect_args": {"check_same_thread": False, "timeout": 60.0}
+    })
+
+engine = create_async_engine(settings.DATABASE_URL, **engine_kwargs)
 
 # Async session factory
 AsyncSessionLocal = async_sessionmaker(
@@ -24,6 +37,25 @@ AsyncSessionLocal = async_sessionmaker(
     autocommit=False,
     autoflush=False,
 )
+
+
+def get_pool_status() -> dict:
+    """Returns the current connection pool status and metrics."""
+    pool = engine.pool
+    # NullPool or StaticPool (used in tests or SQLite) may not have checkedin/checkedout
+    status = {
+        "pool_type": pool.__class__.__name__,
+        "is_postgres": is_postgres,
+    }
+    if hasattr(pool, "size"):
+        status["pool_size"] = pool.size()
+    if hasattr(pool, "checkedin"):
+        status["checked_in"] = pool.checkedin()
+    if hasattr(pool, "checkedout"):
+        status["checked_out"] = pool.checkedout()
+    if hasattr(pool, "overflow"):
+        status["overflow"] = pool.overflow()
+    return status
 
 
 async def init_db() -> None:
@@ -38,14 +70,22 @@ async def init_db() -> None:
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     """Dependency that yields an async database session configured with active tenant context."""
     async with AsyncSessionLocal() as session:
+        tenant_set = False
         try:
             from app.core.tenant import get_current_tenant_id
-            from app.database.rls import set_db_tenant_context
+            from app.database.rls import set_db_tenant_context, reset_db_tenant_context
             tenant_id = get_current_tenant_id()
             if tenant_id:
                 await set_db_tenant_context(session, tenant_id)
+                tenant_set = True
             yield session
             await session.commit()
         except Exception:
             await session.rollback()
             raise
+        finally:
+            if tenant_set:
+                try:
+                    await reset_db_tenant_context(session)
+                except Exception:
+                    pass

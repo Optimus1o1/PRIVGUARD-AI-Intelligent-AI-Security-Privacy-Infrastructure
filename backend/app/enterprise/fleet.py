@@ -198,6 +198,20 @@ class FleetManager:
             .values(is_revoked=True)
         )
 
+        # Emit transactional outbox event for distributed revocation
+        from app.infrastructure.outbox import emit_outbox_event
+        emit_outbox_event(
+            session=db,
+            event_type="AGENT_REVOKED" if (resource and resource.resource_type == "AGENT") else "FLEET_RESOURCE_REVOKED",
+            aggregate_id=resource_id,
+            payload={
+                "reason": reason,
+                "resource_type": resource.resource_type if resource else "AGENT",
+            },
+            tenant_id=tenant_id,
+            workspace_id=resource.workspace_id if resource else None,
+        )
+
         await db.commit()
         if resource:
             await db.refresh(resource)

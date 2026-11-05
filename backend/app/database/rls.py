@@ -31,6 +31,7 @@ TENANT_OWNED_TABLES: List[str] = [
     "integration_credentials",
     "enterprise_audit_events",
     "audit_export_jobs",
+    "outbox_events",
 ]
 
 

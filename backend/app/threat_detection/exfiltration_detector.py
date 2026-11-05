@@ -20,6 +20,7 @@ from app.threat_detection.rules.behavior_signatures import (
 )
 from app.privacy.secret_scanner import SecretScanner
 from app.database.models import ActiveTaint
+from app.infrastructure.taint_store import DistributedTaintStore
 
 
 class ExfiltrationDetector:
@@ -29,11 +30,13 @@ class ExfiltrationDetector:
         self,
         secret_scanner: SecretScanner,
         allowlisted_destinations: Optional[Set[str]] = None,
+        taint_store: Optional[DistributedTaintStore] = None,
     ) -> None:
         self.secret_scanner = secret_scanner
         self.allowlisted_destinations = allowlisted_destinations or set(DEFAULT_ALLOWLISTED_DOMAINS)
         # In-memory fast cache of tainted tasks: task_id -> set of tainted resources
         self._tainted_tasks: Dict[str, Set[str]] = {}
+        self.taint_store = taint_store or DistributedTaintStore()
 
     def is_confidential_resource(self, resource: Optional[str]) -> bool:
         """Determines if a target resource path or identifier contains confidential patterns."""
@@ -59,6 +62,7 @@ class ExfiltrationDetector:
         task_id: str,
         tool_name: str,
         resource: Optional[str],
+        tenant_id: str = "default_tenant",
     ) -> bool:
         """Evaluates whether tool access taints the task context with confidential data."""
         if tool_name in SENSITIVE_READ_TOOLS and self.is_confidential_resource(resource):
@@ -66,29 +70,62 @@ class ExfiltrationDetector:
                 self._tainted_tasks[task_id] = set()
             self._tainted_tasks[task_id].add(resource)
 
-            # Persist active taint record
-            taint_rec = ActiveTaint(
+            # Persist and cache across distributed cluster
+            await self.taint_store.add_taint(
+                db=db,
                 task_id=task_id,
                 resource=resource,
-                taint_level="CONFIDENTIAL",
+                tenant_id=tenant_id,
+                classification="CONFIDENTIAL",
             )
-            db.add(taint_rec)
-            await db.commit()
             return True
         return False
 
     def is_task_tainted(self, task_id: str) -> bool:
-        """Checks if a task context currently carries confidential taint."""
+        """Checks if a task context currently carries confidential taint in local memory."""
         return task_id in self._tainted_tasks and len(self._tainted_tasks[task_id]) > 0
 
+    async def is_task_tainted_async(
+        self,
+        db: AsyncSession,
+        task_id: str,
+        tenant_id: str = "default_tenant",
+    ) -> bool:
+        """Monotonically checks if a task context carries confidential taint across replicas."""
+        if self.is_task_tainted(task_id):
+            return True
+        return await self.taint_store.is_task_tainted(db, task_id, tenant_id)
+
     def get_task_taints(self, task_id: str) -> List[str]:
-        """Returns the list of tainted resources for a task."""
+        """Returns the list of tainted resources for a task from local cache."""
         return list(self._tainted_tasks.get(task_id, set()))
+
+    async def get_task_taints_async(
+        self,
+        db: AsyncSession,
+        task_id: str,
+        tenant_id: str = "default_tenant",
+    ) -> List[str]:
+        """Returns the list of tainted resources across distributed cluster."""
+        local_taints = self.get_task_taints(task_id)
+        if local_taints:
+            return local_taints
+        return await self.taint_store.get_task_taints(db, task_id, tenant_id)
 
     def clear_task_taint(self, task_id: str) -> None:
         """Clears in-memory taint cache for a task."""
         if task_id in self._tainted_tasks:
             del self._tainted_tasks[task_id]
+
+    async def clear_task_taint_async(
+        self,
+        db: AsyncSession,
+        task_id: str,
+        tenant_id: str = "default_tenant",
+    ) -> None:
+        """Clears in-memory and distributed taint records across cluster."""
+        self.clear_task_taint(task_id)
+        await self.taint_store.clear_task_taints(db, task_id, tenant_id)
 
     def _extract_destination_host(self, params: dict) -> Optional[str]:
         """Extracts destination host/domain from outbound tool parameters."""

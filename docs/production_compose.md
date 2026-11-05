@@ -24,6 +24,7 @@ PRIVGUARD AI provides a layered Docker Compose setup:
 | `migrate` | `privguard/backend:0.1.0` | `data` | None (ephemeral) | One-shot Alembic migration runner (`alembic upgrade head`). |
 | `postgres` | `postgres:16-alpine` | `data` | None (5432 internal) | Persistent relational store enforcing PostgreSQL Row-Level Security. |
 | `redis` | `redis:7-alpine` | `data` | None (6379 internal) | Isolated cache and coordination store with ACL password authentication. |
+| `worker` | `privguard/backend:0.1.0` | `application`, `data` | None | Background event worker polling transactional outbox and dispatching Redis Streams. |
 
 ---
 

@@ -55,6 +55,21 @@ services:
           cpus: "1.0"
           memory: 512M
 
+  worker:
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.2"
+          memory: 128M
+
   postgres:
     security_opt:
       - no-new-privileges:true

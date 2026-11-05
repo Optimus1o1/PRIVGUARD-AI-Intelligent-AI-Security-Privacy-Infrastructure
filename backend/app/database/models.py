@@ -654,3 +654,22 @@ class AuditExportJob(Base):
     error_message = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
     completed_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class OutboxEvent(Base):
+    """Transactional Outbox for reliable, at-least-once distributed event publication."""
+
+    __tablename__ = "outbox_events"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    tenant_id = Column(String(64), nullable=False, default="default_tenant", index=True)
+    workspace_id = Column(String(64), nullable=True, index=True)
+    event_type = Column(String(64), nullable=False, index=True)  # e.g. AGENT_REVOKED, POLICY_ACTIVATED
+    aggregate_id = Column(String(64), nullable=False, index=True)
+    aggregate_version = Column(Integer, default=1, nullable=False)
+    payload = Column(Text, nullable=False, default="{}")  # Sanitized JSON metadata (content-free)
+    status = Column(String(20), default="PENDING", nullable=False, index=True)  # PENDING, PUBLISHED, FAILED, DEAD_LETTER
+    retry_count = Column(Integer, default=0, nullable=False)
+    last_attempt_at = Column(DateTime(timezone=True), nullable=True)
+    published_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False, index=True)

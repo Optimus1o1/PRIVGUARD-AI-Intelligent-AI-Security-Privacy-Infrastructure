@@ -221,6 +221,23 @@ class CapabilityManager:
             )
 
         grant.is_revoked = True
+
+        # Emit transactional outbox event for distributed revocation
+        from app.infrastructure.outbox import emit_outbox_event
+        emit_outbox_event(
+            session=db,
+            event_type="CAPABILITY_REVOKED",
+            aggregate_id=grant.id,
+            payload={
+                "agent_id": grant.agent_id,
+                "task_id": grant.task_id,
+                "tool_name": grant.tool_name,
+                "app_id": grant.app_id,
+            },
+            tenant_id=getattr(grant, "tenant_id", "default_tenant"),
+            workspace_id=getattr(grant, "workspace_id", None),
+        )
+
         await db.commit()
         await db.refresh(grant)
         return grant

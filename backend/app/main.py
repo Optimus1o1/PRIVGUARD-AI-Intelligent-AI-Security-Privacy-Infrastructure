@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from app.api import agents, approvals, audit, capabilities, dashboard, enterprise, fleet, gateway, health, identity, mcp, memory, policies, privacy, tasks, threats, tools, workspaces
+from app.api import agents, approvals, audit, capabilities, dashboard, enterprise, fleet, gateway, health, identity, mcp, memory, policies, privacy, system, tasks, threats, tools, workspaces
 from app.core.config import settings
 from app.core.exceptions import (
     AuthenticationError,
@@ -25,7 +25,18 @@ async def lifespan(app: FastAPI):
     # In development/test mode, auto-create SQLite tables; in production, Alembic handles migrations
     if settings.ENVIRONMENT.lower() not in ("production", "prod"):
         await init_db()
+    # Initialize redis pool if configured
+    try:
+        from app.infrastructure.redis_client import init_redis, close_redis
+        await init_redis()
+    except Exception:
+        pass
     yield
+    try:
+        from app.infrastructure.redis_client import close_redis
+        await close_redis()
+    except Exception:
+        pass
 
 
 app = FastAPI(
@@ -147,6 +158,7 @@ app.include_router(enterprise.router)
 app.include_router(workspaces.router)
 app.include_router(fleet.router)
 app.include_router(identity.router)
+app.include_router(system.router)
 
 
 
