@@ -196,5 +196,33 @@ All protected endpoints require an Application API key supplied in one of two fo
 - `GET /v1/memory/audit`
   Returns content-free memory vault audit trail.
 
+### 14. Model Context Protocol (MCP) Security Gateway
+- `POST /v1/mcp/servers`
+  Registers an upstream MCP server after strict destination SSRF or stdio command validation.
+  Body: `{"name": "...", "transport_type": "streamable_http|stdio", "endpoint_url": "...", "command": "...", "args": [...], "auth_type": "..."}`
+- `GET /v1/mcp/servers`
+  Lists registered upstream MCP servers and their trust status.
+- `GET /v1/mcp/servers/{server_id}`
+  Retrieves detailed server status, catalog fingerprint, and connection metadata.
+- `POST /v1/mcp/servers/{server_id}/sync`
+  Discovers upstream tool catalog, executes prompt injection & imperative smuggling scan, and detects catalog drift.
+- `POST /v1/mcp/servers/{server_id}/approve`
+  Human administrator approves drifted catalog, lifting quarantine (`REQUIRES_REAPPROVAL`).
+- `POST /v1/mcp/servers/{server_id}/disable`
+  Disables an MCP server, blocking all subsequent tool execution attempts.
+- `DELETE /v1/mcp/servers/{server_id}`
+  Removes server registration and purges its tool and resource definitions.
+- `GET /v1/mcp/tools`
+  Lists discovered tools with optional filters: `server_id`, `risk_level`.
+- `POST /v1/mcp/servers/{server_id}/tools/{tool_name}/call`
+  Executes a tool through PRIVGUARD's 9-step mediation proxy (validating drift, parameters, capability tokens, human approvals, and output response security).
+  Body: `{"parameters": {...}, "agent_id": "...", "task_id": "...", "capability_token": "...", "approval_id": "..."}`
+- `GET /v1/mcp/activity`
+  Retrieves content-free audit trail of MCP tool calls, catalog syncs, and security blocks.
+- `POST /mcp`
+  2026-07-28 Protected MCP Server Facade. Standard Streamable HTTP JSON-RPC 2.0 endpoint for AI applications.
+  Headers: `mcp-version: 2026-07-28`, `mcp-method: tools/list|tools/call|resources/list|resources/read`, `mcp-name: <tool_name>`.
+
+
 
 

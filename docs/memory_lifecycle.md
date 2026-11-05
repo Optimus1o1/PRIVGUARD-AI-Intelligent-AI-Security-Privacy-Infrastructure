@@ -95,3 +95,4 @@ If another process updated the record between reading and writing:
 - `rowcount == 0`
 - PRIVGUARD raises `409 Conflict` (`MEMORY_VERSION_CONFLICT`)
 - The caller must reload the latest version and reconcile updates.
+

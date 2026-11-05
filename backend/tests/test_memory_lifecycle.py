@@ -111,6 +111,16 @@ async def test_cryptographic_erasure(db_session, setup_life_env):
         category="TASK_CONTEXT",
     )
 
+    # Update to version 2 so version 1 is archived into MemoryVersion
+    await memory_vault.update_memory(
+        db=db_session,
+        app_id=app.id,
+        owner_id=owner_id,
+        memory_id=mem.id,
+        new_value="Updated sensitive note v2",
+        expected_version=1,
+    )
+
     # Delete memory
     deleted = await memory_vault.delete_memory(db_session, app.id, owner_id, mem.id)
     assert deleted is True
@@ -128,6 +138,14 @@ async def test_cryptographic_erasure(db_session, setup_life_env):
     assert r.wrapped_dek == "[DEK_DESTROYED]"
     assert r.nonce == "[WIPED]"
     assert r.dek_nonce == "[WIPED]"
+
+    # Inspect archived historical version in MemoryVersion
+    stmt_v = select(MemoryVersion).where(MemoryVersion.memory_id == mem.id)
+    archived_v = (await db_session.execute(stmt_v)).scalars().all()
+    assert len(archived_v) == 1
+    assert archived_v[0].encrypted_content == "[CRYPTOGRAPHICALLY_ERASED]"
+    assert archived_v[0].wrapped_dek == "[DEK_DESTROYED]"
+    assert archived_v[0].nonce == "[WIPED]"
 
 
 @pytest.mark.asyncio
@@ -183,3 +201,4 @@ async def test_account_vault_purge(db_session, setup_life_env):
         assert r.status == "DELETED"
         assert r.encrypted_content == "[CRYPTOGRAPHICALLY_ERASED]"
         assert r.wrapped_dek == "[DEK_DESTROYED]"
+

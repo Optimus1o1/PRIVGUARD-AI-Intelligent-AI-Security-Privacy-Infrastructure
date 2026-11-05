@@ -65,3 +65,4 @@ flowchart TD
 - **Application Isolation:** Database queries strictly enforce `MemoryRecord.app_id == current_app.id`. Tenants cannot view, query, or affect each other's memories.
 - **Owner Isolation:** Memory retrieval queries strictly filter `MemoryRecord.owner_id == owner_id`. Even with global read permissions within an app, Agent A servicing User X cannot retrieve records owned by User Y.
 - **Audit Immutability:** Every permission check, grant, and revocation is recorded to `MemoryAuditEvent` with timestamp, agent ID, operation, and outcome.
+

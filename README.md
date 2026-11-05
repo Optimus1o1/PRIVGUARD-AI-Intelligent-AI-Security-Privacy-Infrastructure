@@ -19,6 +19,7 @@ PRIVGUARD AI is an independent security and privacy enforcement layer positioned
 8. **SSRF-Proof Provider Isolation:** Client cannot specify remote upstream URLs; all endpoints resolve through server-side provider registry.
 9. **Autonomous AI Threat Defense:** Deterministic prompt injection detection, untrusted content sanitization, sliding-window agent behavior monitoring, and MITRE ATT&CK T1700 exfiltration taint tracking.
 10. **Secure Personal AI Memory Vault:** User-controlled personal memory protected by AES-256-GCM envelope encryption, HKDF-SHA256 derived KEKs, staged human consent proposals, and irreversible cryptographic erasure. Zero AI training usage.
+11. **MCP 2026-07-28 Security Gateway:** Zero-trust enforcement layer mediating autonomous AI agents and external tools connected via the Model Context Protocol. Enforces Streamable HTTP header routing, destination SSRF validation, tool description poisoning defense, catalog drift quarantine, and sandboxed stdio isolation.
 
 ---
 
@@ -138,11 +139,12 @@ The Control Center will be accessible at: `http://localhost:3000`
 PRIVGUARD-AI/
 ├── backend/
 │   ├── app/
-│   │   ├── api/              # Gateway, Privacy, Policies, Audit, Agents, Tasks, Capabilities, Approvals, Tools, Threats, Dashboard, Memory
+│   │   ├── api/              # Gateway, Privacy, Policies, Audit, Agents, Tasks, Capabilities, Approvals, Tools, Threats, Dashboard, Memory, MCP
 │   │   ├── agent_security/   # Identity, Task Manager, Capability Manager, Permission Engine, Tool Registry, Broker, Sandbox
 │   │   ├── approvals/        # Cryptographic Action-Binding, Approval Engine, Anti-Replay
 │   │   ├── memory/           # Envelope Encryption, HKDF KEK Provider, Validator, Permissions, Vault, Retrieval Service
-│   │   ├── sdk/              # Python Client SDK (PrivGuardMemoryClient)
+│   │   ├── mcp/              # MCP Destination Validator (SSRF), Registry & Drift Defense, stdio Sandbox, Protected Client, Security Proxy
+│   │   ├── sdk/              # Python Client SDK (PrivGuardMemoryClient, PrivGuardMCPClient)
 │   │   ├── threat_detection/ # Injection Detector, Content Analyzer, Behavior Analyzer, Exfiltration Taint Tracker, Memory & Retrieval Security
 │   │   ├── core/             # Config, Authentication, Security, Exceptions
 │   │   ├── gateway/          # Upstream proxy, response inspector, secure streaming
@@ -151,12 +153,12 @@ PRIVGUARD-AI/
 │   │   ├── policies/         # Deterministic Policy Engine
 │   │   ├── monitoring/       # Content-free Audit Logger
 │   │   └── database/         # Async SQLite models, migrations, WAL mode
-│   └── tests/                # 171 automated security, red-team, adversarial, load, API, and memory vault tests
+│   └── tests/                # 213 automated security, red-team, adversarial, load, API, memory vault, and MCP gateway tests
 ├── frontend/                 # Next.js 14 App Router, TypeScript, Tailwind CSS, BFF Security Proxy
-│   ├── app/                  # Security Overview, Approvals, Agents, Topology Map, Threats, Privacy, Memory Vault, Tasks, Activity, Diagnostics
+│   ├── app/                  # Security Overview, Approvals, Agents, Topology Map, Threats, Privacy, Memory Vault, MCP Gateway, Tasks, Activity, Diagnostics
 │   ├── components/           # Radial Segmented Protection Gauge, Metric Cards, Forecast Charts, Tables, Modals
 │   └── lib/                  # Type-safe API client, types, BFF handlers
-├── docs/                     # Architecture, Threat Model, AISVS Assessment, Red Team Report, Attack Scenarios, Memory Vault Architecture, Encryption & Lifecycle Specs
+├── docs/                     # Architecture, Threat Model, AISVS Assessment, Red Team Report, Attack Scenarios, Memory Vault & MCP Gateway Specs
 └── README.md
 ```
 
@@ -172,5 +174,6 @@ PRIVGUARD-AI/
 - [x] **Stage 5:** Privacy & Security Control Center (Next.js 14 App Router, BFF Security Proxy, OWASP 2026 Telemetry)
 - [x] **Stage 6:** End-to-End Integration, Red Teaming & Security Validation (OWASP AISVS 1.0, 142 Automated Tests)
 - [x] **Stage 7:** Secure Personal AI Memory Vault (AES-256-GCM Envelope Encryption, Consent Proposals, Memory Poisoning Defense, Bounded Retrieval, Cryptographic Erasure, 171 Automated Tests)
+- [x] **Stage 8:** MCP Security Integration (Model Context Protocol 2026-07-28 Gateway, SSRF Destination Defense, Tool Poisoning & Drift Quarantine, Sandboxed stdio Isolation, 213 Automated Tests)
 
 

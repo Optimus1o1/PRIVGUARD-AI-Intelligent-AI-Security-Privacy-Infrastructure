@@ -321,3 +321,91 @@ class MemoryAuditEvent(Base):
     content_fingerprint = Column(String(64), nullable=True)
     timestamp = Column(DateTime(timezone=True), default=utcnow, nullable=False, index=True)
 
+
+# ==============================================================================
+# STAGE 8: MCP SECURITY GATEWAY MODELS
+# ==============================================================================
+
+class MCPServer(Base):
+    """Registered upstream Model Context Protocol (MCP) server configuration."""
+
+    __tablename__ = "mcp_servers"
+
+    id = Column(String(64), primary_key=True, default=lambda: f"mcp_srv_{uuid.uuid4().hex[:12]}")
+    app_id = Column(String(36), ForeignKey("applications.id"), nullable=False, index=True)
+    name = Column(String(100), nullable=False)
+    description = Column(String(255), nullable=True)
+    transport_type = Column(String(30), default="streamable_http", nullable=False)
+    # streamable_http, stdio
+    endpoint_url = Column(String(512), nullable=True)
+    command = Column(String(255), nullable=True)
+    args = Column(Text, default="[]", nullable=False)  # JSON list
+    env_vars = Column(Text, default="{}", nullable=False)  # JSON dict with encrypted or secret references
+    status = Column(String(30), default="ACTIVE", nullable=False, index=True)
+    # ACTIVE, DISABLED, DISCONNECTED, QUARANTINED, REQUIRES_REAPPROVAL
+    trust_level = Column(String(30), default="UNTRUSTED", nullable=False)
+    # TRUSTED, UNTRUSTED, PROBATION
+    catalog_fingerprint = Column(String(64), nullable=True)
+    auth_type = Column(String(30), default="NONE", nullable=False)
+    # NONE, API_KEY, BEARER_TOKEN, OAUTH2
+    auth_credential_ref = Column(String(255), nullable=True)
+    last_connected_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class MCPToolDefinition(Base):
+    """Tool definitions discovered from an upstream MCP server or exposed by PRIVGUARD."""
+
+    __tablename__ = "mcp_tool_definitions"
+
+    id = Column(String(64), primary_key=True, default=lambda: f"mcpt_{uuid.uuid4().hex[:12]}")
+    server_id = Column(String(64), ForeignKey("mcp_servers.id"), nullable=False, index=True)
+    app_id = Column(String(36), ForeignKey("applications.id"), nullable=False, index=True)
+    name = Column(String(100), nullable=False, index=True)
+    description = Column(Text, nullable=True)
+    input_schema = Column(Text, default="{}", nullable=False)  # JSON schema string
+    risk_level = Column(String(20), default="MEDIUM", nullable=False)
+    # LOW, MEDIUM, HIGH, CRITICAL
+    requires_approval = Column(Boolean, default=False, nullable=False)
+    is_approved = Column(Boolean, default=True, nullable=False)
+    version = Column(Integer, default=1, nullable=False)
+    definition_hash = Column(String(64), nullable=False)  # SHA-256 of canonical definition
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class MCPResourceDefinition(Base):
+    """Resource representations discovered from an upstream MCP server."""
+
+    __tablename__ = "mcp_resource_definitions"
+
+    id = Column(String(64), primary_key=True, default=lambda: f"mcpr_{uuid.uuid4().hex[:12]}")
+    server_id = Column(String(64), ForeignKey("mcp_servers.id"), nullable=False, index=True)
+    app_id = Column(String(36), ForeignKey("applications.id"), nullable=False, index=True)
+    uri = Column(String(512), nullable=False, index=True)
+    name = Column(String(100), nullable=False)
+    description = Column(String(255), nullable=True)
+    mime_type = Column(String(100), default="text/plain", nullable=False)
+    risk_level = Column(String(20), default="LOW", nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class MCPAuditEvent(Base):
+    """Audit events specifically tracking MCP gateway operations and security interventions."""
+
+    __tablename__ = "mcp_audit_events"
+
+    id = Column(String(64), primary_key=True, default=lambda: f"mcpaudit_{uuid.uuid4().hex[:12]}")
+    app_id = Column(String(36), ForeignKey("applications.id"), nullable=False, index=True)
+    server_id = Column(String(64), nullable=True, index=True)
+    agent_id = Column(String(64), nullable=True)
+    tool_name = Column(String(100), nullable=True)
+    action = Column(String(50), nullable=False)
+    # REGISTER_SERVER, SYNC_CATALOG, CALL_TOOL, READ_RESOURCE, CATALOG_DRIFT_DETECTED, SSRF_BLOCKED, POISONING_BLOCKED
+    status = Column(String(30), default="SUCCESS", nullable=False)
+    # SUCCESS, BLOCKED, ERROR, QUARANTINED
+    details = Column(Text, default="{}", nullable=False)  # JSON string
+    timestamp = Column(DateTime(timezone=True), default=utcnow, nullable=False, index=True)
+
+

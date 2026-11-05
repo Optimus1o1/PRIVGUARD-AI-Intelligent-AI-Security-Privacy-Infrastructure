@@ -15,6 +15,7 @@ const ALLOWED_ROUTE_PREFIXES = new Set([
   "chat",
   "tools",
   "memory",
+  "mcp",
 ]);
 
 async function proxyRequest(request: NextRequest, { params }: { params: { path: string[] } }) {

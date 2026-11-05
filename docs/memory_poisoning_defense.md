@@ -81,3 +81,4 @@ All blocked memory poisoning attempts are recorded in `MemoryAuditEvent`:
 - `action_taken`: `"BLOCK"`
 - `status`: `"POISONING_PREVENTED"`
 - Content is scrubbed; only the threat category, fingerprint, and agent ID are preserved for forensic review.
+

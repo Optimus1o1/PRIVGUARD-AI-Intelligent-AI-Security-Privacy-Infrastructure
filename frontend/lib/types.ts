@@ -196,3 +196,66 @@ export interface MemoryRetentionSummary {
   pending_proposals: number;
   categories_breakdown: Record<string, number>;
 }
+
+export interface MCPServer {
+  id: string;
+  name: string;
+  description?: string;
+  transport_type: "streamable_http" | "stdio";
+  endpoint_url?: string;
+  command?: string;
+  args?: string[];
+  status: "ACTIVE" | "DISABLED" | "DISCONNECTED" | "QUARANTINED" | "REQUIRES_REAPPROVAL";
+  trust_level: "VERIFIED" | "SANDBOXED" | "UNTRUSTED" | string;
+  catalog_fingerprint?: string;
+  auth_type: string;
+  last_connected_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MCPToolDefinition {
+  id: string;
+  server_id: string;
+  name: string;
+  description?: string;
+  input_schema: Record<string, any>;
+  risk_level: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  requires_approval: boolean;
+  is_approved: boolean;
+  version: number;
+  definition_hash: string;
+  created_at: string;
+}
+
+export interface MCPResourceDefinition {
+  id: string;
+  server_id: string;
+  uri: string;
+  name: string;
+  description?: string;
+  mime_type?: string;
+  risk_level: string;
+  created_at: string;
+}
+
+export interface MCPAuditEvent {
+  id: string;
+  server_id?: string;
+  agent_id?: string;
+  tool_name?: string;
+  action: string;
+  status: string;
+  details: Record<string, any>;
+  timestamp: string;
+}
+
+export interface CatalogSyncResult {
+  server_id: string;
+  server_status: string;
+  new_tools: number;
+  updated_tools: number;
+  drift_detected: boolean;
+  catalog_fingerprint?: string;
+}
+

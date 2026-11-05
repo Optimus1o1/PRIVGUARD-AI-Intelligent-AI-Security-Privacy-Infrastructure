@@ -133,3 +133,4 @@ def test_kek_rotation_rewrap(crypto_service):
 
     decrypted = crypto_service.decrypt(updated_payload, owner_id, memory_id, category)
     assert decrypted == plaintext
+

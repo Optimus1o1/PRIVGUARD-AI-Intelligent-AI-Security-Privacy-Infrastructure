@@ -50,3 +50,4 @@ Stage 7 underwent adversarial verification across 29 specialized security test c
 - **Scenario:** Rogue agent attempts to reuse a single-use capability token to retrieve personal memory twice.
 - **Verification:** `test_single_use_capability_consumption_enforcement`.
 - **Result:** First call consumes the token; second call fails with capability token maximum use limit exceeded error.
+

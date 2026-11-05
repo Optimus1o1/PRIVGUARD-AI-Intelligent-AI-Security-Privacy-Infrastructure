@@ -161,3 +161,4 @@ class MemoryRetrievalService:
 
 # Global singleton retrieval service
 memory_retrieval_service = MemoryRetrievalService()
+

@@ -82,3 +82,4 @@ User Requests Account Purge
 ### Safety Protections:
 - **UI Confirmation:** The frontend requires typing `"DELETE ALL MEMORIES"` exactly before the purge button is enabled.
 - **Tenant Scoping:** The purge strictly wipes records matching the authenticated user ID and application ID.
+

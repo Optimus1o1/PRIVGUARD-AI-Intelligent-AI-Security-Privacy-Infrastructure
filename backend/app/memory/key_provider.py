@@ -62,3 +62,4 @@ class LocalDevKeyProvider(KeyProvider):
 
 # Global singleton key provider instance
 default_key_provider = LocalDevKeyProvider()
+

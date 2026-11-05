@@ -199,3 +199,4 @@ async def test_retention_and_security_api(
     purge_data = res_purge.json()
     assert purge_data["status"] == "COMPLETED"
     assert purge_data["items_deleted"] >= 1
+

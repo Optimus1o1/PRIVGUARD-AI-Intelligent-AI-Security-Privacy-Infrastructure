@@ -203,3 +203,4 @@ async def test_revoking_permission_blocks_subsequent_access(db_session, setup_pe
     # Verify access now blocked
     with pytest.raises(MemoryPermissionError):
         await memory_vault.get_memory(db_session, app.id, owner_id, mem.id, agent_id=agent.id)
+

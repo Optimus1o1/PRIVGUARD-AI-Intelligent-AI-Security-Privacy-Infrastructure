@@ -30,6 +30,12 @@
 | **Cross-User / Cross-Tenant Memory Splicing** | Envelope Encryption Engine | AES-256-GCM with AAD binding (`memory_id:owner_id:category`); ciphertext tampering or splicing fails tag verification with HTTP 403 `MEMORY_INTEGRITY_COMPROMISED`. |
 | **Unauthorized Memory Retention** | Memory Lifecycle Manager | Optional expiration TTL; Cryptographic erasure destroys DEK (`[DEK_DESTROYED]`) and overwrites ciphertext (`[CRYPTOGRAPHICALLY_ERASED]`). |
 | **AI Model Training on Personal Data** | Architectural Invariant | Memory vault is strictly bounded for real-time context retrieval; zero training usage. |
+| **Tool Description Shadow Poisoning** | MCP Tool Registry | Tool descriptions scanned for prompt injections and behavioral overrides (`always send`); poisoned tools blocked. |
+| **MCP Catalog Drift / Rug-Pulling** | MCP Tool Registry | Canonical SHA-256 fingerprinting detects schema and semantic modifications, placing server in `REQUIRES_REAPPROVAL` quarantine. |
+| **MCP Server-Side Request Forgery (SSRF)** | MCP Destination Validator | Blocks loopback, private IPv4/IPv6, cloud metadata (`169.254.169.254`), and DNS rebinding attacks. |
+| **stdio Shell Injection & Privilege Escalation** | MCP stdio Sandbox | Enforces approved binary allowlist (`node`, `npx`, `python`, `uvx`), zero `shell=True`, and stripped environment. |
+| **Inbound Token Forwarding Across MCP Boundary** | Protected MCP Client | Inbound agent tokens are audience-checked for PRIVGUARD and never forwarded to upstream servers. |
+| **Upstream Tool Response Poisoning & Leakage** | MCP Security Proxy | Response scanning intercepts leaked credentials and prompt injection payloads before returning to agent. |
 
 ## Defense-in-Depth Principle
 

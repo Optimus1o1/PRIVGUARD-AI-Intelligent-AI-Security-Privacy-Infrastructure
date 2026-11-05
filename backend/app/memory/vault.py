@@ -553,6 +553,16 @@ class MemoryVault:
         record.nonce = "[WIPED]"
         record.dek_nonce = "[WIPED]"
         record.updated_at = datetime.now(timezone.utc)
+
+        # Cryptographic wipe of all historical archived versions
+        stmt_versions = select(MemoryVersion).where(MemoryVersion.memory_id == memory_id)
+        versions_res = await db.execute(stmt_versions)
+        for ver in versions_res.scalars().all():
+            ver.encrypted_content = "[CRYPTOGRAPHICALLY_ERASED]"
+            ver.wrapped_dek = "[DEK_DESTROYED]"
+            ver.nonce = "[WIPED]"
+            ver.dek_nonce = "[WIPED]"
+
         await db.commit()
 
         await self.log_audit(
@@ -635,6 +645,15 @@ class MemoryVault:
             m.dek_nonce = "[WIPED]"
             m.updated_at = now
 
+        if target_ids:
+            stmt_vers = select(MemoryVersion).where(MemoryVersion.memory_id.in_(target_ids))
+            vers_res = await db.execute(stmt_vers)
+            for ver in vers_res.scalars().all():
+                ver.encrypted_content = "[CRYPTOGRAPHICALLY_ERASED]"
+                ver.wrapped_dek = "[DEK_DESTROYED]"
+                ver.nonce = "[WIPED]"
+                ver.dek_nonce = "[WIPED]"
+
         job.status = "COMPLETED"
         job.items_deleted = len(target_ids)
         job.completed_at = now
@@ -698,3 +717,4 @@ class MemoryVault:
 
 # Global singleton vault manager
 memory_vault = MemoryVault()
+

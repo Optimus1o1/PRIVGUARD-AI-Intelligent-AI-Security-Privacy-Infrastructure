@@ -20,7 +20,7 @@ OVERRIDE_RULES = [
     InjectionPattern(
         rule_id="INJ_OVERRIDE_001",
         pattern=re.compile(
-            r"\b(ignore|disregard|forget|override|bypass)\s+(?:all\s+)?(?:(?:previous|prior|above|system|initial)\s+)?(instructions|prompts|directions|rules|guidelines|constraints)\b",
+            r"\b(ignore|disregard|forget|override|bypass)\s+(?:all\s+)?(?:(?:previous|prior|above|system|initial)\s+)?(instructions?|prompts?|directions?|rules?|guidelines?|constraints?)\b",
             re.IGNORECASE,
         ),
         threat_type=ThreatType.DIRECT_PROMPT_INJECTION,

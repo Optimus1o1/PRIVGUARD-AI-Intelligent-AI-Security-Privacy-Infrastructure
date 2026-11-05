@@ -92,3 +92,4 @@ Autonomous AI applications and interactive agents require persistent personaliza
 - Deleting a memory overwrites the DEK (`[DEK_DESTROYED]`) and ciphertext (`[CRYPTOGRAPHICALLY_ERASED]`).
 - Even with direct disk or database access, decryption is mathematically impossible.
 - Complete vault purge executes cryptographic wipe across all user records in a single audited transaction.
+

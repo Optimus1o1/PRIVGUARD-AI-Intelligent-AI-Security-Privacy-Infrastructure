@@ -87,3 +87,4 @@ When a user triggers KEK rotation (`POST /v1/memory/key/rotate`):
    - Updates `wrapped_dek`, `dek_nonce`, and `key_version = v+1`.
 3. The underlying `encrypted_content` ciphertext remains untouched on disk.
 4. **Complexity:** $O(1)$ cryptographic work per record regardless of the size of stored memory documents.
+

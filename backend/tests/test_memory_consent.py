@@ -177,3 +177,4 @@ async def test_cross_user_approval_prevented(db_session, setup_consent_env):
             owner_id=owner_bob,
             proposal_id=proposal.id,
         )
+

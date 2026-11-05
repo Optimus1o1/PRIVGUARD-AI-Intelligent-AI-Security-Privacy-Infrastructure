@@ -1,6 +1,6 @@
 """Security and runtime exception taxonomy for PRIVGUARD AI."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 
 class PrivGuardException(Exception):
@@ -92,6 +92,8 @@ class ApprovalRequiredError(PrivGuardException):
             error_code="HUMAN_APPROVAL_REQUIRED",
             details={"approval_id": approval_id, "tool_name": tool_name},
         )
+        self.approval_id = approval_id
+        self.tool_name = tool_name
 
 
 class FailClosedError(PrivGuardException):
@@ -240,5 +242,88 @@ class MemoryPoisoningError(MemorySecurityError):
             error_code="MEMORY_POISONING_DETECTED",
             details=details or {},
         )
+
+
+# ==============================================================================
+# STAGE 8: MCP SECURITY EXCEPTIONS
+# ==============================================================================
+
+class MCPSecurityError(PrivGuardException):
+    """Base exception for Model Context Protocol security gateway violations."""
+
+    def __init__(
+        self,
+        message: str = "MCP security policy violation.",
+        status_code: int = 403,
+        error_code: str = "MCP_SECURITY_VIOLATION",
+        details: Optional[Dict[str, Any]] = None,
+    ):
+        super().__init__(
+            message=message,
+            status_code=status_code,
+            error_code=error_code,
+            details=details or {},
+        )
+
+
+class MCPSSRFError(MCPSecurityError):
+    """Raised when an MCP endpoint targets loopback, private networks, or metadata services."""
+
+    def __init__(self, destination: str, reason: str):
+        super().__init__(
+            message=f"SSRF protection blocked destination '{destination}': {reason}",
+            status_code=403,
+            error_code="MCP_SSRF_BLOCKED",
+            details={"destination": destination, "reason": reason},
+        )
+
+
+class MCPToolPoisoningError(MCPSecurityError):
+    """Raised when an external MCP tool definition contains prompt injection or imperative instructions."""
+
+    def __init__(self, tool_name: str, reason: str, signals: Optional[List[str]] = None):
+        super().__init__(
+            message=f"MCP tool '{tool_name}' rejected: {reason}",
+            status_code=400,
+            error_code="MCP_TOOL_POISONING_DETECTED",
+            details={"tool_name": tool_name, "reason": reason, "signals": signals or []},
+        )
+
+
+class MCPCatalogDriftError(MCPSecurityError):
+    """Raised when an approved MCP tool definition changes without re-approval."""
+
+    def __init__(self, server_id: str, tool_name: str):
+        super().__init__(
+            message=f"Tool definition for '{tool_name}' on server '{server_id}' has drifted and requires human re-approval.",
+            status_code=403,
+            error_code="MCP_CATALOG_DRIFT_UNAPPROVED",
+            details={"server_id": server_id, "tool_name": tool_name},
+        )
+
+
+class MCPProtocolError(MCPSecurityError):
+    """Raised when an MCP request violates the 2026-07-28 specification."""
+
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        super().__init__(
+            message=message,
+            status_code=400,
+            error_code="MCP_PROTOCOL_VIOLATION",
+            details=details or {},
+        )
+
+
+class MCPStdioSandboxError(MCPSecurityError):
+    """Raised when a local stdio MCP server fails execution policy or sandboxing."""
+
+    def __init__(self, command: str, reason: str):
+        super().__init__(
+            message=f"stdio execution blocked for '{command}': {reason}",
+            status_code=403,
+            error_code="MCP_STDIO_BLOCKED",
+            details={"command": command, "reason": reason},
+        )
+
 
 

@@ -2,7 +2,12 @@ import {
   Agent,
   ApprovalRequest,
   AuditEvent,
+  CatalogSyncResult,
   DashboardSummary,
+  MCPAuditEvent,
+  MCPResourceDefinition,
+  MCPServer,
+  MCPToolDefinition,
   MemoryAuditEvent,
   MemoryPermission,
   MemoryProposal,
@@ -157,4 +162,57 @@ export const api = {
   rotateMemoryKey: () => fetchJson<any>("/memory/key/rotate", { method: "POST" }),
   purgeMemoryVault: () => fetchJson<any>("/memory/purge", { method: "POST" }),
   getMemoryAudit: (limit = 50) => fetchJson<MemoryAuditEvent[]>(`/memory/audit?limit=${limit}`),
+
+  // MCP Security Gateway
+  getMCPServers: () => fetchJson<MCPServer[]>("/mcp/servers"),
+  getMCPServer: (id: string) => fetchJson<MCPServer>(`/mcp/servers/${id}`),
+  registerMCPServer: (server: {
+    name: string;
+    description?: string;
+    transport_type: "streamable_http" | "stdio";
+    endpoint_url?: string;
+    command?: string;
+    args?: string[];
+    auth_type?: string;
+    auth_credential_ref?: string;
+  }) => fetchJson<MCPServer>("/mcp/servers", { method: "POST", body: JSON.stringify(server) }),
+  syncMCPCatalog: (id: string) =>
+    fetchJson<CatalogSyncResult>(`/mcp/servers/${id}/sync`, { method: "POST" }),
+  approveMCPCatalog: (id: string) =>
+    fetchJson<{ status: string; approved_tools_count: number }>(`/mcp/servers/${id}/approve`, {
+      method: "POST",
+    }),
+  disableMCPServer: (id: string) =>
+    fetchJson<MCPServer>(`/mcp/servers/${id}/disable`, { method: "POST" }),
+  deleteMCPServer: (id: string) =>
+    fetchJson<void>(`/mcp/servers/${id}`, { method: "DELETE" }),
+  getMCPTools: (params?: { server_id?: string; risk_level?: string }) => {
+    const sp = new URLSearchParams();
+    if (params?.server_id) sp.set("server_id", params.server_id);
+    if (params?.risk_level) sp.set("risk_level", params.risk_level);
+    const q = sp.toString();
+    return fetchJson<MCPToolDefinition[]>(`/mcp/tools${q ? `?${q}` : ""}`);
+  },
+  callMCPTool: (
+    serverId: string,
+    toolName: string,
+    payload: {
+      parameters?: Record<string, any>;
+      agent_id?: string;
+      task_id?: string;
+      capability_token?: string;
+      approval_id?: string;
+    }
+  ) =>
+    fetchJson<any>(`/mcp/servers/${serverId}/tools/${encodeURIComponent(toolName)}/call`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  getMCPActivity: (params?: { server_id?: string; limit?: number }) => {
+    const sp = new URLSearchParams();
+    if (params?.server_id) sp.set("server_id", params.server_id);
+    if (params?.limit) sp.set("limit", params.limit.toString());
+    const q = sp.toString();
+    return fetchJson<MCPAuditEvent[]>(`/mcp/activity${q ? `?${q}` : ""}`);
+  },
 };
