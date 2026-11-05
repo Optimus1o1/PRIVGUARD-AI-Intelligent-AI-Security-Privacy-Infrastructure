@@ -15,7 +15,7 @@ spec:
       {{- include "privguard.selectorLabels" (dict "context" . "component" "backend") | nindent 6 }}
   endpoints:
     - port: http
-      path: /v1/system/distributed-state
+      path: {{ .Values.monitoring.serviceMonitor.path | default "/metrics" }}
       interval: {{ .Values.monitoring.serviceMonitor.interval | default "30s" }}
       scrapeTimeout: {{ .Values.monitoring.serviceMonitor.scrapeTimeout | default "10s" }}
 {{- end }}

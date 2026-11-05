@@ -326,3 +326,82 @@ export interface KeyCompromiseResult {
   timestamp: string;
   notes?: string;
 }
+
+
+// ==============================================================================
+// Observability & Telemetry Types (Stage 10.6)
+// ==============================================================================
+
+export interface CanaryResult {
+  canary_name: string;
+  passed: boolean;
+  latency_ms: number;
+  message: string;
+  timestamp: string;
+  severity: "critical" | "high" | "medium" | "low";
+  details?: Record<string, any>;
+}
+
+export interface CanarySummary {
+  total_canaries: number;
+  executed: number;
+  passed: number;
+  failed: number;
+  healthy: boolean;
+  last_run_timestamp: string | null;
+}
+
+export interface CanaryResponse {
+  summary: CanarySummary;
+  canaries: CanaryResult[];
+}
+
+export interface SLOStatus {
+  name: string;
+  target: number;
+  current_ratio: number;
+  error_budget_remaining: number;
+  burn_rate: number;
+  healthy: boolean;
+  total_events: number;
+  bad_events: number;
+}
+
+export interface MonitoringOverview {
+  status: "nominal" | "degraded";
+  service: string;
+  version: string;
+  environment: string;
+  canary_summary: CanarySummary;
+  slos: Record<string, SLOStatus>;
+  active_alerts_count: number;
+}
+
+export interface GatewayTelemetry {
+  p95_latency_ms: number;
+  p99_latency_ms: number;
+  requests_24h: number;
+  blocked_requests_24h: number;
+  provider_breakdown: Record<string, { requests: number; error_rate: number }>;
+}
+
+export interface SecurityTelemetry {
+  threat_detections_total: number;
+  prompt_injections_blocked: number;
+  secrets_blocked: number;
+  pii_entities_redacted: number;
+  unauthorized_tool_calls_blocked: number;
+  quarantined_agents_count: number;
+}
+
+export interface AlertItem {
+  alertname: string;
+  severity: string;
+  description: string;
+  status: string;
+}
+
+export interface AlertsResponse {
+  firing_alerts: AlertItem[];
+  total_firing: number;
+}

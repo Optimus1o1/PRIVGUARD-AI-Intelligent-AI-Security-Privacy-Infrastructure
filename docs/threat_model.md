@@ -58,6 +58,11 @@
 | **Plaintext Credential Leakage in DB** | Secret Metadata Manager | Application credentials maintain zero plaintext in database models or API metadata contracts. |
 | **In-Flight Key Rotation Downtime** | Envelope Encryption Engine | Dual-mode V1/V2 reading and non-destructive DEK rewrapping preserving ciphertext and nonces ensures 100% uptime during key rotation. |
 | **Approval Forgery via Master Key Exposure** | Signing Key Manager | Versioned HMAC approval action binding keys decoupled from data encryption keys; instant revocation of compromised key ID (`kid`). |
+| **Telemetry Prompt & Content Leakage** | Observability Engine & Safe Attributes | Zero-content telemetry invariant; strict `SAFE_ATTRIBUTE_ALLOWLIST` and `PROHIBITED_KEY_PATTERNS` drop all raw prompts, completions, and memory plaintext from OTel spans and logs. |
+| **Metric Cardinality Denial of Service** | Observability Middleware & Normalizer | Dynamic path parameters (UUIDs, ints, prefixed IDs, canaries) normalized to `{id}` in Prometheus labels; eliminates timeseries explosion. |
+| **Operational Log Credential Exposure** | Logging Redaction Filter | Inline regex scrubbing replaces Bearer tokens, OpenAI/Anthropic/GitHub API keys, and passwords with `[REDACTED_CREDENTIAL]`. Span exception recording scrubs secrets. |
+| **Outbound SIEM Forwarding SSRF** | Enterprise SIEM Exporter | `MCPDestinationValidator` validates target URLs; blocks RFC 1918 private IPs, AWS IMDS `169.254.169.254`, and internal domain TLDs (.corp, .internal). |
+| **Silent Security Control Failure** | Active Synthetic Canaries | 8 continuous automated canaries probe PII redaction, secret blocking, authorization, revocation, injection detection, memory isolation, SSRF, and KMS roundtrips, alerting immediately if controls fail to reject attacks. |
 
 ## Defense-in-Depth Principle
 

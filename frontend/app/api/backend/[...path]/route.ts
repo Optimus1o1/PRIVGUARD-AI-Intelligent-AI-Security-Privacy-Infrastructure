@@ -23,6 +23,7 @@ const ROUTE_POLICY: Record<string, string[]> = {
   keys: ["GET", "POST"],
   secrets: ["GET", "POST"],
   incidents: ["GET", "POST"],
+  monitoring: ["GET", "POST"],
 };
 
 const HOP_BY_HOP_HEADERS = new Set([

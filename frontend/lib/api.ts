@@ -23,6 +23,12 @@ import {
   MigrationStatus,
   SecretMetadata,
   KeyCompromiseResult,
+  MonitoringOverview,
+  CanaryResponse,
+  SLOStatus,
+  GatewayTelemetry,
+  SecurityTelemetry,
+  AlertsResponse,
 } from "./types";
 
 const BASE_URL = "/api/backend";
@@ -320,5 +326,17 @@ export const api = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
+  // Observability & Telemetry APIs (Stage 10.6)
+  getMonitoringOverview: () => fetchJson<MonitoringOverview>("/monitoring/overview"),
+  getCanaries: (autoRun: boolean = false) => fetchJson<CanaryResponse>(`/monitoring/canaries?auto_run=${autoRun}`),
+  runCanaries: () =>
+    fetchJson<CanaryResponse>("/monitoring/canaries/run", {
+      method: "POST",
+    }),
+  getSLOs: () => fetchJson<Record<string, SLOStatus>>("/monitoring/slos"),
+  getGatewayTelemetry: () => fetchJson<GatewayTelemetry>("/monitoring/gateway"),
+  getSecurityTelemetry: () => fetchJson<SecurityTelemetry>("/monitoring/security"),
+  getActiveAlerts: () => fetchJson<AlertsResponse>("/monitoring/alerts"),
 };
 

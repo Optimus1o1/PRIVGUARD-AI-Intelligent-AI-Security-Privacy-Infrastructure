@@ -127,6 +127,18 @@ To stop services and remove volumes (Warning: destroys persistent data):
 docker compose down -v
 ```
 
+### Launching the Observability Stack
+To enable OpenTelemetry Collector, Prometheus, Grafana, Loki, and Alertmanager alongside PRIVGUARD:
+
+```bash
+docker compose -f compose.yaml -f compose.observability.yaml up -d
+```
+
+- **Grafana Dashboards**: Access at `http://localhost:3001` (Default: `admin` / `admin`).
+- **Prometheus Metrics**: Scraped at `http://localhost:8000/metrics`.
+- **Loki Log Ingestion**: Listening on port `3100`.
+- **Alertmanager UI**: Accessible on port `9093`.
+- **Next.js Monitoring Console**: Access at `http://localhost:3000/monitoring`.
 
 ---
 

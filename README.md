@@ -24,6 +24,7 @@ PRIVGUARD AI is an independent security and privacy enforcement layer positioned
 13. **Hardened Docker & Production Deployment Packaging:** Multi-stage, non-root container images (`privguard:privguard`, `nextjs:nodejs`), three-tier isolated networks (`edge`, `application`, `data`), one-shot Alembic schema migration runner, PostgreSQL 16 with RLS and non-superuser runtime role (`privguard_app`), Redis 7.x, Caddy reverse proxy with automated TLS, and Docker Compose secret file management.
 14. **Distributed State & PostgreSQL-Authoritative Coordination:** Atomic Redis Lua sliding-window rate limiting with fail-safe local fallback, Transactional Outbox pattern with secret sanitization, persistent Redis Streams event bus with consumer group idempotency, cross-replica authoritative agent revocation, monotonic distributed taint tracking (MITRE ATT&CK T1700), connection pool tenant isolation, and dedicated background event worker.
 15. **Cloud-Neutral Kubernetes & Helm Deployment Packaging:** Turnkey deployment on AWS EKS, Google GKE, Azure AKS, and self-managed Kubernetes via hardened Helm v3/v4 charts (`deploy/helm/privguard/`). Enforces Kubernetes Restricted Pod Security Standard (`runAsNonRoot: true`, `readOnlyRootFilesystem: true`, capabilities drop `ALL`, runtime seccomp), default-deny micro-segmentation NetworkPolicies, external secret isolation (`existingSecret`), pre-rollout Alembic migration hook Jobs with isolated DDL credentials (`privguard_migrator`), zero-downtime PodDisruptionBudgets, and HPA v2 horizontal autoscaling.
+16. **Zero-Content Observability & Active Security Canaries:** Production-grade OpenTelemetry tracing, low-cardinality Prometheus metrics, Loki structured logging with inline credential scrubbing (`RedactionFilter`), and 8 active synthetic security canaries verifying that security controls continuously fail closed. Zero raw prompts, completions, memory plaintext, tool argument secrets, or API keys in telemetry. Includes 7 auto-provisioned Grafana dashboards, multi-window error budget burn rate alerting, SSRF-protected SIEM export (Splunk HEC, Elastic ECS, Microsoft Sentinel), and Next.js 14 Monitoring Control Center.
 
 ---
 
@@ -174,7 +175,9 @@ The Control Center will be accessible at: `http://localhost:3000`
 PRIVGUARD-AI/
 ├── backend/
 │   ├── app/
-│   │   ├── api/              # Gateway, Privacy, Policies, Audit, Agents, Tasks, Capabilities, Approvals, Tools, Threats, Dashboard, Memory, MCP
+│   │   ├── api/              # Gateway, Privacy, Policies, Audit, Agents, Tasks, Capabilities, Approvals, Tools, Threats, Dashboard, Memory, MCP, Metrics, Monitoring
+│   │   ├── observability/    # OTel Tracing, Safe Attributes, Prometheus Low-Cardinality Registry, Redaction Logging, SLOs, 8 Synthetic Canaries
+│   │   ├── enterprise/       # SIEM Exporter (Splunk HEC, Elastic ECS, Sentinel) with SSRF Validation
 │   │   ├── agent_security/   # Identity, Task Manager, Capability Manager, Permission Engine, Tool Registry, Broker, Sandbox
 │   │   ├── approvals/        # Cryptographic Action-Binding, Approval Engine, Anti-Replay
 │   │   ├── memory/           # Envelope Encryption, HKDF KEK Provider, Validator, Permissions, Vault, Retrieval Service
@@ -188,11 +191,18 @@ PRIVGUARD-AI/
 │   │   ├── policies/         # Deterministic Policy Engine
 │   │   ├── monitoring/       # Content-free Audit Logger
 │   │   └── database/         # Async SQLite models, migrations, WAL mode
-│   └── tests/                # 213 automated security, red-team, adversarial, load, API, memory vault, and MCP gateway tests
+│   └── tests/                # 346 automated security, red-team, adversarial, load, API, memory vault, MCP, and observability tests
 ├── frontend/                 # Next.js 14 App Router, TypeScript, Tailwind CSS, BFF Security Proxy
-│   ├── app/                  # Security Overview, Approvals, Agents, Topology Map, Threats, Privacy, Memory Vault, MCP Gateway, Tasks, Activity, Diagnostics
+│   ├── app/                  # Security Overview, Approvals, Agents, Topology Map, Threats, Privacy, Memory Vault, MCP Gateway, Tasks, Activity, Diagnostics, Monitoring (Overview, Platform, Gateway, Security, Fleet, Canaries, Alerts)
 │   ├── components/           # Radial Segmented Protection Gauge, Metric Cards, Forecast Charts, Tables, Modals
 │   └── lib/                  # Type-safe API client, types, BFF handlers
+├── observability/            # Standalone Observability Daemon Configurations
+│   ├── otel-collector/       # OpenTelemetry Collector pipelines & redaction
+│   ├── prometheus/           # Prometheus scraping & alerting rules
+│   ├── loki/                 # Loki structured logging configuration
+│   ├── alertmanager/         # Alertmanager routing hierarchy & notification policies
+│   └── grafana/              # 7 auto-provisioned production dashboards & datasources
+├── compose.observability.yaml # Standalone Observability Docker Compose
 ├── deploy/                   # Production deployment packaging
 │   ├── docker/               # Dockerfiles, Caddyfile, Compose configurations
 │   └── helm/privguard/       # Cloud-neutral Kubernetes Helm v3/v4 chart (PSS Restricted, NetworkPolicies, HPA, PDB)
@@ -219,7 +229,7 @@ PRIVGUARD-AI/
 - [x] **Stage 10.3:** PostgreSQL, Redis & Distributed State Management (Atomic Lua rate limiting, transactional outbox, Redis streams, cross-replica revocation, 276 Automated Tests)
 - [x] **Stage 10.4:** Kubernetes & Helm Deployment Packaging (Cloud-neutral Helm chart, Restricted PSS, NetworkPolicies, HPA v2, PDB, pre-upgrade migration Jobs, 286 Automated Tests)
 - [x] **Stage 10.5:** Enterprise Secrets & Cryptographic Key Management (Provider-independent KMS abstraction for AWS/GCP/Azure/Vault/Local, non-destructive legacy V1-to-V2 DEK rewrap, automated KEK rotation, Ed25519 signing key separation, decoupled approval HMAC, zero plaintext secret metadata, 314 Automated Tests)
-- [ ] **Stage 10.6:** Monitoring, Observability and Alerting
+- [x] **Stage 10.6:** Production Observability, Monitoring, Security Telemetry & Intelligent Alerting (OpenTelemetry distributed tracing with safe exception scrubbing, low-cardinality Prometheus metrics, 7 provisioned Grafana dashboards, Loki structured JSON logging with regex credential scrubbing, Alertmanager multi-tier routing hierarchy, SSRF-validated SIEM export for Splunk HEC/Elastic ECS/Sentinel, 8 active synthetic security canaries verifying fail-closed controls, 346 Automated Tests)
 - [ ] **Stage 10.7:** Supply-Chain Security and CI/CD
 - [ ] **Stage 10.8:** Compliance Readiness and Evidence Engine
 - [ ] **Stage 10.9:** Python SDK Packaging and Distribution

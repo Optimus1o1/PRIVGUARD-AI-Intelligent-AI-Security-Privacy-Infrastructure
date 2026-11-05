@@ -6,8 +6,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from app.api import agents, approvals, audit, capabilities, dashboard, enterprise, fleet, gateway, health, identity, incidents, keys, mcp, memory, policies, privacy, secrets, system, tasks, threats, tools, workspaces
+from app.api import agents, approvals, audit, capabilities, dashboard, enterprise, fleet, gateway, health, identity, incidents, keys, mcp, memory, policies, privacy, secrets, system, metrics, monitoring, tasks, threats, tools, workspaces
 from app.core.config import settings
+from app.observability import init_observability
 from app.core.exceptions import (
     AuthenticationError,
     FailClosedError,
@@ -47,6 +48,8 @@ app = FastAPI(
     docs_url="/docs" if settings.ENVIRONMENT.lower() not in ("production", "prod") else None,
     redoc_url="/redoc" if settings.ENVIRONMENT.lower() not in ("production", "prod") else None,
 )
+
+init_observability(app)
 
 # CORS Middleware: strictly bounded origin whitelist, restricted methods and headers
 app.add_middleware(
@@ -162,6 +165,8 @@ app.include_router(system.router)
 app.include_router(keys.router)
 app.include_router(secrets.router)
 app.include_router(incidents.router)
+app.include_router(metrics.router)
+app.include_router(monitoring.router)
 
 
 

@@ -75,12 +75,31 @@ Check pod rollout and readiness:
 kubectl get pods -n privguard -l app.kubernetes.io/instance=privguard
 ```
 
-Verify backend and Redis health via port-forward:
+Verify backend, Redis, and security health via port-forward:
 ```bash
 kubectl port-forward svc/privguard-backend -n privguard 8000:8000
 curl http://localhost:8000/health/live
 curl http://localhost:8000/health/ready
-curl http://localhost:8000/health/redis
-curl http://localhost:8000/health/database
+curl http://localhost:8000/health/security
 ```
 
+---
+
+## 5. Prometheus Observability & ServiceMonitor Integration
+
+When the Prometheus Operator is running in your cluster, enable automated scraping by setting `serviceMonitor.enabled: true` in your values file or via `--set`:
+
+```bash
+helm upgrade privguard ./deploy/helm/privguard \
+  --namespace privguard \
+  --reuse-values \
+  --set serviceMonitor.enabled=true \
+  --set serviceMonitor.path="/metrics" \
+  --set serviceMonitor.interval="15s"
+```
+
+Verify that Prometheus has registered the scrape target:
+```bash
+curl http://localhost:8000/metrics
+```
+Output reflects low-cardinality Prometheus metrics including `privguard_http_requests_total`, `privguard_gateway_latency_seconds`, and `privguard_canary_executions_total`.
