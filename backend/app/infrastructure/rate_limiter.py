@@ -98,19 +98,37 @@ class DistributedRateLimiter:
         category: str,
         identifier: str,
         custom_policy: Optional[RateLimitPolicy] = None,
+        strict_fail_closed: Optional[bool] = None,
     ) -> RateLimitResult:
         """
         Evaluates atomic sliding window rate limit for subject within tenant.
         Identifier is automatically hashed to prevent leaking credentials or PII in Redis.
+        In production Kubernetes deployments, shared state failures fail closed for sensitive categories.
         """
         policy = custom_policy or DEFAULT_POLICIES.get(category, RateLimitPolicy(60, 60))
         subject_hash = hash_identifier(identifier)
         redis_key = format_redis_key(RedisNamespace.RATE_LIMIT, tenant_id, category.lower(), subject_hash)
 
+        from app.core.config import settings
+        is_strict = (
+            strict_fail_closed
+            if strict_fail_closed is not None
+            else (settings.ENVIRONMENT.lower() in ("production", "prod") and settings.FAIL_CLOSED_MODE)
+        )
+
         client = self._get_client()
 
-        # If Redis is unavailable, execute fail-safe fallback
+        # If Redis is unavailable, evaluate fail-closed vs local fallback
         if not client:
+            if is_strict and category.upper() in ("AUTHENTICATION", "ADMIN", "GATEWAY"):
+                return RateLimitResult(
+                    allowed=False,
+                    limit=policy.max_requests,
+                    remaining=0,
+                    reset_seconds=policy.window_seconds,
+                    retry_after=policy.window_seconds,
+                    backend_mode="fail_closed_redis_unavailable",
+                )
             return self._fallback_local_rate_limit(redis_key, category, policy)
 
         try:
@@ -141,7 +159,16 @@ class DistributedRateLimiter:
                 backend_mode="redis",
             )
         except Exception as exc:
-            # Fall back safely
+            # In production, network partitioning of Redis fails closed for critical endpoints
+            if is_strict and category.upper() in ("AUTHENTICATION", "ADMIN", "GATEWAY"):
+                return RateLimitResult(
+                    allowed=False,
+                    limit=policy.max_requests,
+                    remaining=0,
+                    reset_seconds=policy.window_seconds,
+                    retry_after=policy.window_seconds,
+                    backend_mode="fail_closed_redis_unavailable",
+                )
             return self._fallback_local_rate_limit(redis_key, category, policy)
 
     def _fallback_local_rate_limit(

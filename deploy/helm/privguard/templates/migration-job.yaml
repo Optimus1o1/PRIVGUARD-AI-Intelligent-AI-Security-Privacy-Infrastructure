@@ -1,0 +1,82 @@
+{{- if .Values.migration.enabled -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "privguard.fullname" . }}-migration-{{ .Chart.AppVersion | replace "." "-" }}-{{ .Release.Revision }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "privguard.labels" . | nindent 4 }}
+    app.kubernetes.io/component: migration
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  backoffLimit: {{ .Values.migration.backoffLimit | default 1 }}
+  activeDeadlineSeconds: {{ .Values.migration.activeDeadlineSeconds | default 300 }}
+  template:
+    metadata:
+      name: {{ include "privguard.fullname" . }}-migration
+      labels:
+        {{- include "privguard.labels" . | nindent 8 }}
+        app.kubernetes.io/component: migration
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "privguard.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: {{ .Values.backend.securityContext.runAsUser | default 10001 }}
+        runAsGroup: {{ .Values.backend.securityContext.runAsGroup | default 10001 }}
+        fsGroup: {{ .Values.backend.securityContext.fsGroup | default 10001 }}
+        seccompProfile:
+          type: RuntimeDefault
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: migration
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy | default "IfNotPresent" }}
+          command:
+            - alembic
+            - upgrade
+            - head
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          env:
+            - name: ENVIRONMENT
+              value: {{ .Values.global.environment | quote }}
+            - name: DATABASE_HOST
+              value: {{ .Values.database.host | quote }}
+            - name: DATABASE_PORT
+              value: {{ .Values.database.port | default 5432 | quote }}
+            - name: DATABASE_NAME
+              value: {{ .Values.database.database | quote }}
+            - name: DATABASE_USER
+              value: {{ .Values.database.migrationUser | default "privguard_migrator" | quote }}
+            - name: DATABASE_SSL_MODE
+              value: {{ .Values.database.sslMode | default "require" | quote }}
+            - name: MIGRATION_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.migrationExistingSecret | default .Values.database.existingSecret }}
+                  key: {{ .Values.database.secretKeys.migrationPassword | default "migration_password" }}
+            - name: DATABASE_URL
+              value: "postgresql+asyncpg://$(DATABASE_USER):$(MIGRATION_PASSWORD)@$(DATABASE_HOST):$(DATABASE_PORT)/$(DATABASE_NAME)?ssl=$(DATABASE_SSL_MODE)"
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            {{- toYaml .Values.migration.resources | nindent 12 }}
+      volumes:
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 32Mi
+{{- end }}

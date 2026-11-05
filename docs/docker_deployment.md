@@ -126,3 +126,14 @@ To stop services and remove volumes (Warning: destroys persistent data):
 ```bash
 docker compose down -v
 ```
+
+
+---
+
+## 5. Moving to Kubernetes (Enterprise Fleet Scale)
+
+For enterprise high-availability deployments requiring horizontal multi-pod scaling, automatic healing, and cloud-neutral deployment on AWS EKS, Google GKE, Azure AKS, or self-managed clusters, use the PRIVGUARD Helm chart:
+
+- Complete guide: [kubernetes_deployment.md](file:///c:/Users/ANIKET/OneDrive/Documents/RIVA_AI/docs/kubernetes_deployment.md)
+- Helm chart reference: [helm_chart_reference.md](file:///c:/Users/ANIKET/OneDrive/Documents/RIVA_AI/docs/helm_chart_reference.md)
+- Security architecture: [kubernetes_security.md](file:///c:/Users/ANIKET/OneDrive/Documents/RIVA_AI/docs/kubernetes_security.md)

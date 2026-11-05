@@ -23,12 +23,13 @@ PRIVGUARD AI is an independent security and privacy enforcement layer positioned
 12. **Enterprise Multi-Tenancy & Fleet Governance:** Complete organization-level data isolation via PostgreSQL Row-Level Security (`FORCE ROW LEVEL SECURITY`), enterprise SSO (OIDC/SAML2), SCIM 2.0 provisioning with immediate revocation, 8-role RBAC with separation of duties, departmental workspaces, central Ed25519-signed policy bundles with anti-downgrade defense, fleet drift monitoring, and tamper-evident SHA-256 hash-chained audit ledgers.
 13. **Hardened Docker & Production Deployment Packaging:** Multi-stage, non-root container images (`privguard:privguard`, `nextjs:nodejs`), three-tier isolated networks (`edge`, `application`, `data`), one-shot Alembic schema migration runner, PostgreSQL 16 with RLS and non-superuser runtime role (`privguard_app`), Redis 7.x, Caddy reverse proxy with automated TLS, and Docker Compose secret file management.
 14. **Distributed State & PostgreSQL-Authoritative Coordination:** Atomic Redis Lua sliding-window rate limiting with fail-safe local fallback, Transactional Outbox pattern with secret sanitization, persistent Redis Streams event bus with consumer group idempotency, cross-replica authoritative agent revocation, monotonic distributed taint tracking (MITRE ATT&CK T1700), connection pool tenant isolation, and dedicated background event worker.
+15. **Cloud-Neutral Kubernetes & Helm Deployment Packaging:** Turnkey deployment on AWS EKS, Google GKE, Azure AKS, and self-managed Kubernetes via hardened Helm v3/v4 charts (`deploy/helm/privguard/`). Enforces Kubernetes Restricted Pod Security Standard (`runAsNonRoot: true`, `readOnlyRootFilesystem: true`, capabilities drop `ALL`, runtime seccomp), default-deny micro-segmentation NetworkPolicies, external secret isolation (`existingSecret`), pre-rollout Alembic migration hook Jobs with isolated DDL credentials (`privguard_migrator`), zero-downtime PodDisruptionBudgets, and HPA v2 horizontal autoscaling.
 
 ---
 
 ## Quickstart
 
-### Option A: Docker Deployment (Recommended)
+### Option A: Docker Deployment (Recommended for Single-Node)
 ```bash
 # 1. Initialize cryptographically secure deployment secrets
 python scripts/init_secrets.py --dir ./secrets
@@ -38,7 +39,26 @@ docker compose up -d --build
 ```
 Access the Control Center at `https://localhost` or `http://localhost`.
 
-### Option B: Local Python Development
+### Option B: Kubernetes Helm Deployment (Enterprise Multi-Node Production)
+```bash
+# 1. Provision required secrets
+kubectl create namespace privguard
+kubectl create secret generic privguard-database-credentials -n privguard \
+  --from-literal=postgres_password='<APP_PASSWORD>' \
+  --from-literal=migration_password='<MIGRATOR_PASSWORD>'
+kubectl create secret generic privguard-redis-credentials -n privguard \
+  --from-literal=redis_password='<REDIS_PASSWORD>'
+kubectl create secret generic privguard-secrets -n privguard \
+  --from-literal=privguard_master_key='<MASTER_KEY>' \
+  --from-literal=privguard_admin_api_key='<ADMIN_KEY>'
+
+# 2. Deploy using production values profile
+helm install privguard ./deploy/helm/privguard \
+  --namespace privguard \
+  -f ./deploy/helm/privguard/values/production.yaml
+```
+
+### Option C: Local Python Development
 
 #### 1. Requirements
 - Python 3.12+
@@ -173,7 +193,10 @@ PRIVGUARD-AI/
 │   ├── app/                  # Security Overview, Approvals, Agents, Topology Map, Threats, Privacy, Memory Vault, MCP Gateway, Tasks, Activity, Diagnostics
 │   ├── components/           # Radial Segmented Protection Gauge, Metric Cards, Forecast Charts, Tables, Modals
 │   └── lib/                  # Type-safe API client, types, BFF handlers
-├── docs/                     # Architecture, Threat Model, AISVS Assessment, Red Team Report, Attack Scenarios, Memory Vault & MCP Gateway Specs
+├── deploy/                   # Production deployment packaging
+│   ├── docker/               # Dockerfiles, Caddyfile, Compose configurations
+│   └── helm/privguard/       # Cloud-neutral Kubernetes Helm v3/v4 chart (PSS Restricted, NetworkPolicies, HPA, PDB)
+├── docs/                     # Architecture, Threat Model, AISVS Assessment, Kubernetes & Production Guides
 └── README.md
 ```
 
@@ -190,5 +213,16 @@ PRIVGUARD-AI/
 - [x] **Stage 6:** End-to-End Integration, Red Teaming & Security Validation (OWASP AISVS 1.0, 142 Automated Tests)
 - [x] **Stage 7:** Secure Personal AI Memory Vault (AES-256-GCM Envelope Encryption, Consent Proposals, Memory Poisoning Defense, Bounded Retrieval, Cryptographic Erasure, 171 Automated Tests)
 - [x] **Stage 8:** MCP Security Integration (Model Context Protocol 2026-07-28 Gateway, SSRF Destination Defense, Tool Poisoning & Drift Quarantine, Sandboxed stdio Isolation, 213 Automated Tests)
+- [x] **Stage 9:** Enterprise Governance, Multi-Tenancy & Fleet Policy Management (Tenant-aware RLS, 8-Role RBAC, SCIM 2.0, Signed Policy Bundles, 255 Automated Tests)
+- [x] **Stage 10.1:** Production Readiness Assessment & Operational Gap Analysis
+- [x] **Stage 10.2:** Docker Containerization, Production Compose & Security Hardening (Multi-stage non-root images, isolated networks, role-separated PostgreSQL, 263 Automated Tests)
+- [x] **Stage 10.3:** PostgreSQL, Redis & Distributed State Management (Atomic Lua rate limiting, transactional outbox, Redis streams, cross-replica revocation, 276 Automated Tests)
+- [x] **Stage 10.4:** Kubernetes & Helm Deployment Packaging (Cloud-neutral Helm chart, Restricted PSS, NetworkPolicies, HPA v2, PDB, pre-upgrade migration Jobs, 286 Automated Tests)
+- [ ] **Stage 10.5:** Secrets and Encryption Key Management
+- [ ] **Stage 10.6:** Monitoring, Observability and Alerting
+- [ ] **Stage 10.7:** Supply-Chain Security and CI/CD
+- [ ] **Stage 10.8:** Compliance Readiness and Evidence Engine
+- [ ] **Stage 10.9:** Python SDK Packaging and Distribution
+- [ ] **Stage 10.10:** Disaster Recovery and Production Validation
 
 

@@ -52,3 +52,15 @@ PRIVGUARD AI establishes three distinct network segments using Docker bridge net
 1. **No Public Database Exposure**: Neither PostgreSQL nor Redis publishes host ports in `compose.yaml` or `compose.production.yaml`.
 2. **Backend Gateway Isolation**: The FastAPI backend cannot be reached directly by external internet traffic; all traffic must pass through the Next.js BFF proxy.
 3. **Data Network Confinement**: The `data` network is configured with `internal: true`. A compromised database container cannot establish outbound reverse shells or exfiltrate data to the internet.
+
+
+---
+
+## 4. Kubernetes Micro-Segmentation (Stage 10.4)
+
+When deploying to Kubernetes via Helm (`deploy/helm/privguard/`), network isolation is enforced through Kubernetes `NetworkPolicy` objects:
+- **Default Deny All**: All ingress and egress is blocked by default across all PRIVGUARD pods.
+- **Frontend Isolation**: Accepts ingress solely from the Ingress Controller on port 3000; egress permitted only to backend on port 8000 and CoreDNS on port 53.
+- **Backend Isolation**: Accepts ingress strictly from frontend pods on port 8000; egress allowed only to external PostgreSQL (`5432`), external Redis (`6379`), and CoreDNS (`53`).
+- **Worker Isolation**: Ingress is completely closed; egress allowed only to external PostgreSQL (`5432`), external Redis (`6379`), and CoreDNS (`53`).
+- See [kubernetes_network_policies.md](file:///c:/Users/ANIKET/OneDrive/Documents/RIVA_AI/docs/kubernetes_network_policies.md) for full policy specifications and CNI compatibility requirements.
