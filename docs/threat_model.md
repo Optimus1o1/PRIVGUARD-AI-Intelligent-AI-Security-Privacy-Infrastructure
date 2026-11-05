@@ -24,6 +24,12 @@
 | **RAG Poisoning & Tampering** | Retrieval Security Validator | Cross-tenant retrieval isolation, cryptographic chunk hash validation, and HTML/CSS hidden injection scanning. |
 | **Covert Data Exfiltration (MITRE T1700)** | Exfiltration Detector | Taint tracking on confidential resources; blocks unauthorized transmission from tainted context to external sinks. |
 | **Arbitrary Code Execution** | Tool Registry | Critical risk tool `execute_code` is disabled by default in v0.1. |
+| **Long-Term Memory Poisoning** | Memory Validator & Consent Gate | Staged proposals require human consent; injection and hidden directives blocked before staging. |
+| **Imperative Agent Behavioral Overrides** | Memory Validator | Scans for persistent control phrases (`always send`, `never ask confirmation`); rejects with HTTP 400. |
+| **Credential Harvesting in Memory** | Memory Validator & Secret Scanner | Raw API keys and private tokens blocked prior to encryption or staging. |
+| **Cross-User / Cross-Tenant Memory Splicing** | Envelope Encryption Engine | AES-256-GCM with AAD binding (`memory_id:owner_id:category`); ciphertext tampering or splicing fails tag verification with HTTP 403 `MEMORY_INTEGRITY_COMPROMISED`. |
+| **Unauthorized Memory Retention** | Memory Lifecycle Manager | Optional expiration TTL; Cryptographic erasure destroys DEK (`[DEK_DESTROYED]`) and overwrites ciphertext (`[CRYPTOGRAPHICALLY_ERASED]`). |
+| **AI Model Training on Personal Data** | Architectural Invariant | Memory vault is strictly bounded for real-time context retrieval; zero training usage. |
 
 ## Defense-in-Depth Principle
 

@@ -69,3 +69,4 @@ Testing was conducted against the high-load `/v1/privacy/inspect` endpoint, exec
 1. **Database Migration:** Replace SQLite with PostgreSQL (e.g. Supabase or Neon) configured with connection pooling (`pgbouncer`) to support higher concurrent write throughput.
 2. **Audit Asynchrony:** For high-throughput deployments exceeding 500 RPS, transition audit logging from inline synchronous database commits to an asynchronous worker queue (e.g. Celery, Redis Streams, or RabbitMQ).
 3. **In-Memory Rate Limiting:** Implement token bucket rate limiting at the API gateway layer to throttle abusive client bursts before reaching database brokers.
+

@@ -93,3 +93,4 @@
 - **Root Cause:** Read-modify-write pattern in Python memory permitted race conditions under 20 concurrent requests.
 - **Fix:** Migrated to atomic SQL updates (`UPDATE ... WHERE uses_count < max_uses` and `UPDATE ... WHERE status = 'APPROVED'`). Checking `cursor.rowcount == 0` guarantees exactly 1 request succeeds and all others are rejected.
 - **Regression Suite:** `tests/test_performance_stage_6.py::test_capability_double_spend_race_condition` and `test_approval_double_spend_race_condition`.
+

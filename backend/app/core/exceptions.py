@@ -182,3 +182,63 @@ class ModelNotConfiguredError(PrivGuardException):
         )
 
 
+class MemorySecurityError(PrivGuardException):
+    """Base exception for Memory Vault security violations."""
+
+    def __init__(self, message: str = "Memory security violation", status_code: int = 403, error_code: str = "MEMORY_SECURITY_ERROR", details: Optional[Dict[str, Any]] = None):
+        super().__init__(
+            message=message,
+            status_code=status_code,
+            error_code=error_code,
+            details=details or {},
+        )
+
+
+class MemoryTamperingError(MemorySecurityError):
+    """Raised when memory ciphertext, authentication tag, or envelope metadata fails cryptographic verification."""
+
+    def __init__(self, memory_id: str = "unknown"):
+        super().__init__(
+            message=f"Cryptographic verification failed for memory record '{memory_id}'. Possible tampering or corrupted key.",
+            status_code=403,
+            error_code="MEMORY_INTEGRITY_COMPROMISED",
+            details={"memory_id": memory_id},
+        )
+
+
+class MemoryNotFoundError(PrivGuardException):
+    """Raised when a requested memory record or proposal does not exist or access is denied."""
+
+    def __init__(self, memory_id: str):
+        super().__init__(
+            message=f"Memory record '{memory_id}' not found or access denied.",
+            status_code=404,
+            error_code="MEMORY_NOT_FOUND",
+            details={"memory_id": memory_id},
+        )
+
+
+class MemoryPermissionError(MemorySecurityError):
+    """Raised when an agent or user lacks required granular permission for memory operation."""
+
+    def __init__(self, operation: str, agent_id: str, resource: str = "vault"):
+        super().__init__(
+            message=f"Access denied: Operation '{operation}' by agent '{agent_id}' is not authorized on '{resource}'.",
+            status_code=403,
+            error_code="MEMORY_ACCESS_DENIED",
+            details={"operation": operation, "agent_id": agent_id, "resource": resource},
+        )
+
+
+class MemoryPoisoningError(MemorySecurityError):
+    """Raised when proposed memory content fails security inspection (prompt injection, imperative override)."""
+
+    def __init__(self, reason: str, details: Optional[Dict[str, Any]] = None):
+        super().__init__(
+            message=f"Memory proposal rejected due to poisoning / security violation: {reason}",
+            status_code=400,
+            error_code="MEMORY_POISONING_DETECTED",
+            details=details or {},
+        )
+
+

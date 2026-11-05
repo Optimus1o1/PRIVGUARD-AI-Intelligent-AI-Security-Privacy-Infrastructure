@@ -48,3 +48,4 @@
 | **Concurrency** | Concurrency scaling 10, 50, 100 clients | `test_performance_stage_6.py` | `test_concurrency_scaling_10_50_100` | **PASS** |
 | **Concurrency** | Capability double-spend CAS race (1/20) | `test_performance_stage_6.py` | `test_capability_double_spend_race_condition` | **PASS** |
 | **Concurrency** | Approval double-spend CAS race (1/20) | `test_performance_stage_6.py` | `test_approval_double_spend_race_condition` | **PASS** |
+

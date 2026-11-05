@@ -14,6 +14,7 @@ const ALLOWED_ROUTE_PREFIXES = new Set([
   "privacy",
   "chat",
   "tools",
+  "memory",
 ]);
 
 async function proxyRequest(request: NextRequest, { params }: { params: { path: string[] } }) {
@@ -49,6 +50,10 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
   const headers = new Headers();
   headers.set("X-API-Key", API_KEY);
   headers.set("Content-Type", "application/json");
+  const incomingUserId = request.headers.get("X-User-ID");
+  if (incomingUserId) {
+    headers.set("X-User-ID", incomingUserId);
+  }
 
   const method = request.method;
   let body: string | undefined = undefined;

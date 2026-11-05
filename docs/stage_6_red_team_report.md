@@ -118,3 +118,4 @@ The following vulnerabilities were identified during red-team probing and succes
 ## 3. Summary of Verification Status
 
 All 12 discovered vulnerabilities have been patched, validated, and incorporated into continuous integration regression test suites. The attack surface of PRIVGUARD AI is verified resilient against OWASP AISVS 1.0 criteria.
+

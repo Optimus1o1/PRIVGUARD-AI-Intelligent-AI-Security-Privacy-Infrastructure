@@ -76,3 +76,4 @@ Autonomous AI systems do not fail solely from isolated malicious prompts; they f
 ## 3. Conclusion
 
 All 5 multi-stage attack scenarios demonstrated that PRIVGUARD AI enforces defense-in-depth across multiple independent layers. Attackers cannot rely on single-point failures to breach data confidentiality or execute unauthorized actions.
+

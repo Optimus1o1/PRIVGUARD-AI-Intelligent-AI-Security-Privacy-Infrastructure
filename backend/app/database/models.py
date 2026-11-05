@@ -47,6 +47,10 @@ class Agent(Base):
     last_activity_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
 
 
+# Alias for Agent Identity
+AgentIdentity = Agent
+
+
 class AgentTask(Base):
     """Task sessions with strict lifecycle and authorization boundaries."""
 
@@ -188,4 +192,132 @@ class ActiveTaint(Base):
     resource = Column(String(255), nullable=False)
     taint_level = Column(String(50), default="CONFIDENTIAL", nullable=False)
     created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class MemoryRecord(Base):
+    """Encrypted personal memory record (AES-256-GCM envelope encryption)."""
+
+    __tablename__ = "memory_records"
+
+    id = Column(String(64), primary_key=True, default=lambda: f"mem_{uuid.uuid4().hex[:12]}")
+    app_id = Column(String(36), ForeignKey("applications.id"), nullable=False, index=True)
+    owner_id = Column(String(100), nullable=False, index=True)
+    agent_id = Column(String(64), nullable=True, index=True)
+    category = Column(String(50), nullable=False, index=True)
+    status = Column(String(30), default="ACTIVE", nullable=False, index=True)
+    # ACTIVE, REVOKED, EXPIRED, DELETED, QUARANTINED
+    provenance = Column(String(30), default="USER_CONFIRMED", nullable=False)
+    # USER_CONFIRMED, AI_PROPOSED, EXTERNALLY_SOURCED, SYSTEM_GENERATED
+    encrypted_content = Column(Text, nullable=False)
+    nonce = Column(String(64), nullable=False)
+    wrapped_dek = Column(Text, nullable=False)
+    dek_nonce = Column(String(64), nullable=False)
+    key_version = Column(Integer, default=1, nullable=False)
+    content_fingerprint = Column(String(64), nullable=False, index=True)
+    summary = Column(String(255), nullable=True)
+    version = Column(Integer, default=1, nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=True, index=True)
+    retention_days = Column(Integer, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    consumed_at = Column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (
+        Index("idx_mem_app_owner", "app_id", "owner_id"),
+        Index("idx_mem_owner_status", "owner_id", "status"),
+    )
+
+
+class MemoryProposal(Base):
+    """Staged memory creation proposal awaiting user consent."""
+
+    __tablename__ = "memory_proposals"
+
+    id = Column(String(64), primary_key=True, default=lambda: f"prop_{uuid.uuid4().hex[:12]}")
+    app_id = Column(String(36), ForeignKey("applications.id"), nullable=False, index=True)
+    owner_id = Column(String(100), nullable=False, index=True)
+    agent_id = Column(String(64), nullable=False, index=True)
+    task_id = Column(String(64), nullable=False, index=True)
+    proposed_key = Column(String(100), nullable=False)
+    proposed_value = Column(Text, nullable=False)
+    category = Column(String(50), default="USER_PREFERENCES", nullable=False)
+    status = Column(String(30), default="PROPOSED", nullable=False, index=True)
+    # PROPOSED, PENDING_APPROVAL, APPROVED, REJECTED, EXPIRED
+    threat_assessment = Column(Text, nullable=True)
+    risk_level = Column(String(20), default="LOW", nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    resolved_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class MemoryPermission(Base):
+    """Granular access permission granting an agent authority over memory records."""
+
+    __tablename__ = "memory_permissions"
+
+    id = Column(String(64), primary_key=True, default=lambda: f"mperm_{uuid.uuid4().hex[:12]}")
+    app_id = Column(String(36), ForeignKey("applications.id"), nullable=False, index=True)
+    owner_id = Column(String(100), nullable=False, index=True)
+    agent_id = Column(String(64), nullable=False, index=True)
+    memory_id = Column(String(64), nullable=True, index=True)
+    category = Column(String(50), nullable=True, index=True)
+    operation = Column(String(30), nullable=False)
+    # memory.read, memory.propose_write, memory.update, memory.delete
+    is_granted = Column(Boolean, default=True, nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=True, index=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class MemoryVersion(Base):
+    """Historical encrypted version archive for rollback and audit."""
+
+    __tablename__ = "memory_versions"
+
+    id = Column(String(64), primary_key=True, default=lambda: f"mver_{uuid.uuid4().hex[:12]}")
+    memory_id = Column(String(64), ForeignKey("memory_records.id"), nullable=False, index=True)
+    version_num = Column(Integer, nullable=False)
+    encrypted_content = Column(Text, nullable=False)
+    nonce = Column(String(64), nullable=False)
+    wrapped_dek = Column(Text, nullable=False)
+    dek_nonce = Column(String(64), nullable=False)
+    key_version = Column(Integer, default=1, nullable=False)
+    content_fingerprint = Column(String(64), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class MemoryDeletionJob(Base):
+    """Asynchronous deletion job tracking cryptographic erasure of memories."""
+
+    __tablename__ = "memory_deletion_jobs"
+
+    id = Column(String(64), primary_key=True, default=lambda: f"mdel_{uuid.uuid4().hex[:12]}")
+    app_id = Column(String(36), ForeignKey("applications.id"), nullable=False, index=True)
+    owner_id = Column(String(100), nullable=False, index=True)
+    target_ids = Column(Text, nullable=False)  # JSON array string
+    deletion_type = Column(String(30), default="INDIVIDUAL", nullable=False)
+    # INDIVIDUAL, BULK, PURGE, EXPIRATION
+    status = Column(String(30), default="PENDING", nullable=False, index=True)
+    # PENDING, PROCESSING, COMPLETED, FAILED
+    items_deleted = Column(Integer, default=0, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class MemoryAuditEvent(Base):
+    """Content-free audit logging for memory vault actions."""
+
+    __tablename__ = "memory_audit_events"
+
+    id = Column(String(64), primary_key=True, default=lambda: f"maudit_{uuid.uuid4().hex[:12]}")
+    app_id = Column(String(36), nullable=False, index=True)
+    owner_id = Column(String(100), nullable=False, index=True)
+    agent_id = Column(String(64), nullable=True, index=True)
+    memory_id = Column(String(64), nullable=True, index=True)
+    operation = Column(String(50), nullable=False)
+    # PROPOSE, APPROVE, REJECT, RETRIEVE, UPDATE, DELETE, PURGE, ROTATE_KEY
+    category = Column(String(50), nullable=True)
+    action_taken = Column(String(30), nullable=False)  # ALLOW, BLOCK, REDACT
+    status = Column(String(30), nullable=False, default="SUCCESS")
+    content_fingerprint = Column(String(64), nullable=True)
+    timestamp = Column(DateTime(timezone=True), default=utcnow, nullable=False, index=True)
 

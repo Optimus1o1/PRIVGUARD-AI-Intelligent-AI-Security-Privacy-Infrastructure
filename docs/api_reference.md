@@ -150,5 +150,51 @@ All protected endpoints require an Application API key supplied in one of two fo
 - `POST /v1/policies`, `PUT /v1/policies/{rule_id}`, `DELETE /v1/policies/{rule_id}`
   Manage custom policy rules with audit logging and protection against invariant violations (e.g. blocking attempts to set `CRITICAL` severity to `ALLOW`).
 
+### 13. Personal AI Memory Vault
+- `POST /v1/memory/proposals`
+  Agent submits a candidate memory proposal awaiting human consent.
+  Body: `{"proposed_key": "...", "proposed_value": "...", "category": "...", "agent_id": "...", "task_id": "...", "ttl_seconds": 86400}`
+- `GET /v1/memory/proposals`
+  Lists pending candidate proposals for user review and consent (`status=PROPOSED`).
+- `POST /v1/memory/proposals/{proposal_id}/approve`
+  User approves proposal, triggering AES-256-GCM envelope encryption into active memory.
+  Body: `{"retention_days": 30}` (optional)
+- `POST /v1/memory/proposals/{proposal_id}/reject`
+  User permanently rejects proposal.
+  Body: `{"reason": "User rejected"}`
+- `POST /v1/memory`
+  User directly creates and encrypts a verified memory entry.
+  Body: `{"key": "...", "value": "...", "category": "USER_PREFERENCES", "retention_days": 90}`
+- `GET /v1/memory`
+  Lists memory records in vault (metadata only, zero plaintext).
+  Query params: `category`, `status`, `limit`, `offset`.
+- `GET /v1/memory/{memory_id}`
+  Retrieves and decrypts a specific personal memory entry using user KEK and record DEK.
+- `PATCH /v1/memory/{memory_id}`
+  Updates memory content with optimistic concurrency control (CAS).
+  Body: `{"new_value": "...", "expected_version": 1}`
+- `DELETE /v1/memory/{memory_id}`
+  Cryptographically erases memory (overwrites DEK and ciphertext with erasure markers).
+- `POST /v1/memory/{memory_id}/revoke`
+  Soft-revokes memory, immediately excluding it from active query retrieval.
+- `POST /v1/memory/retrieve`
+  Privacy-preserving bounded retrieval for active agent tasks or user queries.
+  Body: `{"agent_id": "...", "task_id": "...", "capability_token": "...", "query": "...", "categories": [...], "limit": 5}`
+- `POST /v1/memory/permissions`
+  Grants granular memory operation permission to an agent.
+  Body: `{"agent_id": "...", "operation": "memory.read", "category": "...", "ttl_seconds": 86400}`
+- `GET /v1/memory/permissions`
+  Lists active agent memory permissions.
+- `DELETE /v1/memory/permissions/{permission_id}`
+  Revokes an agent memory permission.
+- `POST /v1/memory/key/rotate`
+  Rotates user Key Encryption Key (KEK) and re-wraps active DEKs in $O(1)$ time.
+- `POST /v1/memory/purge`
+  Executes permanent cryptographic purge of all user personal memories (Right to be Forgotten).
+- `GET /v1/memory/retention`
+  Returns retention metrics, status breakdown, and category counts.
+- `GET /v1/memory/audit`
+  Returns content-free memory vault audit trail.
+
 
 
