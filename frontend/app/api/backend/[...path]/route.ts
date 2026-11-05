@@ -20,6 +20,9 @@ const ROUTE_POLICY: Record<string, string[]> = {
   mcp: ["GET", "POST", "DELETE"],
   organizations: ["GET", "POST", "DELETE"],
   scim: ["GET", "POST", "PATCH", "DELETE"],
+  keys: ["GET", "POST"],
+  secrets: ["GET", "POST"],
+  incidents: ["GET", "POST"],
 };
 
 const HOP_BY_HOP_HEADERS = new Set([

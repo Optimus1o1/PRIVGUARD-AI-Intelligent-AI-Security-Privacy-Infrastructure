@@ -88,3 +88,15 @@ When a user triggers KEK rotation (`POST /v1/memory/key/rotate`):
 3. The underlying `encrypted_content` ciphertext remains untouched on disk.
 4. **Complexity:** $O(1)$ cryptographic work per record regardless of the size of stored memory documents.
 
+---
+
+## 6. Stage 10.5 Enterprise KMS Envelope Encryption (V2)
+
+In Stage 10.5, PRIVGUARD elevated envelope encryption to provider-independent KMS architectures:
+- **Cloud Providers:** DEK wrapping and unwrapping delegated to Hardware Security Modules in AWS KMS (`aws_kms`), Google Cloud KMS (`gcp_kms`), Azure Key Vault (`azure_key_vault`), or HashiCorp Vault (`vault_transit`).
+- **Server-Side Native ReEncrypt:** For AWS KMS and HashiCorp Vault, key rotation uses native server-side rewrapping without DEK plaintext exposure to application memory.
+- **Tenant Isolation Context (AAD):** `AAD_v2 = f"{tenant_id}:{owner_id}:{memory_id}:{category}:v2"`.
+- **Non-Destructive V1-to-V2 Migration:** Legacy Stage 7 HKDF records are migrated to V2 KMS envelopes by rewrapping DEKs while preserving 100% of the original content ciphertext and nonces. Dual-AAD fallback ensures zero downtime and backward compatibility.
+- **Retirement Invariants:** The legacy master key cannot be deleted or retired until all unmigrated records and active database backup retention windows have elapsed.
+
+

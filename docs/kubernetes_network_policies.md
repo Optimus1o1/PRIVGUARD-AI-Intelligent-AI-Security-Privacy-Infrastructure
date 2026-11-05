@@ -120,3 +120,4 @@ networkPolicy:
 ```
 
 If left unconstrained (`postgresCidr: "0.0.0.0/0"`), egress is permitted to the database port across all reachable IP destinations while restricting protocol to TCP port 5432/6379.
+

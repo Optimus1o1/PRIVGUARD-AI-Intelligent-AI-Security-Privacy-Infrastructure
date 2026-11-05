@@ -62,3 +62,4 @@
 | `redis.host` | string | `"redis.cache.svc.cluster.local"` | Redis endpoint. |
 | `redis.existingSecret` | string | `"privguard-redis-credentials"` | Secret name holding `redis_password`. |
 | `secrets.existingSecret` | string | `"privguard-secrets"` | Secret name holding master encryption key. |
+

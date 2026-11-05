@@ -109,3 +109,4 @@ Route (app)                              Size     First Load JS
 | **Zero Plaintext Secrets** | Chart strictly requires `existingSecret` references; no passwords or keys present in manifests | **VERIFIED** |
 | **Database Role Isolation** | Migration Job runs as `privguard_migrator`; runtime Backend and Worker pods run as `privguard_app` | **VERIFIED** |
 | **Fail-Closed Distributed Rate Limiting** | Rate limiter switches to fail-closed behavior for sensitive tiers when Redis cluster is partitioned | **VERIFIED** |
+

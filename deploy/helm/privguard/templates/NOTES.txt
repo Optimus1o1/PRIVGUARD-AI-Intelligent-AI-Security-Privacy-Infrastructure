@@ -33,3 +33,4 @@ Release '{{ .Release.Name }}' deployed successfully to namespace '{{ .Release.Na
 Security reminder: All database, Redis, and encryption keys are consumed via
 external Kubernetes Secrets. Plaintext credentials are never rendered in manifests.
 ================================================================================
+

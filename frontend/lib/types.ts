@@ -259,3 +259,70 @@ export interface CatalogSyncResult {
   catalog_fingerprint?: string;
 }
 
+
+// ==============================================================================
+// Stage 10.5 — Key Management & Secrets Lifecycle Types
+// ==============================================================================
+
+export interface ManagedKey {
+  id: string;
+  tenant_id: string;
+  name: string;
+  purpose: string;
+  provider: string;
+  algorithm: string;
+  status: string;
+  active_version_id?: string;
+  last_rotated_at: string;
+  created_at: string;
+}
+
+export interface KeyVersion {
+  id: string;
+  version_num: number;
+  provider_version_id?: string;
+  status: string;
+  has_public_key: boolean;
+  created_at: string;
+}
+
+export interface KeyDetails {
+  key: ManagedKey;
+  versions: KeyVersion[];
+}
+
+export interface MigrationStatus {
+  unmigrated_records: number;
+  can_retire_legacy_key: boolean;
+  retirement_check_reason: string;
+  latest_job: {
+    id: string;
+    status: string;
+    records_total: number;
+    records_migrated: number;
+  } | null;
+}
+
+export interface SecretMetadata {
+  id: string;
+  tenant_id: string;
+  name: string;
+  secret_type: string;
+  version: number;
+  status: string;
+  expires_at?: string;
+  created_at: string;
+  last_rotated_at: string;
+}
+
+export interface KeyCompromiseResult {
+  status: string;
+  incident_type: string;
+  action?: string;
+  key_id?: string;
+  memory_id?: string;
+  rotation_job_id?: string;
+  records_to_rewrap?: number;
+  timestamp: string;
+  notes?: string;
+}

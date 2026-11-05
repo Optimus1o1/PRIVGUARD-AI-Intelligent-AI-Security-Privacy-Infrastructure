@@ -53,6 +53,11 @@
 | **Stale Cross-Replica Revocation Window** | Agent Security Broker | Tool execution verifies agent and capability status against PostgreSQL authority at dispatch time; sub-millisecond Redis invalidation. |
 | **Cross-Node Covert Exfiltration** | Distributed Taint Store | Monotonic task taint persistence in PostgreSQL `active_taints` and Redis sets prevents exfiltration across multi-replica clusters. |
 | **Connection Pool Tenant Contamination** | Database Session Manager | Transaction-scoped `SET LOCAL app.current_tenant_id` combined with deterministic `finally: RESET` prevents cross-tenant RLS leakage across pooled connections. |
+| **Master Key Compromise Blast Radius** | KMS Abstraction & Purpose Segregation | Separation of DEKs, KEKs, Ed25519 signing keys, and HMAC approval keys; compromise of one subsystem does not compromise others. |
+| **Premature Master Key Destruction** | Legacy Memory Migrator Safeguard | System prevents retirement or deletion of legacy keys while unmigrated records exist in the database or active backup retention window. |
+| **Plaintext Credential Leakage in DB** | Secret Metadata Manager | Application credentials maintain zero plaintext in database models or API metadata contracts. |
+| **In-Flight Key Rotation Downtime** | Envelope Encryption Engine | Dual-mode V1/V2 reading and non-destructive DEK rewrapping preserving ciphertext and nonces ensures 100% uptime during key rotation. |
+| **Approval Forgery via Master Key Exposure** | Signing Key Manager | Versioned HMAC approval action binding keys decoupled from data encryption keys; instant revocation of compromised key ID (`kid`). |
 
 ## Defense-in-Depth Principle
 

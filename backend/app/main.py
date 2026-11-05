@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from app.api import agents, approvals, audit, capabilities, dashboard, enterprise, fleet, gateway, health, identity, mcp, memory, policies, privacy, system, tasks, threats, tools, workspaces
+from app.api import agents, approvals, audit, capabilities, dashboard, enterprise, fleet, gateway, health, identity, incidents, keys, mcp, memory, policies, privacy, secrets, system, tasks, threats, tools, workspaces
 from app.core.config import settings
 from app.core.exceptions import (
     AuthenticationError,
@@ -159,6 +159,9 @@ app.include_router(workspaces.router)
 app.include_router(fleet.router)
 app.include_router(identity.router)
 app.include_router(system.router)
+app.include_router(keys.router)
+app.include_router(secrets.router)
+app.include_router(incidents.router)
 
 
 

@@ -130,3 +130,4 @@ PRIVGUARD completely eliminates this attack vector:
 3. **Database Privilege Separation**:
    - Runtime Backend & Worker pods connect via the unprivileged `privguard_app` database role (CRUD only on tenant tables, no DDL).
    - Migration Job runs one-shot using the `privguard_migrator` database role (DDL privileges strictly on `privguard_*` schemas).
+

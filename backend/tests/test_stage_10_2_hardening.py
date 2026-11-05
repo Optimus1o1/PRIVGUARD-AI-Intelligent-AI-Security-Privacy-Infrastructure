@@ -132,10 +132,13 @@ def test_10_production_valid_configuration_succeeds():
         DEBUG=False,
         PRIVGUARD_MASTER_KEY="vAl1d_Pr0d_M4st3r_K3y_WiTh_SufF1c13nt_EntR0py_32_Chars!",
         CORS_ALLOWED_ORIGINS=["https://app.privguard.internal"],
+        KMS_PROVIDER="aws_kms",
+        KMS_KEY_ID="arn:aws:kms:us-east-1:123456789012:key/test-kek",
     )
     assert s.ENVIRONMENT == "production"
     assert s.DEBUG is False
     assert len(s.PRIVGUARD_MASTER_KEY) >= 32
+    assert s.KMS_PROVIDER == "aws_kms"
 
 
 def test_11_secret_file_loading(tmp_path):

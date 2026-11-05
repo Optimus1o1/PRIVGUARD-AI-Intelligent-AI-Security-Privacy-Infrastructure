@@ -127,6 +127,7 @@ class ApprovalRequest(Base):
     target_resource = Column(String(255), nullable=True)
     action_parameters = Column(Text, nullable=False)  # Canonical JSON parameters
     action_hash = Column(String(64), nullable=False, index=True)  # SHA-256 cryptographic binding
+    signing_key_id = Column(String(64), nullable=True, index=True)
     risk_level = Column(String(20), default="HIGH", nullable=False)
     status = Column(String(20), default="PENDING", nullable=False, index=True)
     # PENDING, APPROVED, REJECTED, EXPIRED, CONSUMED
@@ -235,6 +236,8 @@ class MemoryRecord(Base):
     wrapped_dek = Column(Text, nullable=False)
     dek_nonce = Column(String(64), nullable=False)
     key_version = Column(Integer, default=1, nullable=False)
+    encryption_format = Column(String(10), default="V1", nullable=False, index=True)
+    key_id = Column(String(64), nullable=True, index=True)
     content_fingerprint = Column(String(64), nullable=False, index=True)
     summary = Column(String(255), nullable=True)
     version = Column(Integer, default=1, nullable=False)
@@ -672,4 +675,146 @@ class OutboxEvent(Base):
     retry_count = Column(Integer, default=0, nullable=False)
     last_attempt_at = Column(DateTime(timezone=True), nullable=True)
     published_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False, index=True)
+
+
+# ==============================================================================
+# Stage 10.5 — Key Management & Secrets Lifecycle Models
+# ==============================================================================
+
+class ManagedKey(Base):
+    """Central registry for encryption and signing keys."""
+
+    __tablename__ = "managed_keys"
+
+    id = Column(String(64), primary_key=True, default=lambda: f"key_{uuid.uuid4().hex[:12]}")
+    tenant_id = Column(String(64), nullable=False, default="default_tenant", index=True)
+    workspace_id = Column(String(64), nullable=True, index=True)
+    name = Column(String(128), nullable=False)
+    purpose = Column(String(64), nullable=False, index=True)
+    # MEMORY_ENCRYPTION, POLICY_SIGNING, APPROVAL_BINDING, INTEGRATION_SECRETS
+    provider = Column(String(32), nullable=False)
+    # LOCAL, AWS_KMS, GCP_KMS, AZURE_KEY_VAULT, VAULT_TRANSIT
+    external_key_ref = Column(String(255), nullable=True)  # Cloud ARN / key URI
+    algorithm = Column(String(32), nullable=False)
+    # AES_256_GCM, ED25519, HMAC_SHA256
+    status = Column(String(32), default="ACTIVE", nullable=False, index=True)
+    # CREATED, ACTIVE, ROTATION_PENDING, ROTATING, VERIFYING, RETIRED, COMPROMISED, DESTROYED
+    active_version_id = Column(String(64), nullable=True)
+    rotation_interval_days = Column(Integer, default=90, nullable=False)
+    last_rotated_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    next_rotation_due_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    retired_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class KeyVersion(Base):
+    """Specific cryptographic version of a managed key."""
+
+    __tablename__ = "key_versions"
+
+    id = Column(String(64), primary_key=True, default=lambda: f"kver_{uuid.uuid4().hex[:12]}")
+    key_id = Column(String(64), ForeignKey("managed_keys.id"), nullable=False, index=True)
+    version_num = Column(Integer, nullable=False)
+    provider_version_id = Column(String(128), nullable=True)  # KMS version ID or alias
+    status = Column(String(32), default="ACTIVE", nullable=False, index=True)
+    # ACTIVE, RETIRED, REVOKED, COMPROMISED, DESTROYED
+    public_key_material = Column(Text, nullable=True)  # For asymmetric signing keys ONLY
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    activated_at = Column(DateTime(timezone=True), nullable=True)
+    retired_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class KeyRotationJob(Base):
+    """Asynchronous lifecycle task for rotating a key and rewrapping dependent records."""
+
+    __tablename__ = "key_rotation_jobs"
+
+    id = Column(String(64), primary_key=True, default=lambda: f"krot_{uuid.uuid4().hex[:12]}")
+    tenant_id = Column(String(64), nullable=False, default="default_tenant", index=True)
+    key_id = Column(String(64), ForeignKey("managed_keys.id"), nullable=False, index=True)
+    from_version = Column(Integer, nullable=False)
+    to_version = Column(Integer, nullable=False)
+    mode = Column(String(32), default="MANUAL", nullable=False)
+    # SCHEDULED, MANUAL, EMERGENCY, COMPROMISE_RESPONSE, PROVIDER_MIGRATION
+    status = Column(String(32), default="PENDING", nullable=False, index=True)
+    # PENDING, IN_PROGRESS, VERIFYING, COMPLETED, FAILED
+    records_total = Column(Integer, default=0, nullable=False)
+    records_migrated = Column(Integer, default=0, nullable=False)
+    error_message = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class KeyMigrationJob(Base):
+    """Asynchronous migration task converting V1 records to V2 KMS envelopes."""
+
+    __tablename__ = "key_migration_jobs"
+
+    id = Column(String(64), primary_key=True, default=lambda: f"kmig_{uuid.uuid4().hex[:12]}")
+    tenant_id = Column(String(64), nullable=False, default="default_tenant", index=True)
+    source_format = Column(String(32), default="V1_LOCAL", nullable=False)
+    target_format = Column(String(32), default="V2_KMS", nullable=False)
+    status = Column(String(32), default="PENDING", nullable=False, index=True)
+    # PENDING, IN_PROGRESS, VERIFYING, COMPLETED, FAILED
+    batch_size = Column(Integer, default=50, nullable=False)
+    checkpoint_id = Column(String(64), nullable=True)
+    records_total = Column(Integer, default=0, nullable=False)
+    records_migrated = Column(Integer, default=0, nullable=False)
+    error_message = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class SecretMetadataRecord(Base):
+    """Metadata for application credentials and integration secrets (zero plaintext)."""
+
+    __tablename__ = "secret_metadata_records"
+
+    id = Column(String(64), primary_key=True, default=lambda: f"sec_{uuid.uuid4().hex[:12]}")
+    tenant_id = Column(String(64), nullable=False, default="default_tenant", index=True)
+    workspace_id = Column(String(64), nullable=True, index=True)
+    name = Column(String(128), nullable=False)
+    secret_type = Column(String(32), nullable=False)
+    # DATABASE_CREDENTIAL, REDIS_CREDENTIAL, LLM_API_KEY, MCP_CREDENTIAL, OAUTH_SECRET, SIEM_TOKEN
+    provider_ref = Column(String(128), nullable=True)
+    version = Column(Integer, default=1, nullable=False)
+    status = Column(String(32), default="ACTIVE", nullable=False, index=True)
+    # CREATED, ACTIVE, ROTATION_PENDING, ROTATING, VERIFIED, REVOKED
+    expires_at = Column(DateTime(timezone=True), nullable=True)
+    last_rotated_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class SecretRotationJob(Base):
+    """Rotation lifecycle task for application secrets."""
+
+    __tablename__ = "secret_rotation_jobs"
+
+    id = Column(String(64), primary_key=True, default=lambda: f"srot_{uuid.uuid4().hex[:12]}")
+    tenant_id = Column(String(64), nullable=False, default="default_tenant", index=True)
+    secret_id = Column(String(64), ForeignKey("secret_metadata_records.id"), nullable=False, index=True)
+    status = Column(String(32), default="PENDING", nullable=False, index=True)
+    # PENDING, IN_PROGRESS, VERIFIED, COMPLETED, FAILED
+    error_message = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class KeyAccessEvent(Base):
+    """Security audit log of cryptographic operations on managed keys."""
+
+    __tablename__ = "key_access_events"
+
+    id = Column(String(64), primary_key=True, default=lambda: f"kacc_{uuid.uuid4().hex[:12]}")
+    tenant_id = Column(String(64), nullable=False, default="default_tenant", index=True)
+    key_id = Column(String(64), nullable=False, index=True)
+    key_version = Column(String(32), nullable=True)
+    operation = Column(String(32), nullable=False)
+    # WRAP, UNWRAP, REWRAP, SIGN, VERIFY, ROTATE
+    actor_type = Column(String(32), nullable=False)
+    # SYSTEM, USER, AGENT
+    actor_id = Column(String(64), nullable=False)
+    status = Column(String(20), default="SUCCESS", nullable=False)
+    # SUCCESS, FAILURE, DENIED
     created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False, index=True)

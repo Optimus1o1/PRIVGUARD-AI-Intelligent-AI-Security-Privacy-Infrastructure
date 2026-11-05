@@ -19,3 +19,4 @@ spec:
       name: http
   selector:
     {{- include "privguard.selectorLabels" (dict "context" . "component" "backend") | nindent 4 }}
+

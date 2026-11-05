@@ -50,3 +50,10 @@ networkPolicy:
 
 database:
   sslMode: "disable"
+
+
+kms:
+  provider: "local"
+  keyId: "dev-local-key"
+  region: "us-east-1"
+  endpoint: ""

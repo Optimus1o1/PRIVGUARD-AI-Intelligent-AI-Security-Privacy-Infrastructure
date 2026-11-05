@@ -12,15 +12,15 @@ from app.core.exceptions import ApprovalRequiredError, PrivGuardException
 from app.database.models import ApprovalRequest, ensure_utc, utcnow
 
 
-def compute_action_hash(
+from app.key_management.signing import signing_key_manager
+
+
+def compute_legacy_action_hash(
     tool_name: str,
     target_resource: Optional[str],
     parameters: Dict[str, Any],
 ) -> str:
-    """
-    Computes a deterministic cryptographic HMAC-SHA-256 fingerprint of the exact proposed action.
-    Binds tool name, target resource, and canonical JSON parameters with the master key.
-    """
+    """Legacy action hash derived from master key (for backward compatibility)."""
     canonical_params = json.dumps(parameters, sort_keys=True, separators=(",", ":"))
     payload = f"{tool_name.strip()}|{(target_resource or '').strip()}|{canonical_params}"
     return hmac.new(
@@ -28,6 +28,17 @@ def compute_action_hash(
         payload.encode("utf-8"),
         hashlib.sha256,
     ).hexdigest()
+
+
+def compute_action_hash(
+    tool_name: str,
+    target_resource: Optional[str],
+    parameters: Dict[str, Any],
+    kid: Optional[str] = None,
+) -> str:
+    """Computes HMAC-SHA256 fingerprint using isolated signing key manager."""
+    digest, _ = signing_key_manager.compute_action_hash(tool_name, target_resource, parameters, kid=kid)
+    return digest
 
 
 class ApprovalEngine:
@@ -46,7 +57,7 @@ class ApprovalEngine:
         ttl_seconds: int = 300,
     ) -> ApprovalRequest:
         """Creates a pending human approval request bound cryptographically to the exact action."""
-        action_hash = compute_action_hash(tool_name, target_resource, parameters)
+        action_hash, kid = signing_key_manager.compute_action_hash(tool_name, target_resource, parameters)
         canonical_params = json.dumps(parameters, sort_keys=True, separators=(",", ":"))
         expires_at = datetime.now(timezone.utc) + timedelta(seconds=ttl_seconds)
 
@@ -58,6 +69,7 @@ class ApprovalEngine:
             target_resource=target_resource,
             action_parameters=canonical_params,
             action_hash=action_hash,
+            signing_key_id=kid,
             risk_level=risk_level,
             status="PENDING",
             created_at=datetime.now(timezone.utc),
@@ -203,13 +215,18 @@ class ApprovalEngine:
             )
 
         # CRITICAL ANTI-TAMPERING INVARIANT: Action Hash Verification
-        current_hash = compute_action_hash(tool_name, target_resource, parameters)
-        if current_hash != req.action_hash:
-            raise PrivGuardException(
-                message="Action parameter tampering detected: parameters do not match approved action hash.",
-                status_code=403,
-                error_code="APPROVAL_TAMPERING_DETECTED",
-            )
+        is_valid = signing_key_manager.verify_action_hash(
+            tool_name, target_resource, parameters, req.action_hash, kid=req.signing_key_id
+        )
+        if not is_valid:
+            # Fallback for historical approvals signed with master key
+            legacy_hash = compute_legacy_action_hash(tool_name, target_resource, parameters)
+            if legacy_hash != req.action_hash:
+                raise PrivGuardException(
+                    message="Action parameter tampering detected: parameters do not match approved action hash.",
+                    status_code=403,
+                    error_code="APPROVAL_TAMPERING_DETECTED",
+                )
 
         # Atomic State Transition: APPROVED -> CONSUMED via Compare-And-Swap
         stmt = (

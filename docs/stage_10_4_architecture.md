@@ -62,3 +62,4 @@ PRIVGUARD AI Stage 10.4 establishes a cloud-neutral, portable Kubernetes deploym
 5. **Restricted Pod Security Standard**: All pods enforce `runAsNonRoot: true`, `readOnlyRootFilesystem: true`, capabilities drop `ALL`, and `RuntimeDefault` seccomp profiles. Writable state is restricted to memory-backed `/tmp` mounts.
 6. **Multi-Tier NetworkPolicies**: Default-deny policies block unauthorized pod-to-pod and egress traffic. Only frontend pods can reach backend pods; only backend and worker pods can reach external data stores.
 7. **External Secrets Exclusivity**: Secrets are consumed via `existingSecret` references; no passwords or private keys are stored in `values.yaml` or printed in Helm NOTES.
+

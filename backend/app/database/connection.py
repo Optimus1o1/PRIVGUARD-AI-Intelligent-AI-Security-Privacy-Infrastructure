@@ -89,3 +89,7 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
                     await reset_db_tenant_context(session)
                 except Exception:
                     pass
+
+
+# Alias for database dependency
+get_db = get_db_session

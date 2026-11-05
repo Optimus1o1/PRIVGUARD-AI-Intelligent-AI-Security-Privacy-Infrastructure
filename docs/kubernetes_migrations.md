@@ -95,3 +95,4 @@ Because migrations adhere to the Expand-Contract pattern, the previous applicati
 > 1. Roll back the application container to the previous version.
 > 2. Author a forward migration script (e.g. `alembic revision -m "fix_..."`) that repairs the schema or drops deprecated objects safely.
 > 3. Deploy the fix via `helm upgrade`.
+

@@ -85,3 +85,10 @@ monitoring:
     enabled: true
     interval: "15s"
     scrapeTimeout: "10s"
+
+
+kms:
+  provider: "aws_kms"
+  keyId: "arn:aws:kms:us-east-1:123456789012:key/privguard-prod-kek"
+  region: "us-east-1"
+  endpoint: ""

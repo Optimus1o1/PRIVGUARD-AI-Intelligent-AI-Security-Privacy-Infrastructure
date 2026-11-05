@@ -83,3 +83,4 @@ helm install privguard ./deploy/helm/privguard \
 - **Restricted Pod Security**: All pods drop all capabilities (`drop: ["ALL"]`), disallow privilege escalation (`allowPrivilegeEscalation: false`), mount root filesystems read-only (`readOnlyRootFilesystem: true`), and run with `RuntimeDefault` seccomp profiles.
 - **Zero Ingress to Backend/Data**: The Ingress controller routes exclusively to the frontend service on port 3000. Backend (port 8000), database (port 5432), and Redis (port 6379) are completely shielded from ingress.
 - **NetworkPolicies**: Restrict pod-to-pod communication so that only frontend pods can reach backend pods, and only backend/worker pods can reach external data stores.
+

@@ -240,3 +240,4 @@ async def test_10_rate_limiter_fail_closed_in_production():
     )
     assert res_admin.allowed is False
     assert res_admin.backend_mode == "fail_closed_redis_unavailable"
+

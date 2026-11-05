@@ -68,6 +68,14 @@ class Settings(BaseSettings):
     AUDIT_CONTENT_STORAGE_ENABLED: bool = False  # NEVER store prompt/response text by default
     AUDIT_RETENTION_DAYS: int = 90
 
+    # Key Management Service (KMS) & Cryptography (Stage 10.5)
+    KMS_PROVIDER: str = "local"
+    KMS_KEY_ID: Optional[str] = None
+    KMS_REGION: str = "us-east-1"
+    KMS_ENDPOINT: Optional[str] = None
+    APPROVAL_HMAC_KEY: Optional[str] = None
+    APPROVAL_HMAC_KEY_FILE: Optional[str] = None
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -99,6 +107,12 @@ class Settings(BaseSettings):
         if redis_pw:
             data["REDIS_PASSWORD"] = redis_pw
 
+        # Check for approval HMAC key file
+        hmac_key_file = data.get("APPROVAL_HMAC_KEY_FILE") or os.getenv("APPROVAL_HMAC_KEY_FILE")
+        hmac_pw = _read_secret_file(hmac_key_file)
+        if hmac_pw:
+            data["APPROVAL_HMAC_KEY"] = hmac_pw
+
         return data
 
     @model_validator(mode="after")
@@ -122,6 +136,17 @@ class Settings(BaseSettings):
             if "*" in self.CORS_ALLOWED_ORIGINS:
                 raise ValueError(
                     "Security violation: CORS wildcard '*' origin is strictly prohibited in production."
+                )
+
+            if self.KMS_PROVIDER.lower() in ("local", "dev", "development"):
+                raise ValueError(
+                    "Security violation: Local KMS provider is strictly prohibited in production. "
+                    "A production KMS (AWS KMS, GCP KMS, Azure Key Vault, or Vault Transit) must be configured."
+                )
+
+            if not self.KMS_KEY_ID or not self.KMS_KEY_ID.strip():
+                raise ValueError(
+                    "Security violation: KMS_KEY_ID must be configured with a valid KMS key reference in production."
                 )
 
         return self

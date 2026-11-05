@@ -101,3 +101,4 @@ Kubernetes relies on HTTP probes to determine pod lifecycle state:
 3. **Graceful Shutdown**:
    - Containers handle `SIGTERM` signals cleanly.
    - In-flight requests are allowed up to 30 seconds (`terminationGracePeriodSeconds: 30`) to complete before forced termination.
+

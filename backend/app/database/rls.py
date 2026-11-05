@@ -32,6 +32,12 @@ TENANT_OWNED_TABLES: List[str] = [
     "enterprise_audit_events",
     "audit_export_jobs",
     "outbox_events",
+    "managed_keys",
+    "key_rotation_jobs",
+    "key_migration_jobs",
+    "secret_metadata_records",
+    "secret_rotation_jobs",
+    "key_access_events",
 ]
 
 

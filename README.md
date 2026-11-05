@@ -218,7 +218,7 @@ PRIVGUARD-AI/
 - [x] **Stage 10.2:** Docker Containerization, Production Compose & Security Hardening (Multi-stage non-root images, isolated networks, role-separated PostgreSQL, 263 Automated Tests)
 - [x] **Stage 10.3:** PostgreSQL, Redis & Distributed State Management (Atomic Lua rate limiting, transactional outbox, Redis streams, cross-replica revocation, 276 Automated Tests)
 - [x] **Stage 10.4:** Kubernetes & Helm Deployment Packaging (Cloud-neutral Helm chart, Restricted PSS, NetworkPolicies, HPA v2, PDB, pre-upgrade migration Jobs, 286 Automated Tests)
-- [ ] **Stage 10.5:** Secrets and Encryption Key Management
+- [x] **Stage 10.5:** Enterprise Secrets & Cryptographic Key Management (Provider-independent KMS abstraction for AWS/GCP/Azure/Vault/Local, non-destructive legacy V1-to-V2 DEK rewrap, automated KEK rotation, Ed25519 signing key separation, decoupled approval HMAC, zero plaintext secret metadata, 314 Automated Tests)
 - [ ] **Stage 10.6:** Monitoring, Observability and Alerting
 - [ ] **Stage 10.7:** Supply-Chain Security and CI/CD
 - [ ] **Stage 10.8:** Compliance Readiness and Evidence Engine

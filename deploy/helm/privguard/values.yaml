@@ -191,3 +191,10 @@ monitoring:
     interval: "30s"
     scrapeTimeout: "10s"
     additionalLabels: {}
+
+
+kms:
+  provider: "local"
+  keyId: ""
+  region: "us-east-1"
+  endpoint: ""

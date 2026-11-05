@@ -161,6 +161,26 @@ To protect Kubernetes `Secret` resources from unauthorized inspection in etcd sn
    ```
 3. Update external CI/CD or governance agents with the new API key.
 
-### 6.3 Master Key Rotation
-PRIVGUARD supports envelope encryption where data keys are encrypted by the Master Key.
-- Stage 10.5 will implement key rotation routines and dual-key re-encryption transitions.
+### 6.3 Master Key Rotation & KMS Workload Identity
+PRIVGUARD supports envelope encryption where data encryption keys (DEKs) are wrapped by Key Encryption Keys (KEKs) residing in external KMS providers.
+- When `KMS_PROVIDER` is set to `aws_kms`, `gcp_kms`, `azure_key_vault`, or `vault_transit`, the pod authenticates using Kubernetes Workload Identity (AWS IRSA, GKE Workload Identity, or Azure Workload Identity).
+- Zero master key material is mounted inside the container filesystem.
+- KEK rotation is triggered via `POST /v1/keys/{id}/rotate`, advancing the provider version and triggering non-destructive background DEK rewrapping without downtime.
+
+---
+
+## 7. Stage 10.5 KMS Helm Configuration
+
+The PRIVGUARD Helm chart exposes a dedicated `kms:` configuration block:
+
+```yaml
+kms:
+  provider: "aws_kms"  # or gcp_kms, azure_key_vault, vault_transit, local
+  keyId: "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"
+  region: "us-east-1"
+  endpoint: ""
+```
+
+In production, `kms.provider: "local"` is rejected by the backend startup validator. Pods must authenticate to the cloud KMS service via service account annotations (`eks.amazonaws.com/role-arn` or `iam.gke.io/gcp-service-account`).
+
+

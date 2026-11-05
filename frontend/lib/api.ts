@@ -18,6 +18,11 @@ import {
   Task,
   ThreatEvent,
   ThreatStatistics,
+  KeyDetails,
+  ManagedKey,
+  MigrationStatus,
+  SecretMetadata,
+  KeyCompromiseResult,
 } from "./types";
 
 const BASE_URL = "/api/backend";
@@ -272,6 +277,48 @@ export const api = {
     fetchJson<any>(`/organizations/${orgId}/audit/export`, {
       method: "POST",
       body: JSON.stringify({ destination_url: destinationUrl, destination_type: "SIEM_WEBHOOK" }),
+    }),
+
+  // Stage 10.5 — Key & Secret Lifecycle Management
+  getKeys: () => fetchJson<ManagedKey[]>("/keys"),
+  getKey: (keyId: string) => fetchJson<KeyDetails>(`/keys/${keyId}`),
+  registerKey: (data: any) =>
+    fetchJson<ManagedKey>("/keys", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  rotateKey: (keyId: string) =>
+    fetchJson<any>(`/keys/${keyId}/rotate`, {
+      method: "POST",
+    }),
+  verifyKey: (keyId: string) =>
+    fetchJson<any>(`/keys/${keyId}/verify`, {
+      method: "POST",
+    }),
+  getMigrationStatus: () => fetchJson<MigrationStatus>("/keys/migration/status"),
+  startMigration: (batchSize: number = 50) =>
+    fetchJson<any>("/keys/migration/start", {
+      method: "POST",
+      body: JSON.stringify({ batch_size: batchSize }),
+    }),
+  getSecrets: () => fetchJson<SecretMetadata[]>("/secrets"),
+  registerSecret: (data: any) =>
+    fetchJson<SecretMetadata>("/secrets", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  rotateSecret: (secretId: string) =>
+    fetchJson<any>(`/secrets/${secretId}/rotate`, {
+      method: "POST",
+    }),
+  revokeSecret: (secretId: string) =>
+    fetchJson<any>(`/secrets/${secretId}/revoke`, {
+      method: "POST",
+    }),
+  reportCompromise: (data: any) =>
+    fetchJson<KeyCompromiseResult>("/incidents/compromise", {
+      method: "POST",
+      body: JSON.stringify(data),
     }),
 };
 
