@@ -64,3 +64,4 @@ Any report demonstrating a violation of these core platform invariants will be a
 3. **MCP SSRF Barrier**: Any bypass allowing agent tool execution to connect to private subnets (RFC 1918) or cloud metadata (`169.254.169.254`).
 4. **Approval Action Binding**: Any mechanism permitting an approved tool action to execute with altered parameters.
 5. **Zero-Content Telemetry**: Raw prompts, completions, or memory plaintext appearing in Prometheus metrics, OpenTelemetry spans, or structured logs.
+

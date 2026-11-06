@@ -50,3 +50,4 @@ provenance:
 - **Hermetic Build Definitions**: Parameters, inputs, and build environment captured in an immutable in-toto statement.
 - **Cryptographic Attestation**: The statement is digitally signed by GitHub's OIDC root authority.
 - **Fail-Closed Verification**: `verify_release.py` enforces builder workflow origin (`.github/workflows/release.yml`) and tag matching before any deployment proceeds.
+

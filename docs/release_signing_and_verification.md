@@ -70,3 +70,4 @@ If any verification check fails, `verify_release.py`:
 - Logs the exact mismatch or missing artifact to `stderr`.
 - Exits immediately with return code `1`.
 - Prohibits deployment from proceeding.
+

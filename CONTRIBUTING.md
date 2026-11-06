@@ -68,3 +68,4 @@ When opening a Pull Request:
 - Ensure all GitHub Actions CI checks pass (`backend`, `frontend`, `infrastructure`).
 - Include automated tests in `backend/tests/` for any new logic or bugfix.
 - For architectural changes touching more than 2 files, discuss the implementation design upfront.
+

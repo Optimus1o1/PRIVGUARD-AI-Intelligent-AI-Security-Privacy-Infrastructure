@@ -33,6 +33,8 @@ from app.api import (
     workspaces,
 )
 from app.core.config import settings
+from app.core.middleware import RequestSizeLimitMiddleware, PayloadTooLargeException
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.observability import init_observability
 from app.core.exceptions import (
     AuthenticationError,
@@ -77,6 +79,9 @@ app = FastAPI(
 )
 
 init_observability(app)
+
+# Request Size Limit Middleware: Rejects payloads > settings.MAX_REQUEST_SIZE_BYTES (10 MB)
+app.add_middleware(RequestSizeLimitMiddleware)
 
 # CORS Middleware: strictly bounded origin whitelist, restricted methods and headers
 app.add_middleware(
@@ -166,6 +171,41 @@ async def generic_privguard_handler(request: Request, exc: PrivGuardException):
                 "details": exc.details,
             }
         },
+    )
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    # Unpack payload size exceptions wrapped by AnyIO / Starlette BaseHTTPMiddleware TaskGroups
+    cause = exc.__cause__
+    if cause:
+        if isinstance(cause, PayloadTooLargeException):
+            return JSONResponse(
+                status_code=413,
+                content={
+                    "error": {
+                        "code": "PAYLOAD_TOO_LARGE",
+                        "message": f"Request body exceeds maximum allowed size of {cause.max_bytes} bytes.",
+                        "details": {"max_allowed_bytes": cause.max_bytes},
+                    }
+                },
+            )
+        if isinstance(cause, BaseExceptionGroup):
+            for sub_exc in cause.exceptions:
+                if isinstance(sub_exc, PayloadTooLargeException):
+                    return JSONResponse(
+                        status_code=413,
+                        content={
+                            "error": {
+                                "code": "PAYLOAD_TOO_LARGE",
+                                "message": f"Request body exceeds maximum allowed size of {sub_exc.max_bytes} bytes.",
+                                "details": {"max_allowed_bytes": sub_exc.max_bytes},
+                            }
+                        },
+                    )
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
     )
 
 

@@ -65,8 +65,9 @@ class ToolBroker:
         # 1. Identity Validation (Never trust self-asserted identity)
         agent = await self.identity_mgr.validate_agent_active(db, agent_id, app.id)
 
-        # 2. Task State Validation
+        # 2. Task State Validation & Step Budget Tracking
         task = await self.task_mgr.validate_task_active(db, task_id, app.id, agent_id)
+        await self.task_mgr.record_step(db, task_id, app.id)
 
         # 3. Tool Allowlist & Schema Validation
         tool = self.registry.get_tool(tool_name)

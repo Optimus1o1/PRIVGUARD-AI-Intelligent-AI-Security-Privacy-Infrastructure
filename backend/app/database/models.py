@@ -68,6 +68,8 @@ class AgentTask(Base):
     status = Column(String(30), default="CREATED", nullable=False)
     # Statuses: CREATED, RUNNING, WAITING_FOR_APPROVAL, COMPLETED, FAILED, CANCELLED, EXPIRED
     description = Column(String(255), nullable=True)
+    step_count = Column(Integer, default=0, nullable=True)
+    max_steps = Column(Integer, default=50, nullable=True)
     created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
     expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
@@ -87,6 +89,8 @@ class PolicyRule(Base):
     risk_level = Column(String(20), nullable=False)  # LOW, MEDIUM, HIGH, CRITICAL
     is_enabled = Column(Boolean, default=True, nullable=False)
     description = Column(String(255), nullable=True)
+    step_count = Column(Integer, default=0, nullable=True)
+    max_steps = Column(Integer, default=50, nullable=True)
     created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
 
 

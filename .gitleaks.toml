@@ -64,3 +64,4 @@ regex = '''-----BEGIN (RSA|EC|DSA|OPENSSH|PRIVATE) KEY-----'''
 secretGroup = 0
 severity = "CRITICAL"
 tags = ["cryptography", "keys"]
+

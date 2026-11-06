@@ -104,3 +104,4 @@ When a semantic version tag (`v*.*.*`) is pushed:
 3. **Cosign Keyless Signing**: Uses GitHub Actions OIDC (`id-token: write`) to sign container images with Sigstore. Records cryptographic transparency log entry in Rekor.
 4. **SBOM & Provenance**: Runs `scripts/security/generate_sboms.py` to produce CycloneDX 1.6 SBOMs for all runtimes and packages SLSA v1.0 build provenance.
 5. **Gated Production Deployment**: Deploys to `production` environment, requiring explicit approval from authorized Moon Sanctum Labs reviewers. Images are admitted exclusively by cryptographic digest (`image@sha256:...`).
+

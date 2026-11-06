@@ -126,3 +126,14 @@ helm upgrade privguard ./deploy/helm/privguard \
   --set backend.image.digest="sha256:<VERIFIED_BACKEND_DIGEST>" \
   --set frontend.image.digest="sha256:<VERIFIED_FRONTEND_DIGEST>"
 ```
+
+---
+
+## 7. Resilience, Chaos & Failure Containment
+
+In Kubernetes multi-node clusters:
+- **Pod Disruption Budgets (PDB):** Enforce `minAvailable: 1` during node maintenance, cluster autoscaler drains, and rolling updates.
+- **Fail-Closed Probes:** Liveness probes (`/health/live`) and readiness probes (`/health/ready`) automatically remove failing pods from ClusterIP load balancing.
+- **PostgreSQL-Authoritative State:** If Redis pods crash or partition, backend replicas fail closed on sensitive reads and query PostgreSQL directly, preventing privilege leakage or stale authorizations.
+- **Edge Resource Protection:** Kubernetes container memory limits combined with `RequestSizeLimitMiddleware` (10 MB request limit) prevent OOM kills from volumetric payload attacks.
+- **Agent Runaway Quotas:** Hard step limits (default: 100 steps) ensure looping or prompt-injected agents are terminated with HTTP 429 and auto-revoked before exhausting cluster compute or upstream API budgets.

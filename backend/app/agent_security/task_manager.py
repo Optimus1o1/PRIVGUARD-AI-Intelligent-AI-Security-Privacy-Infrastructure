@@ -19,6 +19,7 @@ class TaskManager:
         app_id: str,
         description: Optional[str] = None,
         ttl_seconds: int = 600,
+        max_steps: int = 50,
     ) -> AgentTask:
         """Initializes a new task session bound to an active agent and caller app."""
         # Verify agent is active and owned by app
@@ -32,6 +33,8 @@ class TaskManager:
             app_id=app_id,
             status="RUNNING",
             description=description,
+            step_count=0,
+            max_steps=max_steps,
             created_at=now,
             expires_at=expires_at,
         )
@@ -87,7 +90,7 @@ class TaskManager:
                 error_code="TASK_EXPIRED",
             )
 
-        if task.status in ("COMPLETED", "FAILED", "CANCELLED", "EXPIRED"):
+        if task.status in ("COMPLETED", "FAILED", "CANCELLED", "EXPIRED", "STEP_LIMIT_EXCEEDED"):
             raise PrivGuardException(
                 message=f"Task '{task_id}' is closed (status: {task.status}).",
                 status_code=403,
@@ -95,6 +98,35 @@ class TaskManager:
             )
 
         return task
+
+    async def record_step(
+        self,
+        db: AsyncSession,
+        task_id: str,
+        app_id: str,
+    ) -> int:
+        """
+        Increments task execution step counter.
+        Enforces MAX_TASK_STEPS to prevent runaway agent loops or recursion resource exhaustion.
+        """
+        task = await self.get_task(db, task_id, app_id)
+        current_steps = getattr(task, "step_count", 0) or 0
+        limit = getattr(task, "max_steps", 50) or 50
+
+        if current_steps >= limit:
+            task.status = "STEP_LIMIT_EXCEEDED"
+            task.completed_at = datetime.now(timezone.utc)
+            await self._cleanup_task_resources(db, task_id, "STEP_LIMIT_EXCEEDED")
+            await db.commit()
+            raise PrivGuardException(
+                message=f"Task '{task_id}' exceeded maximum execution step budget ({limit} steps).",
+                status_code=429,
+                error_code="TASK_STEP_LIMIT_EXCEEDED",
+            )
+
+        task.step_count = current_steps + 1
+        await db.commit()
+        return task.step_count
 
     async def cancel_task(
         self,

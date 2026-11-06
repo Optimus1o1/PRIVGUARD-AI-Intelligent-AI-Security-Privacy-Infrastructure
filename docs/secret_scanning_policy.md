@@ -56,3 +56,4 @@ If a genuine secret is detected in git history or CI output:
     Log incident in security audit trail, determine why pre-commit hooks were
     bypassed, and update detection rules or entropy thresholds accordingly.
 ```
+

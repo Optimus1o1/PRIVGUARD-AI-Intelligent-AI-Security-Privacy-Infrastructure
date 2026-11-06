@@ -66,3 +66,4 @@ PRIVGUARD enforces a protected GitHub Environment named `production`:
 - **Required Reviewers**: Authorized security reviewers (Moon Sanctum Labs leads) must approve the promotion in the GitHub Actions UI.
 - **Wait Timer / Soak Period**: Configurable 15-minute observation window following staging deployment.
 - **Immutable Digest Admission**: Helm charts deployed to production reference container images exclusively by their immutable SHA-256 digest (`image: ghcr.io/privguard-ai/privguard-backend@sha256:...`), guaranteeing that staging-tested artifacts are bit-for-bit identical to production code.
+

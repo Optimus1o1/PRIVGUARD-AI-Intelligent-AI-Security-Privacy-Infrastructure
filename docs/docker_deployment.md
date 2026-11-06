@@ -149,6 +149,12 @@ cosign verify ghcr.io/privguard-ai/privguard-backend:v1.0.0 \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com"
 ```
 
+### Resource Bounding & Production Hardening
+PRIVGUARD enforces strict edge bounding to protect container instances from memory exhaustion and runaway agent processes:
+- `MAX_REQUEST_SIZE_BYTES=10485760`: (Default: 10 MB). Rejects oversized and un-bounded chunked streaming requests at the ASGI edge with HTTP 413 `PAYLOAD_TOO_LARGE`.
+- `DEFAULT_MAX_TASK_STEPS=100`: Automatically halts runaway agent loops at 100 tool executions, transitions task to `STEP_LIMIT_EXCEEDED` (HTTP 429), and auto-revokes associated capability tokens.
+- `TOOL_TIMEOUT_SECONDS=10.0`: Hard timeout for upstream MCP tool handlers, aborting hanging sockets with HTTP 504 `TOOL_EXECUTION_TIMEOUT`.
+
 ---
 
 ## 5. Moving to Kubernetes (Enterprise Fleet Scale)

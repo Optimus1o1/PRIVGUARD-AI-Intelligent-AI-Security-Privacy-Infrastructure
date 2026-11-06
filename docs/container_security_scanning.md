@@ -57,3 +57,4 @@ PRIVGUARD's `Dockerfile` and `Dockerfile.frontend` implement multi-stage builds 
 - **Read-Only Root Filesystem**: Write access restricted to ephemeral `/tmp` volumes.
 - **No Package Managers in Final Stage**: Build tools (`gcc`, `pip`, `npm`) are discarded after compilation stages.
 - **No Embedded Secrets**: Credentials and tokens are injected exclusively at runtime via Kubernetes Secrets or environment variables.
+

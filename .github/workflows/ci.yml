@@ -168,3 +168,4 @@ jobs:
       - name: "Verify Helm template rendering (Production Profile)"
         run: |
           helm template privguard deploy/helm/privguard -f deploy/helm/privguard/values/production.yaml > /dev/null
+

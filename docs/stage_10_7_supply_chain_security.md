@@ -123,3 +123,4 @@ To establish clear security boundaries and review workflows:
 - **`SECURITY.md`**: Defines vulnerability disclosure procedures, triage SLAs (P0: 24h, P1: 72h, P2: 7d), scope definitions, and core security invariants.
 - **`.github/CODEOWNERS`**: Restricts approval authority for security modules, CI/CD workflows, Helm charts, Dockerfiles, and root configurations to designated Moon Sanctum Labs security reviewers.
 - **`CONTRIBUTING.md`**: Formalizes development prerequisites, pre-commit secret scanning, test suite passing criteria, conventional commit messages, and automated merge checks.
+

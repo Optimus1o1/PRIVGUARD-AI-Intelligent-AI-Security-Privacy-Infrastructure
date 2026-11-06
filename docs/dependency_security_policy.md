@@ -93,3 +93,4 @@ Suppressions in `.trivyignore` or audit exclusion files are treated as formal se
 6. **Approver**: Moon Sanctum Labs Security Lead sign-off.
 
 *Current Status*: **Zero (0) active suppressions.** Both Python and Node.js environments maintain a clean vulnerability baseline without exceptions.
+
