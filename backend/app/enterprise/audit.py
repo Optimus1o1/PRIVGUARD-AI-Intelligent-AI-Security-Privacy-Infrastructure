@@ -19,7 +19,9 @@ class EnterpriseAuditLedger:
     """Manages immutable, hash-chained enterprise audit logs with cryptographically verifiable tamper detection."""
 
     @staticmethod
-    def _compute_event_hash(prev_hash: str, seq: int, action: str, actor_id: str, resource_id: str, details_json: str) -> str:
+    def _compute_event_hash(
+        prev_hash: str, seq: int, action: str, actor_id: str, resource_id: str, details_json: str
+    ) -> str:
         """Computes deterministic SHA-256 hash chaining the previous event hash."""
         canonical_content = f"{prev_hash}:{seq}:{action}:{actor_id}:{resource_id}:{details_json}"
         return hashlib.sha256(canonical_content.encode("utf-8")).hexdigest()
@@ -39,9 +41,11 @@ class EnterpriseAuditLedger:
     ) -> EnterpriseAuditEvent:
         """Appends a new event to the tenant's hash-chained audit ledger."""
         # Find the latest event in the tenant's chain
-        q = select(EnterpriseAuditEvent).where(
-            EnterpriseAuditEvent.tenant_id == tenant_id
-        ).order_by(EnterpriseAuditEvent.sequence_number.desc())
+        q = (
+            select(EnterpriseAuditEvent)
+            .where(EnterpriseAuditEvent.tenant_id == tenant_id)
+            .order_by(EnterpriseAuditEvent.sequence_number.desc())
+        )
         res = await db.execute(q)
         last_event = res.scalars().first()
 
@@ -81,16 +85,16 @@ class EnterpriseAuditLedger:
         return audit_entry
 
     @classmethod
-    async def verify_chain_integrity(
-        cls, db: AsyncSession, tenant_id: str
-    ) -> Tuple[bool, List[str]]:
+    async def verify_chain_integrity(cls, db: AsyncSession, tenant_id: str) -> Tuple[bool, List[str]]:
         """
         Scans and mathematically validates the entire audit chain for a tenant.
         Returns: (is_valid, list_of_detected_violations)
         """
-        q = select(EnterpriseAuditEvent).where(
-            EnterpriseAuditEvent.tenant_id == tenant_id
-        ).order_by(EnterpriseAuditEvent.sequence_number.asc())
+        q = (
+            select(EnterpriseAuditEvent)
+            .where(EnterpriseAuditEvent.tenant_id == tenant_id)
+            .order_by(EnterpriseAuditEvent.sequence_number.asc())
+        )
         res = await db.execute(q)
         events = res.scalars().all()
 
@@ -105,9 +109,7 @@ class EnterpriseAuditLedger:
                 )
 
             if ev.previous_event_hash != expected_prev_hash:
-                violations.append(
-                    f"Chain break at sequence {ev.sequence_number}: previous_event_hash mismatch."
-                )
+                violations.append(f"Chain break at sequence {ev.sequence_number}: previous_event_hash mismatch.")
 
             recomputed_hash = cls._compute_event_hash(
                 prev_hash=ev.previous_event_hash,
@@ -119,9 +121,7 @@ class EnterpriseAuditLedger:
             )
 
             if ev.event_hash != recomputed_hash:
-                violations.append(
-                    f"Tamper detected at sequence {ev.sequence_number}: event_hash mismatch."
-                )
+                violations.append(f"Tamper detected at sequence {ev.sequence_number}: event_hash mismatch.")
 
             expected_prev_hash = ev.event_hash
             expected_seq += 1
@@ -146,9 +146,11 @@ class EnterpriseAuditLedger:
         """Creates an auditable, verified export job for SIEM integration."""
         safe_url = cls.validate_siem_export_destination(destination_url)
 
-        q = select(EnterpriseAuditEvent).where(
-            EnterpriseAuditEvent.tenant_id == tenant_id
-        ).order_by(EnterpriseAuditEvent.sequence_number.desc())
+        q = (
+            select(EnterpriseAuditEvent)
+            .where(EnterpriseAuditEvent.tenant_id == tenant_id)
+            .order_by(EnterpriseAuditEvent.sequence_number.desc())
+        )
         res = await db.execute(q)
         latest = res.scalars().first()
 
@@ -169,4 +171,3 @@ class EnterpriseAuditLedger:
         await db.commit()
         await db.refresh(job)
         return job
-

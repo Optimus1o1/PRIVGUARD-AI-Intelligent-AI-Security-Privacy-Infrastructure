@@ -394,6 +394,7 @@ OUTBOX_EVENTS_PUBLISHED_TOTAL = Counter(
     registry=privguard_registry,
 )
 
+
 # ==============================================================================
 # 10. Operational Convenience Helper Functions
 # ==============================================================================
@@ -403,7 +404,9 @@ def record_http_request(method: str, route: str, status_class: str, duration: Op
         HTTP_REQUEST_DURATION_SECONDS.labels(method=method, route=route, status_class=status_class).observe(duration)
 
 
-def record_gateway_request(provider: str, model: str, status: str, duration: Optional[float] = None, phase: str = "total") -> None:
+def record_gateway_request(
+    provider: str, model: str, status: str, duration: Optional[float] = None, phase: str = "total"
+) -> None:
     GATEWAY_REQUESTS_TOTAL.labels(provider=provider, model=model, status=status).inc()
     if duration is not None:
         GATEWAY_REQUEST_DURATION_SECONDS.labels(provider=provider, model=model, phase=phase).observe(duration)

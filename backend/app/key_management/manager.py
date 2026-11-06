@@ -176,9 +176,7 @@ class KMSManager:
         new_version: Optional[str] = None,
         old_nonce: Optional[bytes] = None,
     ) -> WrappedKeyResult:
-        return self.rewrap_dek_sync(
-            key_id, new_key_id, wrapped_dek, tenant_id, old_version, new_version, old_nonce
-        )
+        return self.rewrap_dek_sync(key_id, new_key_id, wrapped_dek, tenant_id, old_version, new_version, old_nonce)
 
     def verify_health(self, key_id: Optional[str] = None) -> bool:
         """Verifies operational connectivity to the active KMS provider."""

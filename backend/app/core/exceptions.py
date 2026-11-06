@@ -111,7 +111,12 @@ class FailClosedError(PrivGuardException):
 class UpstreamProviderError(PrivGuardException):
     """Raised when communication with the upstream LLM provider fails."""
 
-    def __init__(self, message: str = "Upstream model provider encountered an error", status_code: int = 502, details: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self,
+        message: str = "Upstream model provider encountered an error",
+        status_code: int = 502,
+        details: Optional[Dict[str, Any]] = None,
+    ):
         super().__init__(
             message=message,
             status_code=status_code,
@@ -187,7 +192,13 @@ class ModelNotConfiguredError(PrivGuardException):
 class MemorySecurityError(PrivGuardException):
     """Base exception for Memory Vault security violations."""
 
-    def __init__(self, message: str = "Memory security violation", status_code: int = 403, error_code: str = "MEMORY_SECURITY_ERROR", details: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self,
+        message: str = "Memory security violation",
+        status_code: int = 403,
+        error_code: str = "MEMORY_SECURITY_ERROR",
+        details: Optional[Dict[str, Any]] = None,
+    ):
         super().__init__(
             message=message,
             status_code=status_code,
@@ -247,6 +258,7 @@ class MemoryPoisoningError(MemorySecurityError):
 # ==============================================================================
 # STAGE 8: MCP SECURITY EXCEPTIONS
 # ==============================================================================
+
 
 class MCPSecurityError(PrivGuardException):
     """Base exception for Model Context Protocol security gateway violations."""
@@ -348,7 +360,3 @@ class SecurityPolicyViolationError(PrivGuardException):
             error_code="SECURITY_POLICY_VIOLATION",
             details=details or {},
         )
-
-
-
-

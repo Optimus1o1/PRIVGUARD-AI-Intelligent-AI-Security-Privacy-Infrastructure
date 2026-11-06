@@ -17,6 +17,7 @@ _redis_client: Optional[aioredis.Redis] = None
 
 class RedisNamespace:
     """Standard Redis key namespaces for tenant-isolated distributed state."""
+
     RATE_LIMIT = "rl"
     TAINT = "taint"
     POLICY = "policy"
@@ -94,6 +95,7 @@ async def check_redis_health() -> dict:
         return {"connected": False, "error": "Redis client not initialized"}
 
     import time
+
     t0 = time.perf_counter()
     try:
         await client.ping()

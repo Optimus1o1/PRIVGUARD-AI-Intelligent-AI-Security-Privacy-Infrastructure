@@ -22,7 +22,9 @@ async def prometheus_metrics(
     # If METRICS_PROTECTED is enabled in production, verify token
     metrics_token = getattr(settings, "METRICS_SCRAPE_TOKEN", None)
     if metrics_token:
-        provided = x_metrics_token or (authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else "")
+        provided = x_metrics_token or (
+            authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else ""
+        )
         if provided != metrics_token:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

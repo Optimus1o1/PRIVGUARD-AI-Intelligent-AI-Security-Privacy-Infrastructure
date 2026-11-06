@@ -25,7 +25,7 @@ class LocalKMSProvider(KMSProvider):
     """
     Local development KMS provider.
     Derives versioned AES-256 KEKs from master_key using HKDF-SHA256 and wraps DEKs using AES-256-GCM.
-    
+
     SECURITY INVARIANT:
     Strictly prohibited in production environments.
     """

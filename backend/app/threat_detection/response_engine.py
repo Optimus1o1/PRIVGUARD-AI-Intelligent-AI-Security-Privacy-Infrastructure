@@ -104,4 +104,3 @@ class ThreatResponseEngine:
             action=highest_action,
             reason=f"Threat detected ({max_sig.threat_type.value}): {max_sig.description}",
         )
-

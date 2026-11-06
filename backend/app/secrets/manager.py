@@ -13,7 +13,7 @@ from app.secrets.base import SecretMetadata, SecretStatus, SecretType
 class SecretManager:
     """
     Manages application secret metadata and rotation lifecycle.
-    
+
     SECURITY INVARIANTS:
     - Never stores plaintext credentials in the database metadata table.
     - Never exposes secret values in API metadata responses.

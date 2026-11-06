@@ -11,13 +11,17 @@ from app.core.exceptions import PrivGuardException
 from app.database.models import KeyRotationJob, KeyVersion, ManagedKey, MemoryRecord, utcnow
 from app.key_management.base import KeyStatus, KeyPurpose, KeyAlgorithm
 from app.key_management.manager import KMSManager, kms_manager as default_kms_manager
-from app.memory.crypto import EncryptedMemoryPayload, EnvelopeEncryption, envelope_encryption as default_envelope_encryption
+from app.memory.crypto import (
+    EncryptedMemoryPayload,
+    EnvelopeEncryption,
+    envelope_encryption as default_envelope_encryption,
+)
 
 
 class KeyRotationEngine:
     """
     Automated key lifecycle and KEK rotation manager.
-    
+
     Guarantees:
     - Independent key version lifecycle transitions.
     - Non-destructive DEK rewrapping (preserves data ciphertext & nonce).

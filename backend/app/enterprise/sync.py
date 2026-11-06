@@ -13,9 +13,7 @@ class PolicySyncEngine:
     """Orchestrates policy bundle synchronization and detects fleet configuration drift."""
 
     @staticmethod
-    async def get_sync_status(
-        db: AsyncSession, tenant_id: str, workspace_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+    async def get_sync_status(db: AsyncSession, tenant_id: str, workspace_id: Optional[str] = None) -> Dict[str, Any]:
         """Calculates fleet-wide policy compliance and drift metrics."""
         q = select(FleetResource).where(FleetResource.tenant_id == tenant_id)
         if workspace_id:
@@ -58,9 +56,7 @@ class PolicySyncEngine:
 
     @staticmethod
     async def get_active_bundle_for_resource(
-        db: AsyncSession,
-        tenant_id: str,
-        resource_id: str
+        db: AsyncSession, tenant_id: str, resource_id: str
     ) -> Optional[PolicyBundle]:
         """Fetches the authoritative active signed policy bundle for an individual fleet resource."""
         q = select(FleetResource).where(
@@ -73,9 +69,7 @@ class PolicySyncEngine:
             return None
 
         if resource.status in ("REVOKED", "DISABLED", "QUARANTINED"):
-            raise SecurityPolicyViolationError(
-                f"Policy sync refused: Resource '{resource_id}' is {resource.status}."
-            )
+            raise SecurityPolicyViolationError(f"Policy sync refused: Resource '{resource_id}' is {resource.status}.")
 
         # Look for workspace-specific active bundle first
         if resource.workspace_id:
@@ -97,4 +91,3 @@ class PolicySyncEngine:
         )
         org_res = await db.execute(org_q)
         return org_res.scalar_one_or_none()
-

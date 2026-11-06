@@ -39,9 +39,7 @@ class WorkspaceManager:
         return ws
 
     @staticmethod
-    async def list_workspaces(
-        db: AsyncSession, organization_id: str
-    ) -> List[Workspace]:
+    async def list_workspaces(db: AsyncSession, organization_id: str) -> List[Workspace]:
         """Lists all workspaces belonging to an organization."""
         q = select(Workspace).where(Workspace.organization_id == organization_id)
         res = await db.execute(q)
@@ -49,9 +47,7 @@ class WorkspaceManager:
 
     @staticmethod
     async def verify_agent_workspace_access(
-        db: AsyncSession,
-        agent_id: str,
-        target_workspace_id: Optional[str]
+        db: AsyncSession, agent_id: str, target_workspace_id: Optional[str]
     ) -> bool:
         """
         Enforces workspace boundary jailing:
@@ -75,4 +71,3 @@ class WorkspaceManager:
             )
 
         return True
-

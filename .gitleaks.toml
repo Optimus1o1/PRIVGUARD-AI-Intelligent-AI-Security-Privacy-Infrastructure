@@ -1,0 +1,66 @@
+# ==============================================================================
+# PRIVGUARD AI - Gitleaks Secret Scanner Configuration
+# Moon Sanctum Labs - Decode. Build. Evolve.
+# ==============================================================================
+
+title = "PRIVGUARD AI Secret Scanning Configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Global allowlist for synthetic test fixtures and documentation examples"
+paths = [
+    '''backend/tests/.*''',
+    '''docs/.*''',
+    '''\.gitleaks\.toml''',
+    '''test_privguard\.db''',
+]
+regexes = [
+    '''pg_live_test_api_key_valid_99999''',
+    '''sk-proj-canary-dummy-key-for-testing-only-1234567890''',
+    '''sk-ant-canary-dummy-key-for-testing-only-1234567890''',
+    '''ghp_canary000000000000000000000000000000''',
+    '''<[A-Z0-9_]+>''',
+    '''\[REDACTED[A-Z0-9_]*\]''',
+]
+
+[[rules]]
+id = "privguard-api-key"
+description = "Detected PRIVGUARD API Key"
+regex = '''pg_(live|test)_[a-zA-Z0-9]{32,}'''
+secretGroup = 0
+severity = "CRITICAL"
+tags = ["privguard", "credentials"]
+
+[[rules]]
+id = "privguard-capability-token"
+description = "Detected PRIVGUARD Capability Token"
+regex = '''pg_cap_[a-zA-Z0-9_\-]{32,}'''
+secretGroup = 0
+severity = "HIGH"
+tags = ["privguard", "capabilities"]
+
+[[rules]]
+id = "openai-api-key"
+description = "Detected OpenAI API Key"
+regex = '''sk-(proj-)?[a-zA-Z0-9_\-]{20,}'''
+secretGroup = 0
+severity = "CRITICAL"
+tags = ["openai", "credentials"]
+
+[[rules]]
+id = "anthropic-api-key"
+description = "Detected Anthropic API Key"
+regex = '''sk-ant-[a-zA-Z0-9_\-]{20,}'''
+secretGroup = 0
+severity = "CRITICAL"
+tags = ["anthropic", "credentials"]
+
+[[rules]]
+id = "generic-private-key"
+description = "Detected Private Cryptographic Key"
+regex = '''-----BEGIN (RSA|EC|DSA|OPENSSH|PRIVATE) KEY-----'''
+secretGroup = 0
+severity = "CRITICAL"
+tags = ["cryptography", "keys"]

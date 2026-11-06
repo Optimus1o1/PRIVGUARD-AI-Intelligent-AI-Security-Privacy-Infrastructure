@@ -236,4 +236,3 @@ class UpstreamCoordinator:
 
 # Shared upstream coordinator instance
 upstream_coordinator = UpstreamCoordinator()
-

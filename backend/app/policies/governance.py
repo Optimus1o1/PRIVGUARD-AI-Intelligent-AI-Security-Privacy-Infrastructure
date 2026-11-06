@@ -62,10 +62,14 @@ class PolicyGovernanceManager:
         Guarantees strictly increasing version sequences.
         """
         # 1. Determine next version number
-        q = select(PolicyBundle).where(
-            PolicyBundle.organization_id == organization_id,
-            PolicyBundle.workspace_id == workspace_id,
-        ).order_by(PolicyBundle.version.desc())
+        q = (
+            select(PolicyBundle)
+            .where(
+                PolicyBundle.organization_id == organization_id,
+                PolicyBundle.workspace_id == workspace_id,
+            )
+            .order_by(PolicyBundle.version.desc())
+        )
         res = await db.execute(q)
         latest_bundle = res.scalars().first()
 
@@ -138,7 +142,7 @@ class PolicyGovernanceManager:
         active_q = select(PolicyBundle).where(
             PolicyBundle.organization_id == bundle.organization_id,
             PolicyBundle.workspace_id == bundle.workspace_id,
-            PolicyBundle.status == "ACTIVE"
+            PolicyBundle.status == "ACTIVE",
         )
         active_res = await db.execute(active_q)
         current_active = active_res.scalar_one_or_none()
@@ -159,6 +163,7 @@ class PolicyGovernanceManager:
 
         # Emit transactional outbox event for distributed policy synchronization
         from app.infrastructure.outbox import emit_outbox_event
+
         emit_outbox_event(
             session=db,
             event_type="POLICY_ACTIVATED",
@@ -203,7 +208,7 @@ class PolicyGovernanceManager:
         active_q = select(PolicyBundle).where(
             PolicyBundle.organization_id == target.organization_id,
             PolicyBundle.workspace_id == target.workspace_id,
-            PolicyBundle.status == "ACTIVE"
+            PolicyBundle.status == "ACTIVE",
         )
         active_res = await db.execute(active_q)
         current_active = active_res.scalar_one_or_none()
@@ -216,6 +221,7 @@ class PolicyGovernanceManager:
 
         # Emit transactional outbox event for distributed policy rollback
         from app.infrastructure.outbox import emit_outbox_event
+
         emit_outbox_event(
             session=db,
             event_type="POLICY_ROLLED_BACK",
@@ -246,9 +252,7 @@ class PolicyGovernanceManager:
 
         # Sort candidate rules by restrictiveness descending
         sorted_rules = sorted(
-            rules_by_layer,
-            key=lambda r: ACTION_RESTRICTIVENESS.get(r.get("action", "ALLOW"), 1),
-            reverse=True
+            rules_by_layer, key=lambda r: ACTION_RESTRICTIVENESS.get(r.get("action", "ALLOW"), 1), reverse=True
         )
         winner = sorted_rules[0]
         return {
@@ -257,4 +261,3 @@ class PolicyGovernanceManager:
             "layer": winner.get("layer", "UNKNOWN"),
             "reason": f"Resolved by deterministic hierarchy (most restrictive rule from {winner.get('layer')}).",
         }
-

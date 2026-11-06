@@ -38,7 +38,10 @@ const HOP_BY_HOP_HEADERS = new Set([
   "host",
 ]);
 
-async function proxyRequest(request: NextRequest, { params }: { params: { path: string[] } }) {
+async function proxyRequest(
+  request: NextRequest,
+  context: { params: Promise<{ path: string[] }> }
+) {
   if (!API_KEY) {
     return NextResponse.json(
       { error: { code: "BFF_CONFIGURATION_ERROR", message: "Backend API key is not configured." } },
@@ -46,7 +49,8 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
     );
   }
 
-  const segments = params.path || [];
+  const resolvedParams = await context.params;
+  const segments = resolvedParams?.path || [];
 
   // 1. Strict traversal and encoded normalization rejection
   for (const seg of segments) {

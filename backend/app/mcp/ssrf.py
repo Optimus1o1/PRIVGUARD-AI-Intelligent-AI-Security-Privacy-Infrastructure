@@ -18,27 +18,27 @@ FORBIDDEN_HOSTNAMES = {
 }
 
 BLOCKED_IP_NETWORKS = [
-    ipaddress.ip_network("0.0.0.0/8"),          # Current network
-    ipaddress.ip_network("10.0.0.0/8"),         # Private-use (RFC 1918)
-    ipaddress.ip_network("100.64.0.0/10"),      # Shared Address Space (RFC 6598)
-    ipaddress.ip_network("127.0.0.0/8"),        # Loopback (RFC 1122)
-    ipaddress.ip_network("169.254.0.0/16"),     # Link-Local (RFC 3927) & Cloud Metadata
-    ipaddress.ip_network("172.16.0.0/12"),      # Private-use (RFC 1918)
-    ipaddress.ip_network("192.0.0.0/24"),       # IETF Protocol Assignments
-    ipaddress.ip_network("192.0.2.0/24"),       # TEST-NET-1 (RFC 5737)
-    ipaddress.ip_network("192.168.0.0/16"),     # Private-use (RFC 1918)
-    ipaddress.ip_network("198.18.0.0/15"),      # Network benchmark tests
-    ipaddress.ip_network("198.51.100.0/24"),    # TEST-NET-2 (RFC 5737)
-    ipaddress.ip_network("203.0.113.0/24"),     # TEST-NET-3 (RFC 5737)
-    ipaddress.ip_network("224.0.0.0/4"),        # Multicast (RFC 5771)
-    ipaddress.ip_network("240.0.0.0/4"),        # Reserved (RFC 1112)
-    ipaddress.ip_network("255.255.255.255/32"), # Broadcast
+    ipaddress.ip_network("0.0.0.0/8"),  # Current network
+    ipaddress.ip_network("10.0.0.0/8"),  # Private-use (RFC 1918)
+    ipaddress.ip_network("100.64.0.0/10"),  # Shared Address Space (RFC 6598)
+    ipaddress.ip_network("127.0.0.0/8"),  # Loopback (RFC 1122)
+    ipaddress.ip_network("169.254.0.0/16"),  # Link-Local (RFC 3927) & Cloud Metadata
+    ipaddress.ip_network("172.16.0.0/12"),  # Private-use (RFC 1918)
+    ipaddress.ip_network("192.0.0.0/24"),  # IETF Protocol Assignments
+    ipaddress.ip_network("192.0.2.0/24"),  # TEST-NET-1 (RFC 5737)
+    ipaddress.ip_network("192.168.0.0/16"),  # Private-use (RFC 1918)
+    ipaddress.ip_network("198.18.0.0/15"),  # Network benchmark tests
+    ipaddress.ip_network("198.51.100.0/24"),  # TEST-NET-2 (RFC 5737)
+    ipaddress.ip_network("203.0.113.0/24"),  # TEST-NET-3 (RFC 5737)
+    ipaddress.ip_network("224.0.0.0/4"),  # Multicast (RFC 5771)
+    ipaddress.ip_network("240.0.0.0/4"),  # Reserved (RFC 1112)
+    ipaddress.ip_network("255.255.255.255/32"),  # Broadcast
     # IPv6 blocks
-    ipaddress.ip_network("::/128"),             # Unspecified
-    ipaddress.ip_network("::1/128"),           # Loopback
-    ipaddress.ip_network("fc00::/7"),           # Unique Local (RFC 4193)
-    ipaddress.ip_network("fe80::/10"),          # Link-Local Unicast (RFC 4291)
-    ipaddress.ip_network("ff00::/8"),           # Multicast (RFC 4291)
+    ipaddress.ip_network("::/128"),  # Unspecified
+    ipaddress.ip_network("::1/128"),  # Loopback
+    ipaddress.ip_network("fc00::/7"),  # Unique Local (RFC 4193)
+    ipaddress.ip_network("fe80::/10"),  # Link-Local Unicast (RFC 4291)
+    ipaddress.ip_network("ff00::/8"),  # Multicast (RFC 4291)
 ]
 
 
@@ -62,7 +62,9 @@ class MCPDestinationValidator:
 
         # Enforce HTTPS outside local dev
         if scheme not in ("http", "https"):
-            raise MCPSSRFError(destination=url, reason=f"Unsupported protocol scheme '{scheme}'. Only HTTP/HTTPS supported.")
+            raise MCPSSRFError(
+                destination=url, reason=f"Unsupported protocol scheme '{scheme}'. Only HTTP/HTTPS supported."
+            )
 
         hostname = parsed.hostname
         if not hostname:
@@ -73,7 +75,9 @@ class MCPDestinationValidator:
         # Check explicit forbidden hostnames
         if hostname_lower in FORBIDDEN_HOSTNAMES:
             if not self.allow_loopback_in_test or hostname_lower != "localhost":
-                raise MCPSSRFError(destination=url, reason=f"Hostname '{hostname}' is a protected internal destination.")
+                raise MCPSSRFError(
+                    destination=url, reason=f"Hostname '{hostname}' is a protected internal destination."
+                )
 
         # Check suffix patterns
         if any(hostname_lower.endswith(suffix) for suffix in (".internal", ".local", ".corp", ".lan")):
@@ -119,16 +123,22 @@ class MCPDestinationValidator:
         if ip_obj.is_private:
             raise MCPSSRFError(destination=original_url, reason=f"Resolved IP {ip_obj} is a private network address.")
         if ip_obj.is_link_local:
-            raise MCPSSRFError(destination=original_url, reason=f"Resolved IP {ip_obj} is a link-local / cloud metadata address.")
+            raise MCPSSRFError(
+                destination=original_url, reason=f"Resolved IP {ip_obj} is a link-local / cloud metadata address."
+            )
         if ip_obj.is_multicast:
             raise MCPSSRFError(destination=original_url, reason=f"Resolved IP {ip_obj} is a multicast address.")
         if ip_obj.is_reserved or ip_obj.is_unspecified:
-            raise MCPSSRFError(destination=original_url, reason=f"Resolved IP {ip_obj} is a reserved/unspecified address.")
+            raise MCPSSRFError(
+                destination=original_url, reason=f"Resolved IP {ip_obj} is a reserved/unspecified address."
+            )
 
         # Check against comprehensive CIDRs
         for net in BLOCKED_IP_NETWORKS:
             if ip_obj in net:
-                raise MCPSSRFError(destination=original_url, reason=f"Resolved IP {ip_obj} falls in blocked CIDR {net}.")
+                raise MCPSSRFError(
+                    destination=original_url, reason=f"Resolved IP {ip_obj} falls in blocked CIDR {net}."
+                )
 
 
 # Global validator instances

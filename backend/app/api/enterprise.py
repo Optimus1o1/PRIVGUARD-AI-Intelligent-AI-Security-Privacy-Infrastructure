@@ -167,6 +167,7 @@ async def get_organization(
 # MEMBERSHIP & INVITATIONS
 # ==========================================
 
+
 @router.post("/{id}/members/invite", status_code=status.HTTP_201_CREATED)
 async def invite_member(
     id: str,
@@ -286,6 +287,7 @@ async def remove_member(
     RBACAuthorizer.enforce_permission(ctx, Permission.ORG_MEMBERS_MANAGE.value)
 
     from app.enterprise.scim import SCIMService
+
     await SCIMService.deprovision_user(db, id, user_id)
 
     await EnterpriseAuditLedger.record_event(
@@ -325,6 +327,7 @@ async def accept_invitation_route(
 # DOMAIN VERIFICATION & SSO
 # ==========================================
 
+
 @router.post("/{id}/domain/verify")
 async def verify_domain(
     id: str,
@@ -361,6 +364,7 @@ async def verify_domain(
 # ==========================================
 # POLICY GOVERNANCE & BUNDLES
 # ==========================================
+
 
 @router.get("/{id}/policies")
 async def list_policies(
@@ -501,6 +505,7 @@ async def rollback_policy(
 # AUDIT & SIEM
 # ==========================================
 
+
 @router.get("/{id}/audit")
 async def get_audit_trail(
     id: str,
@@ -513,9 +518,12 @@ async def get_audit_trail(
         raise HTTPException(status_code=403, detail="Forbidden: Tenant isolation mismatch.")
     RBACAuthorizer.enforce_permission(ctx, Permission.AUDIT_READ.value)
 
-    q = select(EnterpriseAuditEvent).where(
-        EnterpriseAuditEvent.tenant_id == id
-    ).order_by(EnterpriseAuditEvent.sequence_number.desc()).limit(limit)
+    q = (
+        select(EnterpriseAuditEvent)
+        .where(EnterpriseAuditEvent.tenant_id == id)
+        .order_by(EnterpriseAuditEvent.sequence_number.desc())
+        .limit(limit)
+    )
     res = await db.execute(q)
     events = res.scalars().all()
 
@@ -574,6 +582,7 @@ async def export_audit_to_siem(
 # GOVERNANCE SUMMARY
 # ==========================================
 
+
 @router.get("/{id}/governance-summary")
 async def get_governance_summary(
     id: str,
@@ -585,6 +594,7 @@ async def get_governance_summary(
         raise HTTPException(status_code=403, detail="Forbidden: Tenant isolation mismatch.")
 
     from app.enterprise.sync import PolicySyncEngine
+
     sync_status = await PolicySyncEngine.get_sync_status(db, id)
 
     # Count members
@@ -593,10 +603,7 @@ async def get_governance_summary(
     members_count = len(mem_res.scalars().all())
 
     # Fetch active policy version
-    pol_q = select(PolicyBundle).where(
-        PolicyBundle.organization_id == id,
-        PolicyBundle.status == "ACTIVE"
-    )
+    pol_q = select(PolicyBundle).where(PolicyBundle.organization_id == id, PolicyBundle.status == "ACTIVE")
     pol_res = await db.execute(pol_q)
     active_bundle = pol_res.scalars().first()
 
@@ -608,4 +615,3 @@ async def get_governance_summary(
         "fleet_sync": sync_status,
         "timestamp": utcnow().isoformat(),
     }
-

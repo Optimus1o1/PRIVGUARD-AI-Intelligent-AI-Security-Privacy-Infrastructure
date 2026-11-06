@@ -224,6 +224,7 @@ class CapabilityManager:
 
         # Emit transactional outbox event for distributed revocation
         from app.infrastructure.outbox import emit_outbox_event
+
         emit_outbox_event(
             session=db,
             event_type="CAPABILITY_REVOKED",

@@ -15,12 +15,7 @@ def canonical_json_bytes(data: Dict[str, Any]) -> bytes:
     - Compact separators (':', ',') without extraneous whitespace
     - UTF-8 encoded
     """
-    return json.dumps(
-        data,
-        sort_keys=True,
-        separators=(",", ":"),
-        ensure_ascii=False
-    ).encode("utf-8")
+    return json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
 
 
 class PolicySigner:
@@ -34,7 +29,7 @@ class PolicySigner:
         """
         private_key = ed25519.Ed25519PrivateKey.generate()
         public_key = private_key.public_key()
-        
+
         priv_bytes = private_key.private_bytes_raw()
         pub_bytes = public_key.public_bytes_raw()
 
@@ -54,11 +49,7 @@ class PolicySigner:
         return signature.hex()
 
     @staticmethod
-    def verify_bundle_signature(
-        bundle_dict: Dict[str, Any],
-        signature_hex: str,
-        public_key_hex: str
-    ) -> bool:
+    def verify_bundle_signature(bundle_dict: Dict[str, Any], signature_hex: str, public_key_hex: str) -> bool:
         """
         Verifies that the policy bundle has not been tampered with and was signed by the authorized key.
         Raises SecurityPolicyViolationError if signature is invalid or verification fails.
@@ -75,4 +66,3 @@ class PolicySigner:
             raise SecurityPolicyViolationError(
                 f"Policy Bundle Signature Verification Failed: Cryptographic integrity check rejected ({err})."
             )
-

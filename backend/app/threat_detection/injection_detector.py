@@ -119,7 +119,7 @@ class InjectionDetector:
                 confidence = rule.confidence
                 severity = rule.severity
                 action = rule.recommended_action
-                
+
                 # Check if this pattern is inside a quoted pedagogical question
                 # e.g., 'What does "ignore previous instructions" mean?'
                 if self._is_quoted_pedagogical(normalized, matched_str):
@@ -200,7 +200,6 @@ class InjectionDetector:
             action=final_action,
             reason=f"Threat detected: {max_sig.description}",
         )
-
 
     def _is_quoted_pedagogical(self, text: str, matched_str: str) -> bool:
         """Determines if a matched phrase appears to be quoted in an academic or inquiry context."""

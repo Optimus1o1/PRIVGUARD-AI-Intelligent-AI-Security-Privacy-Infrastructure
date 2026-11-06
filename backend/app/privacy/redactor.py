@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 class RedactedEntity(BaseModel):
     """Metadata regarding a redacted entity."""
+
     entity_type: str
     placeholder: str
     start: int
@@ -14,10 +15,11 @@ class RedactedEntity(BaseModel):
 
 class RedactionResult(BaseModel):
     """Result of data redaction process."""
+
     original_text: str
     redacted_text: str
-    mapping: Dict[str, str]        # placeholder -> original_value
-    reverse_mapping: Dict[str, str] # original_value -> placeholder
+    mapping: Dict[str, str]  # placeholder -> original_value
+    reverse_mapping: Dict[str, str]  # original_value -> placeholder
     redacted_entities: List[RedactedEntity]
     entity_counts: Dict[str, int]
 
@@ -117,4 +119,3 @@ class DataRedactor:
 
 # Default shared redactor instance
 redactor = DataRedactor()
-

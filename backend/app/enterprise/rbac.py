@@ -202,8 +202,9 @@ class RBACAuthorizer:
 
 def require_permission(permission: str):
     """FastAPI dependency to require a specific permission."""
+
     async def _dependency(ctx: TenantContext = Depends(resolve_tenant_context)):
         RBACAuthorizer.enforce_permission(ctx, permission)
         return ctx
-    return _dependency
 
+    return _dependency

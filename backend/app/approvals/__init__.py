@@ -9,4 +9,3 @@ from app.approvals.approval_engine import (
 )
 
 __all__ = ["ApprovalEngine", "approval_engine", "compute_action_hash"]
-

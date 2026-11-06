@@ -20,6 +20,7 @@ class EnterpriseCredentialManager:
         """Derives a Fernet cipher from master key or secret key."""
         import base64
         import hashlib
+
         key_material = hashlib.sha256(settings.JWT_SECRET.encode()).digest()
         b64_key = base64.urlsafe_b64encode(key_material)
         return Fernet(b64_key)
@@ -103,4 +104,3 @@ class EnterpriseCredentialManager:
             return None
 
         return cls.decrypt_secret(cred.encrypted_secret)
-

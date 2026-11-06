@@ -18,7 +18,7 @@ from app.key_management.base import (
 class AWSKMSProvider(KMSProvider):
     """
     AWS Key Management Service (KMS) provider adapter.
-    
+
     Features:
     - Encrypt / Decrypt for 256-bit DEK wrapping.
     - Native server-side ReEncrypt (O(1) HSM rewrap without client-side plaintext exposure).
@@ -41,6 +41,7 @@ class AWSKMSProvider(KMSProvider):
             return self._client
         try:
             import boto3
+
             self._client = boto3.client(
                 "kms",
                 region_name=self.region_name,

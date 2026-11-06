@@ -134,9 +134,7 @@ class Settings(BaseSettings):
                 )
 
             if "*" in self.CORS_ALLOWED_ORIGINS:
-                raise ValueError(
-                    "Security violation: CORS wildcard '*' origin is strictly prohibited in production."
-                )
+                raise ValueError("Security violation: CORS wildcard '*' origin is strictly prohibited in production.")
 
             if self.KMS_PROVIDER.lower() in ("local", "dev", "development"):
                 raise ValueError(

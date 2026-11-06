@@ -61,6 +61,7 @@ class RetrievalSecurityValidator:
 
         # 3. Poisoning & indirect prompt injection scan
         import re
+
         html_poisoning_pattern = re.compile(
             r"(<script\b[^>]*>|javascript:|display\s*:\s*none|visibility\s*:\s*hidden|color\s*:\s*(white|transparent)|<!--.*?-->)",
             re.IGNORECASE | re.DOTALL,
@@ -121,4 +122,3 @@ class RetrievalSecurityValidator:
             reason=max_sig.description,
         )
         return False, assessment
-

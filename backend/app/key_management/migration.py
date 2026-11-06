@@ -11,14 +11,18 @@ from app.core.config import settings
 from app.core.exceptions import PrivGuardException
 from app.database.models import KeyMigrationJob, MemoryRecord, utcnow
 from app.key_management.manager import KMSManager, kms_manager as default_kms_manager
-from app.memory.crypto import EncryptedMemoryPayload, EnvelopeEncryption, envelope_encryption as default_envelope_encryption
+from app.memory.crypto import (
+    EncryptedMemoryPayload,
+    EnvelopeEncryption,
+    envelope_encryption as default_envelope_encryption,
+)
 from app.memory.key_provider import KeyProvider, default_key_provider
 
 
 class LegacyMemoryMigrator:
     """
     Non-destructive migrator converting Stage 7 V1 memory records to V2 KMS envelopes.
-    
+
     Guarantees:
     - Zero data payload re-encryption: unwraps legacy DEK and rewraps under target KMS KEK.
     - Preserves data ciphertext, nonce, and original content AAD.
@@ -56,7 +60,10 @@ class LegacyMemoryMigrator:
         count = await self.get_unmigrated_count(db, tenant_id)
         if count > 0:
             return False, f"Cannot retire legacy key: {count} unmigrated V1 records exist in active database."
-        return True, "All active records migrated to V2 KMS. Ensure backup retention period has elapsed before destroying key."
+        return (
+            True,
+            "All active records migrated to V2 KMS. Ensure backup retention period has elapsed before destroying key.",
+        )
 
     async def start_migration_job(
         self,
@@ -140,9 +147,7 @@ class LegacyMemoryMigrator:
                 )
 
                 new_wrapped_dek_b64 = base64.b64encode(wrapped_res.wrapped_key).decode("ascii")
-                new_dek_nonce_b64 = (
-                    base64.b64encode(wrapped_res.nonce).decode("ascii") if wrapped_res.nonce else ""
-                )
+                new_dek_nonce_b64 = base64.b64encode(wrapped_res.nonce).decode("ascii") if wrapped_res.nonce else ""
                 new_key_version = (
                     int(wrapped_res.key_version) if wrapped_res.key_version.isdigit() else record.key_version
                 )

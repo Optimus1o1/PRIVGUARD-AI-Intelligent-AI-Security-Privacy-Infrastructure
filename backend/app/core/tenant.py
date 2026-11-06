@@ -20,6 +20,7 @@ _tenant_context_var: contextvars.ContextVar[Optional["TenantContext"]] = context
 
 class TenantIsolationError(HTTPException):
     """Raised when an attempt to cross tenant boundaries or access unauthorized tenant resources is detected."""
+
     def __init__(self, detail: str = "Access denied: Tenant isolation policy violation."):
         super().__init__(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
 
@@ -27,6 +28,7 @@ class TenantIsolationError(HTTPException):
 @dataclass
 class TenantContext:
     """Server-side verified context for the active tenant, workspace, and actor."""
+
     tenant_id: str
     organization_id: str
     workspace_id: Optional[str] = None
@@ -103,7 +105,7 @@ async def resolve_tenant_context(
     if app:
         if not app.is_active:
             raise AuthenticationError("Application is disabled.")
-        
+
         # Enforce that application tenant matches requested tenant if specified
         tenant_id = getattr(app, "tenant_id", "default_tenant") or "default_tenant"
         if x_tenant_id and x_tenant_id != tenant_id and tenant_id != "default_tenant":
@@ -126,18 +128,16 @@ async def resolve_tenant_context(
     # 3. Check for Organization Membership / User API Key or Session Token
     # Check OrganizationMembership by user_id or API key lookup
     # For user session or direct user tokens, check active membership
-    mem_query = select(OrganizationMembership).where(
-        OrganizationMembership.status == "ACTIVE"
-    )
+    mem_query = select(OrganizationMembership).where(OrganizationMembership.status == "ACTIVE")
     if x_tenant_id:
         mem_query = mem_query.where(OrganizationMembership.organization_id == x_tenant_id)
 
     # In local testing or simulated user sessions:
     # If the token matches a membership ID or user email prefix
     user_mem_query = select(OrganizationMembership).where(
-        (OrganizationMembership.user_id == api_key) | 
-        (OrganizationMembership.email == api_key) |
-        (OrganizationMembership.id == api_key)
+        (OrganizationMembership.user_id == api_key)
+        | (OrganizationMembership.email == api_key)
+        | (OrganizationMembership.id == api_key)
     )
     user_mem_res = await db.execute(user_mem_query)
     membership = user_mem_res.scalar_one_or_none()
@@ -178,4 +178,3 @@ async def resolve_tenant_context(
         return ctx
 
     raise AuthenticationError("Invalid or expired authentication credentials.")
-

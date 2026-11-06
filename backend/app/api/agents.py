@@ -135,4 +135,3 @@ async def revoke_agent(
         created_at=agent.created_at,
         last_activity_at=agent.last_activity_at,
     )
-

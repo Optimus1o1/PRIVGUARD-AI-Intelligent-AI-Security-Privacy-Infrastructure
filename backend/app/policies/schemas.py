@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 class PolicyAction(str, Enum):
     """Enforceable actions."""
+
     ALLOW = "ALLOW"
     REDACT = "REDACT"
     BLOCK = "BLOCK"
@@ -15,6 +16,7 @@ class PolicyAction(str, Enum):
 
 class PolicyRuleConfig(BaseModel):
     """Configuration for an individual policy rule."""
+
     category: str
     action: PolicyAction
     risk_level: str
@@ -24,6 +26,7 @@ class PolicyRuleConfig(BaseModel):
 
 class PolicyEvaluationRequest(BaseModel):
     """Input payload to evaluate against active policies."""
+
     text: str
     detected_entities: List[str] = Field(default_factory=list)
     detected_secrets: List[str] = Field(default_factory=list)
@@ -32,9 +35,9 @@ class PolicyEvaluationRequest(BaseModel):
 
 class PolicyDecision(BaseModel):
     """Outcome of policy evaluation."""
+
     action: PolicyAction
     risk_level: str
     reason: str
     matched_rule: Optional[str] = None
     allow_execution: bool = True
-

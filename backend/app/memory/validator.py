@@ -39,6 +39,7 @@ class MemoryProvenance:
     EXTERNALLY_SOURCED = "EXTERNALLY_SOURCED"
     SYSTEM_GENERATED = "SYSTEM_GENERATED"
 
+
 SUSPICIOUS_IMPERATIVES = [
     "always send",
     "forward all",
@@ -95,7 +96,10 @@ class MemoryValidator:
 
         # 2. Prompt Injection & Jailbreak Check
         injection_assessment = self.injection_detector.inspect(combined_text)
-        if injection_assessment.is_threat and injection_assessment.action in (ThreatAction.BLOCK, ThreatAction.QUARANTINE):
+        if injection_assessment.is_threat and injection_assessment.action in (
+            ThreatAction.BLOCK,
+            ThreatAction.QUARANTINE,
+        ):
             raise MemoryPoisoningError(
                 reason=f"Memory proposal rejected due to prompt injection: {injection_assessment.reason}",
                 details={"signals": [s.description for s in injection_assessment.signals]},

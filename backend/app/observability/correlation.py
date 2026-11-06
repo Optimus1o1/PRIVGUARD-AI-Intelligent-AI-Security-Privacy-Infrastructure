@@ -8,9 +8,7 @@ from typing import Optional
 from opentelemetry import trace
 
 # ContextVar for async-local request correlation
-_request_id_var: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar(
-    "current_request_id", default=None
-)
+_request_id_var: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar("current_request_id", default=None)
 
 
 def generate_request_id() -> str:

@@ -10,6 +10,7 @@ from app.threat_detection import injection_detector
 
 class InspectedResponse(NamedTuple):
     """Result of inspecting and restoring model response text."""
+
     sanitized_content: str
     restored_content: str
     has_secrets: bool
@@ -87,4 +88,3 @@ class ResponseSecurityInspector:
 
 # Shared response inspector instance
 response_inspector = ResponseSecurityInspector()
-

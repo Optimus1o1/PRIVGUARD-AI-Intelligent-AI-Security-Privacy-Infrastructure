@@ -140,6 +140,15 @@ docker compose -f compose.yaml -f compose.observability.yaml up -d
 - **Alertmanager UI**: Accessible on port `9093`.
 - **Next.js Monitoring Console**: Access at `http://localhost:3000/monitoring`.
 
+### Supply Chain Verification for Docker Images
+All production container images published to GHCR are cryptographically signed with Sigstore Cosign and accompanied by CycloneDX 1.6 SBOMs and SLSA v1.0 Level 3 build provenance. Verify image integrity and authenticity prior to deployment:
+
+```bash
+cosign verify ghcr.io/privguard-ai/privguard-backend:v1.0.0 \
+  --certificate-identity-regexp "https://github.com/privguard-ai/privguard/.github/workflows/release.yml@" \
+  --certificate-oidc-issuer "https://token.actions.githubusercontent.com"
+```
+
 ---
 
 ## 5. Moving to Kubernetes (Enterprise Fleet Scale)

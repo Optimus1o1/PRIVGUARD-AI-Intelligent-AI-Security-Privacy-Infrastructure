@@ -162,11 +162,13 @@ class FleetManager:
 
         if resource:
             resource.status = "REVOKED"
-            resource.metadata_json = json.dumps({
-                **json.loads(resource.metadata_json or "{}"),
-                "revoked_at": utcnow().isoformat(),
-                "revocation_reason": reason,
-            })
+            resource.metadata_json = json.dumps(
+                {
+                    **json.loads(resource.metadata_json or "{}"),
+                    "revoked_at": utcnow().isoformat(),
+                    "revocation_reason": reason,
+                }
+            )
 
         # Propagate to underlying Agent model if resource is an agent
         agent_q = select(Agent).where(
@@ -200,9 +202,12 @@ class FleetManager:
 
         # Emit transactional outbox event for distributed revocation
         from app.infrastructure.outbox import emit_outbox_event
+
         emit_outbox_event(
             session=db,
-            event_type="AGENT_REVOKED" if (resource and resource.resource_type == "AGENT") else "FLEET_RESOURCE_REVOKED",
+            event_type="AGENT_REVOKED"
+            if (resource and resource.resource_type == "AGENT")
+            else "FLEET_RESOURCE_REVOKED",
             aggregate_id=resource_id,
             payload={
                 "reason": reason,
@@ -243,4 +248,3 @@ class FleetManager:
                 r.drift_status = "DISCONNECTED"
 
         return resources
-

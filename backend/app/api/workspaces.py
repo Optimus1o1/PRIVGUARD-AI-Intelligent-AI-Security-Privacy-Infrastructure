@@ -75,4 +75,3 @@ async def list_workspaces(
         }
         for ws in workspaces
     ]
-

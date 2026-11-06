@@ -8,6 +8,7 @@ from typing import Dict, NamedTuple, Optional
 
 class KMSProviderType(str, Enum):
     """Supported KMS provider backends."""
+
     LOCAL = "local"
     AWS_KMS = "aws_kms"
     GCP_KMS = "gcp_kms"
@@ -17,6 +18,7 @@ class KMSProviderType(str, Enum):
 
 class KeyPurpose(str, Enum):
     """Cryptographic purpose classification."""
+
     MEMORY_ENCRYPTION = "MEMORY_ENCRYPTION"
     POLICY_SIGNING = "POLICY_SIGNING"
     APPROVAL_BINDING = "APPROVAL_BINDING"
@@ -25,6 +27,7 @@ class KeyPurpose(str, Enum):
 
 class KeyStatus(str, Enum):
     """Key lifecycle status state machine."""
+
     CREATED = "CREATED"
     ACTIVE = "ACTIVE"
     ROTATION_PENDING = "ROTATION_PENDING"
@@ -37,6 +40,7 @@ class KeyStatus(str, Enum):
 
 class KeyAlgorithm(str, Enum):
     """Supported cryptographic algorithms."""
+
     AES_256_GCM = "AES_256_GCM"
     ED25519 = "ED25519"
     HMAC_SHA256 = "HMAC_SHA256"
@@ -44,6 +48,7 @@ class KeyAlgorithm(str, Enum):
 
 class WrappedKeyResult(NamedTuple):
     """Result of wrapping a data encryption key (DEK)."""
+
     wrapped_key: bytes
     key_version: str
     nonce: Optional[bytes] = None
@@ -52,6 +57,7 @@ class WrappedKeyResult(NamedTuple):
 
 class KeyMetadata(NamedTuple):
     """Descriptive metadata for a managed cryptographic key."""
+
     key_id: str
     provider: str
     key_version: str
@@ -63,6 +69,7 @@ class KeyMetadata(NamedTuple):
 
 class KMSCapabilities(NamedTuple):
     """Explicit functional capabilities of a KMS provider."""
+
     server_side_rewrap: bool
     asymmetric_signing: bool
     versioning: bool

@@ -6,7 +6,32 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from app.api import agents, approvals, audit, capabilities, dashboard, enterprise, fleet, gateway, health, identity, incidents, keys, mcp, memory, policies, privacy, secrets, system, metrics, monitoring, tasks, threats, tools, workspaces
+from app.api import (
+    agents,
+    approvals,
+    audit,
+    capabilities,
+    dashboard,
+    enterprise,
+    fleet,
+    gateway,
+    health,
+    identity,
+    incidents,
+    keys,
+    mcp,
+    memory,
+    policies,
+    privacy,
+    secrets,
+    system,
+    metrics,
+    monitoring,
+    tasks,
+    threats,
+    tools,
+    workspaces,
+)
 from app.core.config import settings
 from app.observability import init_observability
 from app.core.exceptions import (
@@ -29,12 +54,14 @@ async def lifespan(app: FastAPI):
     # Initialize redis pool if configured
     try:
         from app.infrastructure.redis_client import init_redis, close_redis
+
         await init_redis()
     except Exception:
         pass
     yield
     try:
         from app.infrastructure.redis_client import close_redis
+
         await close_redis()
     except Exception:
         pass
@@ -167,6 +194,3 @@ app.include_router(secrets.router)
 app.include_router(incidents.router)
 app.include_router(metrics.router)
 app.include_router(monitoring.router)
-
-
-

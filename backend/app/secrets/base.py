@@ -6,6 +6,7 @@ from typing import NamedTuple, Optional
 
 class SecretType(str, Enum):
     """Classification of application credentials and secrets."""
+
     DATABASE_CREDENTIAL = "DATABASE_CREDENTIAL"
     REDIS_CREDENTIAL = "REDIS_CREDENTIAL"
     LLM_API_KEY = "LLM_API_KEY"
@@ -16,6 +17,7 @@ class SecretType(str, Enum):
 
 class SecretStatus(str, Enum):
     """Lifecycle states for operational credentials."""
+
     CREATED = "CREATED"
     ACTIVE = "ACTIVE"
     ROTATION_PENDING = "ROTATION_PENDING"
@@ -26,6 +28,7 @@ class SecretStatus(str, Enum):
 
 class SecretMetadata(NamedTuple):
     """Metadata representation of an application secret (zero plaintext)."""
+
     id: str
     tenant_id: str
     name: str

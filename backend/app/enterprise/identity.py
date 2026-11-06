@@ -17,6 +17,7 @@ from app.database.models import Organization, OrganizationMembership, Organizati
 
 class SSOConfig(BaseModel):
     """Configuration for Enterprise Identity Provider (OIDC / SAML 2.0)."""
+
     provider_type: str = Field("OIDC", description="OIDC or SAML2")
     issuer: str
     client_id: str
@@ -31,6 +32,7 @@ class SSOConfig(BaseModel):
 
 class DomainVerificationRecord(BaseModel):
     """Domain verification status and token."""
+
     domain: str
     verification_token: str
     verified: bool = False
@@ -47,12 +49,7 @@ class EnterpriseIdentityManager:
         return hashlib.sha256(salt.encode()).hexdigest()[:32]
 
     @staticmethod
-    async def verify_domain(
-        db: AsyncSession,
-        organization_id: str,
-        domain: str,
-        provided_token: str
-    ) -> bool:
+    async def verify_domain(db: AsyncSession, organization_id: str, domain: str, provided_token: str) -> bool:
         """
         Verifies organization domain ownership.
         Strict requirement: prevents unauthorized domain takeovers or unverified domain SSO.
@@ -92,15 +89,19 @@ class EnterpriseIdentityManager:
         # 1. Issuer Validation
         issuer = token_claims.get("iss")
         if issuer != config.issuer:
-            raise AuthenticationError(f"SSO Token validation failed: Issuer mismatch ('{issuer}' != '{config.issuer}').")
+            raise AuthenticationError(
+                f"SSO Token validation failed: Issuer mismatch ('{issuer}' != '{config.issuer}')."
+            )
 
         # 2. Audience Validation
         aud = token_claims.get("aud")
         if isinstance(aud, list):
             if config.client_id not in aud:
-                raise AuthenticationError(f"SSO Token validation failed: Audience mismatch.")
+                raise AuthenticationError("SSO Token validation failed: Audience mismatch.")
         elif aud != config.client_id:
-            raise AuthenticationError(f"SSO Token validation failed: Audience mismatch ('{aud}' != '{config.client_id}').")
+            raise AuthenticationError(
+                f"SSO Token validation failed: Audience mismatch ('{aud}' != '{config.client_id}')."
+            )
 
         # 3. Expiration Validation
         exp = token_claims.get("exp")
@@ -122,7 +123,9 @@ class EnterpriseIdentityManager:
 
         user_domain = email.split("@")[1].lower()
         if config.allowed_domains and user_domain not in [d.lower() for d in config.allowed_domains]:
-            raise AuthenticationError(f"SSO Token validation failed: Domain '{user_domain}' is not authorized for this organization.")
+            raise AuthenticationError(
+                f"SSO Token validation failed: Domain '{user_domain}' is not authorized for this organization."
+            )
 
         return {
             "email": email.lower(),
@@ -176,8 +179,7 @@ class EnterpriseIdentityManager:
         """Consumes a pending invitation and creates an active organization membership."""
         token_hash = hashlib.sha256(invitation_token.strip().encode()).hexdigest()
         q = select(OrganizationInvitation).where(
-            OrganizationInvitation.token_hash == token_hash,
-            OrganizationInvitation.status == "PENDING"
+            OrganizationInvitation.token_hash == token_hash, OrganizationInvitation.status == "PENDING"
         )
         res = await db.execute(q)
         inv = res.scalar_one_or_none()
@@ -244,4 +246,3 @@ class EnterpriseIdentityManager:
         await db.commit()
         await db.refresh(mem)
         return mem
-

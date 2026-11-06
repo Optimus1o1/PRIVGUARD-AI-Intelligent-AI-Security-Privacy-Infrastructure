@@ -29,7 +29,9 @@ class RedactionFilter(logging.Filter):
             record.msg = sanitize_string_value(record.msg)
         if record.args:
             if isinstance(record.args, dict):
-                record.args = {k: (sanitize_string_value(v) if isinstance(v, str) else v) for k, v in record.args.items()}
+                record.args = {
+                    k: (sanitize_string_value(v) if isinstance(v, str) else v) for k, v in record.args.items()
+                }
             elif isinstance(record.args, tuple):
                 record.args = tuple(sanitize_string_value(arg) if isinstance(arg, str) else arg for arg in record.args)
         return True
@@ -81,10 +83,27 @@ class StructuredJsonFormatter(logging.Formatter):
         extras: Dict[str, Any] = {}
         for key, value in record.__dict__.items():
             if key not in {
-                "name", "msg", "args", "levelname", "levelno", "pathname", "filename",
-                "module", "exc_info", "exc_text", "stack_info", "lineno", "funcName",
-                "created", "msecs", "relativeCreated", "thread", "threadName",
-                "processName", "process", "message"
+                "name",
+                "msg",
+                "args",
+                "levelname",
+                "levelno",
+                "pathname",
+                "filename",
+                "module",
+                "exc_info",
+                "exc_text",
+                "stack_info",
+                "lineno",
+                "funcName",
+                "created",
+                "msecs",
+                "relativeCreated",
+                "thread",
+                "threadName",
+                "processName",
+                "process",
+                "message",
             }:
                 if isinstance(value, (str, int, float, bool)):
                     extras[key] = sanitize_string_value(str(value)) if isinstance(value, str) else value
@@ -108,6 +127,9 @@ def configure_structured_logging(level: int = logging.INFO) -> None:
     handler.addFilter(RedactionFilter())
 
     # Avoid duplicate handlers if re-configured
-    if not any(isinstance(h, logging.StreamHandler) and isinstance(h.formatter, StructuredJsonFormatter) for h in privguard_logger.handlers):
+    if not any(
+        isinstance(h, logging.StreamHandler) and isinstance(h.formatter, StructuredJsonFormatter)
+        for h in privguard_logger.handlers
+    ):
         privguard_logger.addHandler(handler)
         privguard_logger.propagate = False

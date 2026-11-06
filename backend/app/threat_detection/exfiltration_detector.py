@@ -159,7 +159,6 @@ class ExfiltrationDetector:
         secret_findings = self.secret_scanner.scan(param_str)
         if secret_findings:
             signals.append(
-
                 ThreatSignal(
                     threat_type=ThreatType.DATA_EXFILTRATION,
                     severity=ThreatSeverity.CRITICAL,

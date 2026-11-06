@@ -1,0 +1,22 @@
+# ==============================================================================
+# PRIVGUARD AI - Trivy Vulnerability & Misconfiguration Ignore List
+# Moon Sanctum Labs - Decode. Build. Evolve.
+# ==============================================================================
+# Policy: Do not silently suppress vulnerabilities.
+# Every entry in this file MUST specify:
+# 1. CVE or Flaw Identifier
+# 2. Package Name and Version
+# 3. Technical Justification
+# 4. Compensating Control
+# 5. Owner (Moon Sanctum Labs Security Lead)
+# 6. Expiration Date (ISO 8601)
+# ==============================================================================
+# Example:
+# CVE-YYYY-NNNNN
+#   package: example-pkg
+#   justification: Non-exploitable in isolated container runtime
+#   control: Read-only filesystem and non-root execution
+#   owner: secops@moonsanctum.internal
+#   exp: 2026-12-31
+# ==============================================================================
+# CURRENT ACTIVE SUPPRESSIONS: NONE (0 Known Unresolved Vulnerabilities)

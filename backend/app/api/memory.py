@@ -44,6 +44,7 @@ def get_owner_id(
 
 # --- Pydantic Schemas ---
 
+
 class ProposalCreateRequest(BaseModel):
     proposed_key: str = Field(..., min_length=1, max_length=128)
     proposed_value: str = Field(..., min_length=1, max_length=10000)
@@ -185,6 +186,7 @@ class VaultPurgeResponse(BaseModel):
 
 
 # --- Endpoints ---
+
 
 # 1. Proposals API
 @router.post("/proposals", response_model=ProposalResponse, status_code=status.HTTP_201_CREATED)
@@ -642,10 +644,14 @@ async def get_retention_summary(
     db: AsyncSession = Depends(get_db_session),
 ) -> MemoryRetentionSummaryResponse:
     """Provides memory vault metrics, retention status, and category breakdown."""
-    stmt_mem = select(MemoryRecord.status, MemoryRecord.category, func.count(MemoryRecord.id)).where(
-        MemoryRecord.app_id == current_app.id,
-        MemoryRecord.owner_id == owner_id,
-    ).group_by(MemoryRecord.status, MemoryRecord.category)
+    stmt_mem = (
+        select(MemoryRecord.status, MemoryRecord.category, func.count(MemoryRecord.id))
+        .where(
+            MemoryRecord.app_id == current_app.id,
+            MemoryRecord.owner_id == owner_id,
+        )
+        .group_by(MemoryRecord.status, MemoryRecord.category)
+    )
 
     res_mem = await db.execute(stmt_mem)
     rows = res_mem.all()
@@ -694,10 +700,15 @@ async def list_memory_audit_events(
     db: AsyncSession = Depends(get_db_session),
 ) -> List[MemoryAuditEventResponse]:
     """Returns content-free memory vault audit trail."""
-    stmt = select(MemoryAuditEvent).where(
-        MemoryAuditEvent.app_id == current_app.id,
-        MemoryAuditEvent.owner_id == owner_id,
-    ).order_by(MemoryAuditEvent.timestamp.desc()).limit(limit)
+    stmt = (
+        select(MemoryAuditEvent)
+        .where(
+            MemoryAuditEvent.app_id == current_app.id,
+            MemoryAuditEvent.owner_id == owner_id,
+        )
+        .order_by(MemoryAuditEvent.timestamp.desc())
+        .limit(limit)
+    )
 
     res = await db.execute(stmt)
     events = res.scalars().all()
@@ -717,6 +728,7 @@ async def list_memory_audit_events(
 
 
 # --- Specific Item Parameterized Operations (Placed at bottom to avoid shadowing literal routes) ---
+
 
 @router.get("/{memory_id}", response_model=MemoryDetailResponse)
 async def get_memory(
@@ -819,4 +831,3 @@ async def revoke_memory(
         memory_id=memory_id,
     )
     return {"status": "REVOKED", "memory_id": memory_id}
-

@@ -1,0 +1,29 @@
+# ==============================================================================
+# PRIVGUARD AI - Repository Code Ownership Specification
+# Moon Sanctum Labs - Decode. Build. Evolve.
+# ==============================================================================
+
+# Global fallback ownership
+* @aniktn
+
+# Core Security & Architectural Enclaves
+/backend/app/agent_security/ @aniktn
+/backend/app/approvals/ @aniktn
+/backend/app/core/ @aniktn
+/backend/app/database/ @aniktn
+/backend/app/enterprise/ @aniktn
+/backend/app/gateway/ @aniktn
+/backend/app/mcp/ @aniktn
+/backend/app/memory/ @aniktn
+/backend/app/observability/ @aniktn
+/backend/app/policies/ @aniktn
+/backend/app/privacy/ @aniktn
+/backend/app/threat_detection/ @aniktn
+
+# Supply Chain & CI/CD Pipelines
+/.github/ @aniktn
+/scripts/security/ @aniktn
+/.gitleaks.toml @aniktn
+/.trivyignore @aniktn
+/compose*.yaml @aniktn
+/deploy/ @aniktn

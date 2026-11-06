@@ -19,7 +19,7 @@ from app.key_management.base import (
 class VaultTransitProvider(KMSProvider):
     """
     HashiCorp Vault Transit secrets engine provider adapter.
-    
+
     Features:
     - Dedicated transit encryption engine.
     - Native server-side rewrap endpoint (/v1/transit/rewrap/:key_name) without client-side plaintext exposure.
@@ -43,6 +43,7 @@ class VaultTransitProvider(KMSProvider):
             return self._client
         try:
             import hvac
+
             self._client = hvac.Client(url=self.vault_url, token=self.token)
             return self._client
         except ImportError:
@@ -93,7 +94,9 @@ class VaultTransitProvider(KMSProvider):
                 provider="vault_transit",
             )
         except Exception as e:
-            raise PrivGuardException(f"Vault Transit encrypt failed: {e}", status_code=502, error_code="KMS_ENCRYPT_FAILED")
+            raise PrivGuardException(
+                f"Vault Transit encrypt failed: {e}", status_code=502, error_code="KMS_ENCRYPT_FAILED"
+            )
 
     async def unwrap_key(
         self,
@@ -114,7 +117,9 @@ class VaultTransitProvider(KMSProvider):
             b64_plaintext = res["data"]["plaintext"]
             return base64.b64decode(b64_plaintext.encode("ascii"))
         except Exception as e:
-            raise PrivGuardException(f"Vault Transit decrypt failed: {e}", status_code=502, error_code="KMS_DECRYPT_FAILED")
+            raise PrivGuardException(
+                f"Vault Transit decrypt failed: {e}", status_code=502, error_code="KMS_DECRYPT_FAILED"
+            )
 
     async def rewrap_key(
         self,
@@ -143,7 +148,9 @@ class VaultTransitProvider(KMSProvider):
                 provider="vault_transit",
             )
         except Exception as e:
-            raise PrivGuardException(f"Vault Transit native rewrap failed: {e}", status_code=502, error_code="KMS_REWRAP_FAILED")
+            raise PrivGuardException(
+                f"Vault Transit native rewrap failed: {e}", status_code=502, error_code="KMS_REWRAP_FAILED"
+            )
 
     async def get_key_metadata(self, key_id: str) -> KeyMetadata:
         return KeyMetadata(

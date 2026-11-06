@@ -8,6 +8,7 @@ from app.core.exceptions import PrivGuardException, UnauthorizedToolError
 
 class RegisteredTool(BaseModel):
     """Metadata and execution configuration for a registered tool."""
+
     name: str
     description: str
     required_parameters: List[str]
@@ -157,4 +158,3 @@ class ToolRegistry:
 
 # Shared tool registry instance
 tool_registry = ToolRegistry()
-

@@ -69,7 +69,9 @@ class BehaviorAnalyzer:
             recent_3 = window[-3:]
             if (
                 recent_3[0].tool_name == recent_3[1].tool_name == recent_3[2].tool_name
-                and recent_3[0].parameters_fingerprint == recent_3[1].parameters_fingerprint == recent_3[2].parameters_fingerprint
+                and recent_3[0].parameters_fingerprint
+                == recent_3[1].parameters_fingerprint
+                == recent_3[2].parameters_fingerprint
                 and recent_3[0].parameters_fingerprint is not None
             ):
                 signals.append(
@@ -167,4 +169,3 @@ class BehaviorAnalyzer:
             action=action,
             reason=max_sig.description,
         )
-

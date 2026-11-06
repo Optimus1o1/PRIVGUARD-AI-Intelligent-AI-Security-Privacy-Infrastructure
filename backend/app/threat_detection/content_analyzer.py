@@ -16,7 +16,9 @@ from app.threat_detection.injection_detector import InjectionDetector
 
 _HTML_SCRIPT_PATTERN = re.compile(r"<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>", re.IGNORECASE)
 _HTML_EVENT_HANDLER = re.compile(r"\bon\w+\s*=\s*['\"][^'\"]*['\"]", re.IGNORECASE)
-_HIDDEN_CSS_DIRECTIVE = re.compile(r"(style\s*=\s*['\"][^'\"]*display\s*:\s*none[^'\"]*['\"][^>]*>)(.*?)(<\/)", re.IGNORECASE | re.DOTALL)
+_HIDDEN_CSS_DIRECTIVE = re.compile(
+    r"(style\s*=\s*['\"][^'\"]*display\s*:\s*none[^'\"]*['\"][^>]*>)(.*?)(<\/)", re.IGNORECASE | re.DOTALL
+)
 _DATA_URI_PATTERN = re.compile(r"data:(?:text/html|application/javascript)[^,]+,[^'\"]+", re.IGNORECASE)
 
 
@@ -96,7 +98,8 @@ class ContentAnalyzer:
 
         # Determine quarantine state
         is_quarantined = any(
-            s.recommended_action in (ThreatAction.QUARANTINE, ThreatAction.BLOCK) or s.severity in (ThreatSeverity.HIGH, ThreatSeverity.CRITICAL)
+            s.recommended_action in (ThreatAction.QUARANTINE, ThreatAction.BLOCK)
+            or s.severity in (ThreatSeverity.HIGH, ThreatSeverity.CRITICAL)
             for s in signals
         )
 
@@ -137,8 +140,9 @@ class ContentAnalyzer:
             overall_risk_score=overall_risk,
             signals=signals,
             action=ThreatAction.QUARANTINE if is_quarantined else ThreatAction.ALLOW,
-            reason="Malicious or adversarial content detected in untrusted input." if signals else "Content verified clean.",
+            reason="Malicious or adversarial content detected in untrusted input."
+            if signals
+            else "Content verified clean.",
         )
 
         return envelope, assessment
-

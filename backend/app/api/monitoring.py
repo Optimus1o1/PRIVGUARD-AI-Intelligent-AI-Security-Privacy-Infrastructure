@@ -39,10 +39,7 @@ async def monitoring_overview():
     canary_summary = runner.get_summary()
 
     # SLI summaries
-    slo_results = {
-        name: evaluate_slo_status(name, total_events=1000, bad_events=2)
-        for name in CORE_SLOS
-    }
+    slo_results = {name: evaluate_slo_status(name, total_events=1000, bad_events=2) for name in CORE_SLOS}
 
     return {
         "status": "nominal" if canary_summary.get("healthy", True) else "degraded",
@@ -103,10 +100,7 @@ async def get_canary_status(canary_name: str):
 @router.get("/slos")
 async def get_slos_status():
     """Returns status and burn rates for all configured Service Level Objectives."""
-    return {
-        name: evaluate_slo_status(name, total_events=10000, bad_events=5)
-        for name in CORE_SLOS
-    }
+    return {name: evaluate_slo_status(name, total_events=10000, bad_events=5) for name in CORE_SLOS}
 
 
 @router.get("/gateway")
@@ -145,12 +139,14 @@ async def get_active_alerts():
 
     alerts = []
     if canary_summary.get("failed", 0) > 0:
-        alerts.append({
-            "alertname": "SyntheticSecurityCanaryFailed",
-            "severity": "critical",
-            "description": f"{canary_summary.get('failed')} synthetic security canary check(s) failed.",
-            "status": "firing",
-        })
+        alerts.append(
+            {
+                "alertname": "SyntheticSecurityCanaryFailed",
+                "severity": "critical",
+                "description": f"{canary_summary.get('failed')} synthetic security canary check(s) failed.",
+                "status": "firing",
+            }
+        )
 
     return {
         "firing_alerts": alerts,

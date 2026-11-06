@@ -39,7 +39,7 @@ class SecureStreamingHandler:
                     continue
 
                 if line.startswith("data:"):
-                    data_str = line[len("data:"):].strip()
+                    data_str = line[len("data:") :].strip()
                     if data_str == "[DONE]":
                         break
 
@@ -135,4 +135,3 @@ class SecureStreamingHandler:
 
 # Shared secure stream handler instance
 secure_stream_handler = SecureStreamingHandler()
-

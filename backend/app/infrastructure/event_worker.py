@@ -77,6 +77,7 @@ if __name__ == "__main__":
     async def main():
         logging.basicConfig(level=logging.INFO)
         from app.infrastructure.redis_client import init_redis
+
         await init_redis()
         worker = EventWorker()
         await worker.start()

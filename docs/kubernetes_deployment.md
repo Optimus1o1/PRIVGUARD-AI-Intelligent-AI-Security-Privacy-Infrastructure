@@ -103,3 +103,26 @@ Verify that Prometheus has registered the scrape target:
 curl http://localhost:8000/metrics
 ```
 Output reflects low-cardinality Prometheus metrics including `privguard_http_requests_total`, `privguard_gateway_latency_seconds`, and `privguard_canary_executions_total`.
+
+---
+
+## 6. Supply Chain Integrity & Production Digest Pinning
+
+In high-assurance production Kubernetes clusters, workloads should strictly reference container images by immutable cryptographic digests (`@sha256:...`) rather than mutable semantic tags.
+
+Before initiating a production rollout, execute the automated release verification script:
+```bash
+python scripts/security/verify_release.py \
+  --manifest-path dist/release-manifest.json \
+  --expected-repo "privguard-ai/privguard" \
+  --expected-tag "v1.0.0"
+```
+
+Once validated, deploy with digest pinning:
+```bash
+helm upgrade privguard ./deploy/helm/privguard \
+  --namespace privguard \
+  --reuse-values \
+  --set backend.image.digest="sha256:<VERIFIED_BACKEND_DIGEST>" \
+  --set frontend.image.digest="sha256:<VERIFIED_FRONTEND_DIGEST>"
+```

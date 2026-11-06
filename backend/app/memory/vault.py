@@ -116,11 +116,13 @@ class MemoryVault:
             proposed_value=value.strip(),
             category=cat,
             status="PROPOSED",
-            threat_assessment=json.dumps({
-                "is_threat": assessment.is_threat,
-                "action": assessment.action.value,
-                "reason": assessment.reason,
-            }),
+            threat_assessment=json.dumps(
+                {
+                    "is_threat": assessment.is_threat,
+                    "action": assessment.action.value,
+                    "reason": assessment.reason,
+                }
+            ),
             risk_level=assessment.max_severity.value,
             expires_at=expires_at,
             created_at=utcnow(),
@@ -717,4 +719,3 @@ class MemoryVault:
 
 # Global singleton vault manager
 memory_vault = MemoryVault()
-

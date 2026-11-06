@@ -27,11 +27,13 @@ def init_tracing(exporter: Optional[SpanExporter] = None) -> TracerProvider:
             _provider.add_span_processor(SimpleSpanProcessor(exporter))
         return _provider
 
-    resource = Resource.create({
-        "service.name": settings.PROJECT_NAME,
-        "service.version": settings.VERSION,
-        "deployment.environment": settings.ENVIRONMENT,
-    })
+    resource = Resource.create(
+        {
+            "service.name": settings.PROJECT_NAME,
+            "service.version": settings.VERSION,
+            "deployment.environment": settings.ENVIRONMENT,
+        }
+    )
 
     _provider = TracerProvider(resource=resource)
 
@@ -44,6 +46,7 @@ def init_tracing(exporter: Optional[SpanExporter] = None) -> TracerProvider:
         if otlp_endpoint:
             try:
                 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+
                 otlp_exporter = OTLPSpanExporter(endpoint=f"{otlp_endpoint.rstrip('/')}/v1/traces")
                 _provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
             except Exception:

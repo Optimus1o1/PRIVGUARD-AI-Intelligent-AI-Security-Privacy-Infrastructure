@@ -13,6 +13,7 @@ def utcnow() -> datetime:
 
 class TrustLevel(str, Enum):
     """Trust classification levels for inbound data and context."""
+
     TRUSTED = "TRUSTED"
     UNTRUSTED = "UNTRUSTED"
     QUARANTINED = "QUARANTINED"
@@ -20,6 +21,7 @@ class TrustLevel(str, Enum):
 
 class SourceType(str, Enum):
     """Origin type of content evaluated by PRIVGUARD."""
+
     USER_INPUT = "USER_INPUT"
     SYSTEM_PROMPT = "SYSTEM_PROMPT"
     EXTERNAL_DOCUMENT = "EXTERNAL_DOCUMENT"
@@ -31,6 +33,7 @@ class SourceType(str, Enum):
 
 class ThreatType(str, Enum):
     """Recognized AI security and agent threats."""
+
     DIRECT_PROMPT_INJECTION = "DIRECT_PROMPT_INJECTION"
     INDIRECT_PROMPT_INJECTION = "INDIRECT_PROMPT_INJECTION"
     SYSTEM_PROMPT_EXTRACTION = "SYSTEM_PROMPT_EXTRACTION"
@@ -46,6 +49,7 @@ class ThreatType(str, Enum):
 
 class ThreatSeverity(str, Enum):
     """Threat severity levels."""
+
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
@@ -54,6 +58,7 @@ class ThreatSeverity(str, Enum):
 
 class ThreatAction(str, Enum):
     """Explainable defensive response actions."""
+
     ALLOW = "ALLOW"
     FLAG = "FLAG"
     QUARANTINE = "QUARANTINE"
@@ -65,6 +70,7 @@ class ThreatAction(str, Enum):
 
 class ContentEnvelope(BaseModel):
     """Envelopes incoming data with provenance, tenant attribution, and trust classification."""
+
     content: str
     source_type: SourceType = SourceType.USER_INPUT
     trust_level: TrustLevel = TrustLevel.UNTRUSTED
@@ -80,6 +86,7 @@ class ContentEnvelope(BaseModel):
 
 class ThreatSignal(BaseModel):
     """Individual signal raised by a detection rule or analyzer."""
+
     threat_type: ThreatType
     severity: ThreatSeverity
     confidence: float = Field(ge=0.0, le=1.0)
@@ -91,6 +98,7 @@ class ThreatSignal(BaseModel):
 
 class ThreatAssessment(BaseModel):
     """Unified threat evaluation output across all detectors."""
+
     is_threat: bool = False
     max_severity: ThreatSeverity = ThreatSeverity.LOW
     overall_risk_score: float = Field(default=0.0, ge=0.0, le=1.0)
@@ -101,6 +109,7 @@ class ThreatAssessment(BaseModel):
 
 class BehavioralEvent(BaseModel):
     """Chronological event representing an agent action or tool invocation."""
+
     agent_id: str
     task_id: str
     tool_name: str
@@ -112,6 +121,7 @@ class BehavioralEvent(BaseModel):
 
 class TaintRecord(BaseModel):
     """Taint status associated with a task context."""
+
     task_id: str
     resource: str
     taint_level: str = "CONFIDENTIAL"
@@ -120,6 +130,7 @@ class TaintRecord(BaseModel):
 
 class MemoryUpdateProposal(BaseModel):
     """Proposed long-term memory update submitted for inspection."""
+
     agent_id: str
     user_id: str
     app_id: str
@@ -130,10 +141,10 @@ class MemoryUpdateProposal(BaseModel):
 
 class RetrievedDocumentChunk(BaseModel):
     """RAG document chunk submitted for integrity and poisoning validation."""
+
     chunk_id: str
     app_id: str
     collection_id: str
     content: str
     expected_hash: Optional[str] = None
     metadata: Dict[str, Any] = Field(default_factory=dict)
-

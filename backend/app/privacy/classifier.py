@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 class DataCategory(str, Enum):
     """Data classification categories."""
+
     PUBLIC = "PUBLIC"
     INTERNAL = "INTERNAL"
     PERSONAL = "PERSONAL"
@@ -16,6 +17,7 @@ class DataCategory(str, Enum):
 
 class RiskLevel(str, Enum):
     """Security risk levels."""
+
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
@@ -33,7 +35,6 @@ ENTITY_CLASSIFICATION_MAP: Dict[str, tuple[DataCategory, RiskLevel]] = {
     "JWT_TOKEN": (DataCategory.CRITICAL, RiskLevel.CRITICAL),
     "AWS_KEY": (DataCategory.CRITICAL, RiskLevel.CRITICAL),
     "SSH_KEY": (DataCategory.CRITICAL, RiskLevel.CRITICAL),
-
     # Personal Identifiable Information (PII)
     "EMAIL": (DataCategory.PERSONAL, RiskLevel.MEDIUM),
     "PHONE_NUMBER": (DataCategory.PERSONAL, RiskLevel.MEDIUM),
@@ -42,7 +43,6 @@ ENTITY_CLASSIFICATION_MAP: Dict[str, tuple[DataCategory, RiskLevel]] = {
     "PERSON_NAME": (DataCategory.PERSONAL, RiskLevel.LOW),
     "IP_ADDRESS": (DataCategory.PERSONAL, RiskLevel.LOW),
     "NATIONAL_ID": (DataCategory.PERSONAL, RiskLevel.HIGH),
-
     # Confidential
     "CONFIDENTIAL_MARKER": (DataCategory.CONFIDENTIAL, RiskLevel.HIGH),
     "INTERNAL_DOCUMENT": (DataCategory.INTERNAL, RiskLevel.LOW),
@@ -51,6 +51,7 @@ ENTITY_CLASSIFICATION_MAP: Dict[str, tuple[DataCategory, RiskLevel]] = {
 
 class ClassificationResult(BaseModel):
     """Result of classifying a text or extracted entity set."""
+
     overall_category: DataCategory
     highest_risk: RiskLevel
     entity_counts: Dict[str, int]
@@ -133,4 +134,3 @@ def classify_entities(detected_entities: List[str]) -> ClassificationResult:
         entity_counts=entity_counts,
         is_safe_to_forward=True,
     )
-

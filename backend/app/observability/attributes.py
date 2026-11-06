@@ -98,6 +98,7 @@ PROHIBITED_KEY_PATTERNS: Set[str] = {
 
 class SemanticAttributes:
     """Namespace grouping safe OpenTelemetry attribute keys."""
+
     HTTP_METHOD = HTTP_METHOD
     HTTP_ROUTE = HTTP_ROUTE
     HTTP_STATUS_CODE = HTTP_STATUS_CODE

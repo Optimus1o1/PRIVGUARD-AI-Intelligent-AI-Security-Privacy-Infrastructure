@@ -60,9 +60,7 @@ class SCIMService:
         }
 
     @classmethod
-    async def get_user(
-        cls, db: AsyncSession, organization_id: str, user_id: str
-    ) -> Dict[str, Any]:
+    async def get_user(cls, db: AsyncSession, organization_id: str, user_id: str) -> Dict[str, Any]:
         """Retrieves a single user by SCIM ID."""
         q = select(OrganizationMembership).where(
             OrganizationMembership.organization_id == organization_id,
@@ -79,9 +77,12 @@ class SCIMService:
         cls, db: AsyncSession, organization_id: str, start_index: int = 1, count: int = 50
     ) -> Dict[str, Any]:
         """Lists provisioned enterprise users in SCIM 2.0 ListResponse format."""
-        q = select(OrganizationMembership).where(
-            OrganizationMembership.organization_id == organization_id
-        ).offset(start_index - 1).limit(count)
+        q = (
+            select(OrganizationMembership)
+            .where(OrganizationMembership.organization_id == organization_id)
+            .offset(start_index - 1)
+            .limit(count)
+        )
         res = await db.execute(q)
         members = res.scalars().all()
 
@@ -94,9 +95,7 @@ class SCIMService:
         }
 
     @classmethod
-    async def provision_user(
-        cls, db: AsyncSession, organization_id: str, payload: SCIMUserPayload
-    ) -> Dict[str, Any]:
+    async def provision_user(cls, db: AsyncSession, organization_id: str, payload: SCIMUserPayload) -> Dict[str, Any]:
         """Provisions a new user into the enterprise organization."""
         email = payload.userName.lower().strip()
         role = payload.roles[0].value if payload.roles else "VIEWER"
@@ -158,9 +157,7 @@ class SCIMService:
         return cls._map_to_scim(mem)
 
     @classmethod
-    async def deprovision_user(
-        cls, db: AsyncSession, organization_id: str, user_id: str
-    ) -> None:
+    async def deprovision_user(cls, db: AsyncSession, organization_id: str, user_id: str) -> None:
         """
         Deprovisions user with immediate revocation of all sessions and capability grants.
         Strict requirement: A deprovisioned user must immediately lose authorization.
@@ -190,8 +187,7 @@ class SCIMService:
             .where(
                 ApprovalRequest.tenant_id == organization_id,
                 ApprovalRequest.approver_id == user_id,
-                ApprovalRequest.status == "PENDING"
+                ApprovalRequest.status == "PENDING",
             )
             .values(status="EXPIRED")
         )
-

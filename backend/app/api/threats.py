@@ -62,7 +62,6 @@ async def inspect_content(
     app: Application = Depends(get_current_app),
     db: AsyncSession = Depends(get_db_session),
 ) -> InspectContentResponse:
-
     """Inspects arbitrary content or user prompts for injection and security threats."""
     envelope, assessment = content_analyzer.wrap_and_analyze(
         raw_text=payload.text,
@@ -139,7 +138,6 @@ async def list_threat_events(
     app: Application = Depends(get_current_app),
     db: AsyncSession = Depends(get_db_session),
 ) -> List[ThreatEventResponse]:
-
     """Queries content-free threat events for the current application."""
     stmt = (
         select(ThreatEvent)

@@ -15,12 +15,14 @@ router = APIRouter(prefix="/v1/privacy", tags=["Privacy Engine"])
 
 class InspectRequest(BaseModel):
     """Payload to inspect for sensitive information."""
+
     text: str = Field(..., min_length=1, description="Raw input text to inspect")
     request_id: Optional[str] = Field(None, description="Optional caller correlation ID")
 
 
 class InspectResponse(BaseModel):
     """Inspection result metadata."""
+
     category: str
     risk_level: str
     action: str
@@ -34,12 +36,14 @@ class InspectResponse(BaseModel):
 
 class RedactRequest(BaseModel):
     """Payload to sanitize via redaction."""
+
     text: str = Field(..., min_length=1)
     reversible: bool = True
 
 
 class RedactResponse(BaseModel):
     """Sanitized payload and token mapping."""
+
     sanitized_text: str
     mapping: Dict[str, str]
     entity_counts: Dict[str, int]
@@ -97,4 +101,3 @@ async def redact_data(
         mapping=verdict.redaction_mapping if payload.reversible else {},
         entity_counts=verdict.entity_counts,
     )
-

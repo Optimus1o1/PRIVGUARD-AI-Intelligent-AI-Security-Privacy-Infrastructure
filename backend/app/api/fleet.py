@@ -189,4 +189,3 @@ async def get_resource_policy_bundle(
         "signing_key_id": bundle.signing_key_id,
         "bundle": json.loads(bundle.bundle_json),
     }
-

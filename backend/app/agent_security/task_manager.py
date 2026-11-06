@@ -134,11 +134,7 @@ class TaskManager:
     async def _cleanup_task_resources(self, db: AsyncSession, task_id: str, terminal_status: str):
         """Revokes all capabilities and expires all pending approvals for a task."""
         # 1. Revoke all capability grants for this task
-        await db.execute(
-            update(CapabilityGrant)
-            .where(CapabilityGrant.task_id == task_id)
-            .values(is_revoked=True)
-        )
+        await db.execute(update(CapabilityGrant).where(CapabilityGrant.task_id == task_id).values(is_revoked=True))
         # 2. Expire all pending approval requests for this task
         await db.execute(
             update(ApprovalRequest)

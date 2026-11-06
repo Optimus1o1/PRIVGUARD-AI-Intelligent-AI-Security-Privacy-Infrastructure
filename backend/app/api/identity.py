@@ -69,4 +69,3 @@ async def delete_scim_user(
     RBACAuthorizer.enforce_permission(ctx, Permission.ORG_MEMBERS_MANAGE.value)
     await SCIMService.deprovision_user(db, ctx.organization_id, user_id)
     return None
-

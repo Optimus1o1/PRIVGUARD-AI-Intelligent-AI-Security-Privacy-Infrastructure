@@ -205,7 +205,11 @@ async def migration_status(
     unmigrated = await legacy_migrator.get_unmigrated_count(db, tenant_id)
     can_retire, reason = await legacy_migrator.can_retire_legacy_key(db, tenant_id)
 
-    jq = select(KeyMigrationJob).where(KeyMigrationJob.tenant_id == tenant_id).order_by(KeyMigrationJob.created_at.desc())
+    jq = (
+        select(KeyMigrationJob)
+        .where(KeyMigrationJob.tenant_id == tenant_id)
+        .order_by(KeyMigrationJob.created_at.desc())
+    )
     jres = await db.execute(jq)
     latest_job = jres.scalars().first()
 

@@ -83,12 +83,17 @@ class ProtectedMCPClient:
                 raise PrivGuardException("command is required for stdio transport", status_code=400)
             # Stdio transport discovery
             proc = await mcp_stdio_sandbox.spawn_server_process(command, args or [])
-            req = json.dumps({
-                "jsonrpc": "2.0",
-                "id": "privguard_req_stdio_list",
-                "method": "tools/list",
-                "params": {},
-            }) + "\n"
+            req = (
+                json.dumps(
+                    {
+                        "jsonrpc": "2.0",
+                        "id": "privguard_req_stdio_list",
+                        "method": "tools/list",
+                        "params": {},
+                    }
+                )
+                + "\n"
+            )
             stdout, stderr = await proc.communicate(input=req.encode("utf-8"))
             if proc.returncode != 0 and not stdout:
                 raise MCPProtocolError(f"stdio MCP process failed with code {proc.returncode}: {stderr.decode()[:200]}")
@@ -161,12 +166,17 @@ class ProtectedMCPClient:
             if not command:
                 raise PrivGuardException("command is required for stdio transport", status_code=400)
             proc = await mcp_stdio_sandbox.spawn_server_process(command, args or [])
-            req = json.dumps({
-                "jsonrpc": "2.0",
-                "id": f"privguard_stdio_call_{tool_name}",
-                "method": "tools/call",
-                "params": {"name": tool_name, "arguments": arguments or {}},
-            }) + "\n"
+            req = (
+                json.dumps(
+                    {
+                        "jsonrpc": "2.0",
+                        "id": f"privguard_stdio_call_{tool_name}",
+                        "method": "tools/call",
+                        "params": {"name": tool_name, "arguments": arguments or {}},
+                    }
+                )
+                + "\n"
+            )
             stdout, stderr = await proc.communicate(input=req.encode("utf-8"))
             if proc.returncode != 0 and not stdout:
                 raise MCPProtocolError(f"stdio process failed with code {proc.returncode}: {stderr.decode()[:200]}")

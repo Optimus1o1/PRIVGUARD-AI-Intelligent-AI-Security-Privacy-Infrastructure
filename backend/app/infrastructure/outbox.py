@@ -30,7 +30,8 @@ def emit_outbox_event(
     """
     # Sanitize payload: strip any forbidden secret keys
     sanitized_payload = {
-        k: v for k, v in payload.items()
+        k: v
+        for k, v in payload.items()
         if not any(secret_term in k.lower() for secret_term in ("secret", "password", "token", "key", "dek", "kek"))
     }
 
@@ -100,11 +101,16 @@ class OutboxPublisher:
                 await redis_client.xadd(stream_key, message_data, maxlen=10000)
 
                 # 2. Ephemeral Pub/Sub notification for fast invalidation
-                await redis_client.publish(channel_key, json.dumps({
-                    "event_type": event.event_type,
-                    "aggregate_id": event.aggregate_id,
-                    "tenant_id": event.tenant_id,
-                }))
+                await redis_client.publish(
+                    channel_key,
+                    json.dumps(
+                        {
+                            "event_type": event.event_type,
+                            "aggregate_id": event.aggregate_id,
+                            "tenant_id": event.tenant_id,
+                        }
+                    ),
+                )
 
                 event.status = "PUBLISHED"
                 event.published_at = now

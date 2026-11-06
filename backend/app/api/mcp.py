@@ -42,6 +42,7 @@ router = APIRouter(tags=["MCP Security Gateway"])
 
 # --- Pydantic Schemas ---
 
+
 class ServerRegisterRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     description: Optional[str] = Field(None, max_length=255)
@@ -113,6 +114,7 @@ class MCPAuditResponse(BaseModel):
 
 
 # --- Management REST Endpoints ---
+
 
 @router.post("/v1/mcp/servers", response_model=ServerResponse, status_code=status.HTTP_201_CREATED)
 async def register_mcp_server(
@@ -458,6 +460,7 @@ async def list_mcp_activity(
 
 # --- 2026-07-28 Protected MCP Server Facade (POST /mcp) ---
 
+
 @router.post("/mcp")
 async def mcp_server_facade(
     request: Request,
@@ -541,11 +544,13 @@ async def mcp_server_facade(
         res = await db.execute(stmt)
         tools = []
         for t, s in res.all():
-            tools.append({
-                "name": t.name,
-                "description": f"[{s.name}] {t.description or ''}".strip(),
-                "inputSchema": json.loads(t.input_schema or "{}"),
-            })
+            tools.append(
+                {
+                    "name": t.name,
+                    "description": f"[{s.name}] {t.description or ''}".strip(),
+                    "inputSchema": json.loads(t.input_schema or "{}"),
+                }
+            )
         return JSONResponse(
             content={
                 "jsonrpc": "2.0",
@@ -625,10 +630,7 @@ async def mcp_server_facade(
             )
 
     elif method == "resources/list":
-        stmt = (
-            select(MCPResourceDefinition)
-            .where(MCPResourceDefinition.app_id == current_app.id)
-        )
+        stmt = select(MCPResourceDefinition).where(MCPResourceDefinition.app_id == current_app.id)
         res = await db.execute(stmt)
         resources = [
             {"uri": r.uri, "name": r.name, "description": r.description, "mimeType": r.mime_type}

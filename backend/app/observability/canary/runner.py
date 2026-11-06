@@ -20,9 +20,7 @@ class CanaryRunner:
     """Manages periodic and on-demand execution of synthetic security canaries."""
 
     def __init__(self) -> None:
-        self.canaries: Dict[str, BaseCanaryScenario] = {
-            cls.name: cls() for cls in ALL_CANARY_CLASSES
-        }
+        self.canaries: Dict[str, BaseCanaryScenario] = {cls.name: cls() for cls in ALL_CANARY_CLASSES}
         self.latest_results: Dict[str, CanaryResult] = {}
         self.last_run_timestamp: Optional[str] = None
 

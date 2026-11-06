@@ -88,14 +88,10 @@ async def get_distributed_state_overview(
     pool_metrics = get_pool_status()
 
     # Query outbox pending and failed counts
-    pending_count_res = await db.execute(
-        select(func.count(OutboxEvent.id)).where(OutboxEvent.status == "PENDING")
-    )
+    pending_count_res = await db.execute(select(func.count(OutboxEvent.id)).where(OutboxEvent.status == "PENDING"))
     pending_events = pending_count_res.scalar() or 0
 
-    failed_count_res = await db.execute(
-        select(func.count(OutboxEvent.id)).where(OutboxEvent.status == "FAILED")
-    )
+    failed_count_res = await db.execute(select(func.count(OutboxEvent.id)).where(OutboxEvent.status == "FAILED"))
     failed_events = failed_count_res.scalar() or 0
 
     return {

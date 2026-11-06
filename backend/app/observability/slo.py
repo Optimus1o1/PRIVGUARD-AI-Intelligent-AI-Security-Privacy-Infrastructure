@@ -9,6 +9,7 @@ from typing import Dict, List, Any, Optional
 @dataclass(frozen=True)
 class SLOSpecification:
     """Definition of a Service Level Objective."""
+
     name: str
     description: str
     target_ratio: float  # e.g. 0.995 for 99.5%

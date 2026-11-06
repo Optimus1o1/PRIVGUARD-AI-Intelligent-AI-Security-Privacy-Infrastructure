@@ -19,6 +19,7 @@ from app.observability.metrics import (
 @dataclass
 class CanaryResult:
     """Outcome of a synthetic security canary execution."""
+
     canary_name: str
     passed: bool
     latency_ms: float
@@ -30,6 +31,7 @@ class CanaryResult:
 
 class BaseCanaryScenario(ABC):
     """Abstract base class for all synthetic security canaries."""
+
     name: str = "base_canary"
     description: str = "Base canary scenario"
     severity: str = "high"
@@ -74,6 +76,7 @@ class BaseCanaryScenario(ABC):
 
 class GatewayProtectionCanary(BaseCanaryScenario):
     """Canary 1: Verifies PII detection and redaction using synthetic test data."""
+
     name = "gateway_protection"
     description = "Asserts PII detection & surrogate token redaction prevent sensitive leaks"
     severity = "critical"
@@ -97,14 +100,19 @@ class GatewayProtectionCanary(BaseCanaryScenario):
         if "john.doe@canary-privguard.test" in res.redacted_text:
             return False, "Redacted text still contains raw synthetic email", {"redacted_text": res.redacted_text}
 
-        return True, "PII detection and redaction verified successfully", {
-            "entities_found": len(matches),
-            "redacted_text": res.redacted_text,
-        }
+        return (
+            True,
+            "PII detection and redaction verified successfully",
+            {
+                "entities_found": len(matches),
+                "redacted_text": res.redacted_text,
+            },
+        )
 
 
 class SecretBlockingCanary(BaseCanaryScenario):
     """Canary 2: Verifies that synthetic credential patterns fail closed without upstream dispatch."""
+
     name = "secret_blocking"
     description = "Asserts high-entropy credential patterns are caught by secret scanner"
     severity = "critical"
@@ -117,20 +125,29 @@ class SecretBlockingCanary(BaseCanaryScenario):
         matches = scanner.scan(synthetic_secret)
 
         if not matches:
-            return False, "Secret scanner failed to catch synthetic API token", {"scanned_length": len(synthetic_secret)}
+            return (
+                False,
+                "Secret scanner failed to catch synthetic API token",
+                {"scanned_length": len(synthetic_secret)},
+            )
 
         match = matches[0]
         if match.matched_text == match.preview:
             return False, "Secret preview was not masked", {"preview": match.preview}
 
-        return True, "Secret scanner successfully caught and masked synthetic credential", {
-            "secret_type": match.secret_type,
-            "preview": match.preview,
-        }
+        return (
+            True,
+            "Secret scanner successfully caught and masked synthetic credential",
+            {
+                "secret_type": match.secret_type,
+                "preview": match.preview,
+            },
+        )
 
 
 class AgentAuthorizationCanary(BaseCanaryScenario):
     """Canary 3: Verifies that unauthorized tool execution is rejected."""
+
     name = "agent_authorization"
     description = "Asserts unauthorized agent tool execution is blocked fail-closed"
     severity = "critical"
@@ -152,14 +169,19 @@ class AgentAuthorizationCanary(BaseCanaryScenario):
             permission_engine.check_agent_tool_permission(agent, requested_tool)
             return False, f"Unauthorized tool '{requested_tool}' was incorrectly allowed", {"tool": requested_tool}
         except UnauthorizedToolError:
-            return True, "Unauthorized tool call successfully blocked by permission engine", {
-                "requested_tool": requested_tool,
-                "blocked": True,
-            }
+            return (
+                True,
+                "Unauthorized tool call successfully blocked by permission engine",
+                {
+                    "requested_tool": requested_tool,
+                    "blocked": True,
+                },
+            )
 
 
 class CapabilityRevocationCanary(BaseCanaryScenario):
     """Canary 4: Verifies that revoked capability tokens are rejected."""
+
     name = "capability_revocation"
     description = "Asserts revoked capability tokens are immediately rejected"
     severity = "critical"
@@ -180,14 +202,19 @@ class CapabilityRevocationCanary(BaseCanaryScenario):
         if not grant.is_revoked:
             return False, "Revoked capability grant state was not marked as revoked", {}
 
-        return True, "Revoked capability token successfully identified and rejected", {
-            "grant_id": grant.id,
-            "is_revoked": True,
-        }
+        return (
+            True,
+            "Revoked capability token successfully identified and rejected",
+            {
+                "grant_id": grant.id,
+                "is_revoked": True,
+            },
+        )
 
 
 class PromptInjectionCanary(BaseCanaryScenario):
     """Canary 5: Verifies that synthetic injection heuristics trigger threat signals."""
+
     name = "prompt_injection"
     description = "Asserts prompt injection patterns trigger threat detection"
     severity = "high"
@@ -201,19 +228,26 @@ class PromptInjectionCanary(BaseCanaryScenario):
         assessment = detector.detect(synthetic_injection)
 
         if assessment.action not in (ThreatAction.BLOCK, ThreatAction.QUARANTINE, ThreatAction.FLAG):
-            return False, f"Injection detector failed to flag injection pattern (action={assessment.action})", {
-                "action": str(assessment.action)
-            }
+            return (
+                False,
+                f"Injection detector failed to flag injection pattern (action={assessment.action})",
+                {"action": str(assessment.action)},
+            )
 
-        return True, "Prompt injection pattern successfully flagged by threat detector", {
-            "action": str(assessment.action),
-            "threat_score": assessment.overall_risk_score,
-            "signals_count": len(assessment.signals),
-        }
+        return (
+            True,
+            "Prompt injection pattern successfully flagged by threat detector",
+            {
+                "action": str(assessment.action),
+                "threat_score": assessment.overall_risk_score,
+                "signals_count": len(assessment.signals),
+            },
+        )
 
 
 class MemoryIsolationCanary(BaseCanaryScenario):
     """Canary 6: Verifies that cross-tenant/user memory access or tampered ciphertexts are rejected."""
+
     name = "memory_isolation"
     description = "Asserts AEAD ciphertext tampering and cross-user memory decryption fails closed"
     severity = "critical"
@@ -242,13 +276,16 @@ class MemoryIsolationCanary(BaseCanaryScenario):
         if not tampered_caught:
             return False, "Decryption succeeded across different user contexts without raising error", {}
 
-        return True, "Memory isolation and AEAD integrity verified: cross-user decryption rejected", {
-            "tampered_caught": True
-        }
+        return (
+            True,
+            "Memory isolation and AEAD integrity verified: cross-user decryption rejected",
+            {"tampered_caught": True},
+        )
 
 
 class MCPSecurityCanary(BaseCanaryScenario):
     """Canary 7: Verifies that SSRF attacks against internal network endpoints are blocked."""
+
     name = "mcp_security"
     description = "Asserts MCP proxy rejects private IP and cloud metadata SSRF targets"
     severity = "critical"
@@ -266,18 +303,25 @@ class MCPSecurityCanary(BaseCanaryScenario):
             ssrf_blocked = True
 
         if not ssrf_blocked:
-            return False, f"MCP URL validator failed to block AWS metadata URL: {metadata_url}", {
-                "target_url": metadata_url
-            }
+            return (
+                False,
+                f"MCP URL validator failed to block AWS metadata URL: {metadata_url}",
+                {"target_url": metadata_url},
+            )
 
-        return True, "MCP SSRF validator successfully blocked cloud metadata endpoint", {
-            "target_url": metadata_url,
-            "ssrf_blocked": True,
-        }
+        return (
+            True,
+            "MCP SSRF validator successfully blocked cloud metadata endpoint",
+            {
+                "target_url": metadata_url,
+                "ssrf_blocked": True,
+            },
+        )
 
 
 class KMSAvailabilityCanary(BaseCanaryScenario):
     """Canary 8: Verifies cryptographic encrypt/decrypt roundtrip validation against active KMS."""
+
     name = "kms_availability"
     description = "Asserts active KMS provider performs clean encrypt/decrypt envelope operations"
     severity = "critical"
@@ -300,14 +344,16 @@ class KMSAvailabilityCanary(BaseCanaryScenario):
         )
 
         if unwrapped_dek != synthetic_dek:
-            return False, "Decrypted DEK does not match original synthetic DEK", {
-                "key_id": key_id
-            }
+            return False, "Decrypted DEK does not match original synthetic DEK", {"key_id": key_id}
 
-        return True, "KMS provider roundtrip verified successfully", {
-            "key_id": key_id,
-            "provider": wrapped_res.provider,
-        }
+        return (
+            True,
+            "KMS provider roundtrip verified successfully",
+            {
+                "key_id": key_id,
+                "provider": wrapped_res.provider,
+            },
+        )
 
 
 ALL_CANARY_CLASSES: List[Type[BaseCanaryScenario]] = [

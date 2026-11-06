@@ -99,7 +99,9 @@ class MCPSecurityProxy:
             raise PrivGuardException(f"Tool '{tool_name}' is not approved for execution.", status_code=403)
 
         if tool_def.risk_level == "CRITICAL":
-            raise PrivGuardException(f"Tool '{tool_name}' has CRITICAL risk level and is blocked by security policy.", status_code=403)
+            raise PrivGuardException(
+                f"Tool '{tool_name}' has CRITICAL risk level and is blocked by security policy.", status_code=403
+            )
 
         # 3. Privacy & Secret Inspection on Arguments
         param_text = json.dumps(parameters)
@@ -212,10 +214,12 @@ class MCPSecurityProxy:
             tool_name=tool_name,
             action="CALL_TOOL",
             status="SUCCESS",
-            details=json.dumps({
-                "risk_level": tool_def.risk_level,
-                "requires_approval": tool_def.requires_approval,
-            }),
+            details=json.dumps(
+                {
+                    "risk_level": tool_def.risk_level,
+                    "requires_approval": tool_def.requires_approval,
+                }
+            ),
             timestamp=utcnow(),
         )
         db.add(audit_evt)

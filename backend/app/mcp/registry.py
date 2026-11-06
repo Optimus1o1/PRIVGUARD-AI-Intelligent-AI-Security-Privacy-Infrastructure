@@ -233,10 +233,12 @@ class MCPToolRegistry:
                 server_id=server.id,
                 action="CATALOG_DRIFT_DETECTED",
                 status="QUARANTINED",
-                details=json.dumps({
-                    "updated_tools_count": updated_count,
-                    "catalog_fingerprint": catalog_fingerprint,
-                }),
+                details=json.dumps(
+                    {
+                        "updated_tools_count": updated_count,
+                        "catalog_fingerprint": catalog_fingerprint,
+                    }
+                ),
                 timestamp=utcnow(),
             )
             db.add(audit_evt)

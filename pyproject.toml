@@ -4,3 +4,29 @@ asyncio_default_fixture_loop_scope = "function"
 testpaths = ["backend/tests"]
 pythonpath = ["backend"]
 
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+src = ["backend"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "B",   # flake8-bugbear
+]
+ignore = [
+    "E501", # line too long (soft limit handled by formatter)
+    "E712", # comparison to False/True (SQLAlchemy column expression filter)
+    "E711", # comparison to None (SQLAlchemy column IS NULL filter)
+    "B008", # do not perform function calls in argument defaults (FastAPI Depends)
+    "B904", # raise ... from err (exception chaining)
+    "B006", # mutable default argument
+    "B007", # loop control variable not used
+    "F401", # imported but unused (re-exports across package namespaces)
+    "F841", # local variable assigned but never used
+]
+
+[tool.bandit]
+exclude_dirs = ["backend/tests", ".venv"]
+skips = ["B101"]

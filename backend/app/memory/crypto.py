@@ -17,6 +17,7 @@ from app.memory.key_provider import KeyProvider, default_key_provider
 
 class EncryptedMemoryPayload(NamedTuple):
     """Encrypted envelope representation of a memory record."""
+
     ciphertext_b64: str
     nonce_b64: str
     wrapped_dek_b64: str

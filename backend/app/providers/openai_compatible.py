@@ -71,11 +71,14 @@ class OpenAICompatibleProvider(BaseProvider):
             choice = data["choices"][0]
             content = choice["message"].get("content", "")
             finish_reason = choice.get("finish_reason", "stop")
-            usage = data.get("usage", {
-                "prompt_tokens": 0,
-                "completion_tokens": len(content.split()),
-                "total_tokens": len(content.split()),
-            })
+            usage = data.get(
+                "usage",
+                {
+                    "prompt_tokens": 0,
+                    "completion_tokens": len(content.split()),
+                    "total_tokens": len(content.split()),
+                },
+            )
 
             return ProviderResponse(
                 id=data.get("id", f"gen_{uuid.uuid4().hex[:12]}"),
@@ -139,4 +142,3 @@ class OpenAICompatibleProvider(BaseProvider):
         finally:
             if should_close:
                 await client.aclose()
-

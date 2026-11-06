@@ -39,6 +39,7 @@ class GCPKMSProvider(KMSProvider):
             return self._client
         try:
             from google.cloud import kms
+
             self._client = kms.KeyManagementServiceClient()
             return self._client
         except ImportError:
@@ -70,7 +71,9 @@ class GCPKMSProvider(KMSProvider):
     def _format_key_name(self, key_id: str) -> str:
         if "projects/" in key_id:
             return key_id
-        return f"projects/{self.project_id}/locations/{self.location_id}/keyRings/{self.key_ring_id}/cryptoKeys/{key_id}"
+        return (
+            f"projects/{self.project_id}/locations/{self.location_id}/keyRings/{self.key_ring_id}/cryptoKeys/{key_id}"
+        )
 
     async def wrap_key(
         self,
@@ -84,6 +87,7 @@ class GCPKMSProvider(KMSProvider):
             req: Dict[str, Any] = {"name": name, "plaintext": plaintext_key}
             if encryption_context:
                 import json
+
                 req["additional_authenticated_data"] = json.dumps(encryption_context, sort_keys=True).encode("utf-8")
             response = client.encrypt(request=req)
             return WrappedKeyResult(
@@ -109,11 +113,14 @@ class GCPKMSProvider(KMSProvider):
             req: Dict[str, Any] = {"name": name, "ciphertext": wrapped_key}
             if encryption_context:
                 import json
+
                 req["additional_authenticated_data"] = json.dumps(encryption_context, sort_keys=True).encode("utf-8")
             response = client.decrypt(request=req)
             return response.plaintext
         except Exception as e:
-            raise PrivGuardException(f"GCP KMS unwrap_key failed: {e}", status_code=502, error_code="KMS_DECRYPT_FAILED")
+            raise PrivGuardException(
+                f"GCP KMS unwrap_key failed: {e}", status_code=502, error_code="KMS_DECRYPT_FAILED"
+            )
 
     async def rewrap_key(
         self,

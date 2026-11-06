@@ -15,17 +15,17 @@ engine_kwargs = {
     "future": True,
 }
 if is_postgres:
-    engine_kwargs.update({
-        "pool_size": 20,
-        "max_overflow": 10,
-        "pool_timeout": 30.0,
-        "pool_recycle": 1800,
-        "pool_pre_ping": True,
-    })
+    engine_kwargs.update(
+        {
+            "pool_size": 20,
+            "max_overflow": 10,
+            "pool_timeout": 30.0,
+            "pool_recycle": 1800,
+            "pool_pre_ping": True,
+        }
+    )
 else:
-    engine_kwargs.update({
-        "connect_args": {"check_same_thread": False, "timeout": 60.0}
-    })
+    engine_kwargs.update({"connect_args": {"check_same_thread": False, "timeout": 60.0}})
 
 engine = create_async_engine(settings.DATABASE_URL, **engine_kwargs)
 
@@ -74,6 +74,7 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
         try:
             from app.core.tenant import get_current_tenant_id
             from app.database.rls import set_db_tenant_context, reset_db_tenant_context
+
             tenant_id = get_current_tenant_id()
             if tenant_id:
                 await set_db_tenant_context(session, tenant_id)

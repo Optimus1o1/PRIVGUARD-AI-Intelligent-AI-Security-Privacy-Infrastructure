@@ -83,9 +83,7 @@ async def get_dashboard_summary(
     )
 
     # 3. Agent, Task, and Approval Counts
-    active_agents_stmt = select(func.count(Agent.id)).where(
-        Agent.app_id == app_id, Agent.status == "ACTIVE"
-    )
+    active_agents_stmt = select(func.count(Agent.id)).where(Agent.app_id == app_id, Agent.status == "ACTIVE")
     running_tasks_stmt = select(func.count(AgentTask.id)).where(
         AgentTask.app_id == app_id, AgentTask.status == "RUNNING"
     )
@@ -180,11 +178,13 @@ async def get_threat_statistics(
         day_reqs = (await db.execute(req_count_stmt)).scalar() or 0
         day_threats = (await db.execute(threat_count_stmt)).scalar() or 0
 
-        timeline.append({
-            "date": day_str,
-            "requests": day_reqs,
-            "threats": day_threats,
-        })
+        timeline.append(
+            {
+                "date": day_str,
+                "requests": day_reqs,
+                "threats": day_threats,
+            }
+        )
 
     return ThreatStatisticsResponse(
         by_severity=by_severity,
@@ -206,53 +206,66 @@ async def get_system_health(
     db_start = time.perf_counter()
     try:
         from sqlalchemy import text
+
         await db.execute(text("SELECT 1"))
         db_lat = round((time.perf_counter() - db_start) * 1000, 2)
-        components.append(ComponentHealth(
-            name="Database (SQLite WAL)",
-            status="OPERATIONAL",
-            latency_ms=db_lat,
-            description="Active database connection and WAL journal mode operational.",
-        ))
+        components.append(
+            ComponentHealth(
+                name="Database (SQLite WAL)",
+                status="OPERATIONAL",
+                latency_ms=db_lat,
+                description="Active database connection and WAL journal mode operational.",
+            )
+        )
     except Exception as e:
-        components.append(ComponentHealth(
-            name="Database (SQLite WAL)",
-            status="DOWN",
-            latency_ms=0.0,
-            description=f"Database unreachable: {str(e)}",
-        ))
+        components.append(
+            ComponentHealth(
+                name="Database (SQLite WAL)",
+                status="DOWN",
+                latency_ms=0.0,
+                description=f"Database unreachable: {str(e)}",
+            )
+        )
 
     # 2. Security Gateway
-    components.append(ComponentHealth(
-        name="Security Gateway & Proxy",
-        status="OPERATIONAL",
-        latency_ms=0.15,
-        description="OpenAI-compatible gateway and buffered streaming pipeline active.",
-    ))
+    components.append(
+        ComponentHealth(
+            name="Security Gateway & Proxy",
+            status="OPERATIONAL",
+            latency_ms=0.15,
+            description="OpenAI-compatible gateway and buffered streaming pipeline active.",
+        )
+    )
 
     # 3. Privacy Engine
-    components.append(ComponentHealth(
-        name="Privacy Engine (PII & Secrets)",
-        status="OPERATIONAL",
-        latency_ms=0.22,
-        description="Deterministic secret scanner and reversible PII redactor active.",
-    ))
+    components.append(
+        ComponentHealth(
+            name="Privacy Engine (PII & Secrets)",
+            status="OPERATIONAL",
+            latency_ms=0.22,
+            description="Deterministic secret scanner and reversible PII redactor active.",
+        )
+    )
 
     # 4. Agent Security Broker
-    components.append(ComponentHealth(
-        name="Agent Security Broker & Sandbox",
-        status="OPERATIONAL",
-        latency_ms=0.12,
-        description="Capability token validator, approval engine, and tool jail operational.",
-    ))
+    components.append(
+        ComponentHealth(
+            name="Agent Security Broker & Sandbox",
+            status="OPERATIONAL",
+            latency_ms=0.12,
+            description="Capability token validator, approval engine, and tool jail operational.",
+        )
+    )
 
     # 5. AI Threat Detection Engine
-    components.append(ComponentHealth(
-        name="AI Threat Detection & Defense",
-        status="OPERATIONAL",
-        latency_ms=0.08,
-        description="Prompt injection scanner, behavioral sliding window, and taint tracker active.",
-    ))
+    components.append(
+        ComponentHealth(
+            name="AI Threat Detection & Defense",
+            status="OPERATIONAL",
+            latency_ms=0.08,
+            description="Prompt injection scanner, behavioral sliding window, and taint tracker active.",
+        )
+    )
 
     total_lat = round((time.perf_counter() - start_total) * 1000, 2)
     overall_status = "HEALTHY" if all(c.status == "OPERATIONAL" for c in components) else "DEGRADED"
@@ -263,4 +276,3 @@ async def get_system_health(
         components=components,
         last_check=utcnow().isoformat(),
     )
-

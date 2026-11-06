@@ -1,0 +1,176 @@
+# ==============================================================================
+# PRIVGUARD AI - Production Release, Attestation & Signing Pipeline
+# Moon Sanctum Labs - Decode. Build. Evolve.
+# ==============================================================================
+
+name: "Release & Attestation Pipeline"
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+"
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+env:
+  REGISTRY: "ghcr.io"
+  IMAGE_BACKEND: "ghcr.io/${{ github.repository }}/backend"
+  IMAGE_FRONTEND: "ghcr.io/${{ github.repository }}/frontend"
+
+jobs:
+  # ----------------------------------------------------------------------------
+  # Stage 1: Build, Test & Evidence Generation
+  # ----------------------------------------------------------------------------
+  build-and-attest:
+    name: "Build, Attest & Cryptographically Sign"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: "Checkout repository on release tag"
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: "Set up Python 3.12"
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: "backend/requirements.txt"
+
+      - name: "Set up Node.js 20"
+        uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4.1.0
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "frontend/package-lock.json"
+
+      - name: "Install release dependencies"
+        run: |
+          pip install -r backend/requirements.txt
+          pip install pip-audit ruff bandit cyclonedx-bom pytest pytest-cov
+          npm ci --prefix frontend
+
+      - name: "Execute full verification test suite"
+        env:
+          ENVIRONMENT: "testing"
+          DEBUG: "false"
+        run: |
+          pytest backend/tests/ -q
+          npm run build --prefix frontend
+
+      - name: "Generate CycloneDX 1.6 Software Bills of Materials (SBOMs)"
+        run: |
+          python scripts/security/generate_sboms.py --output-dir ./release-artifacts
+
+      - name: "Set up Docker Buildx"
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+
+      - name: "Log in to GitHub Container Registry"
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Build & Push Backend Container Image by Digest"
+        id: build-backend
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_BACKEND }}:${{ github.ref_name }}
+          provenance: false
+
+      - name: "Build & Push Frontend Container Image by Digest"
+        id: build-frontend
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_FRONTEND }}:${{ github.ref_name }}
+          provenance: false
+
+      - name: "Generate SLSA v1.0 Build Provenance for Backend Image"
+        uses: actions/attest-build-provenance@c074443f1a5fb4a4829734d23ec30b41c8880825 # v2.2.3
+        with:
+          subject-name: ${{ env.IMAGE_BACKEND }}
+          subject-digest: ${{ steps.build-backend.outputs.digest }}
+          push-to-registry: true
+
+      - name: "Generate SLSA v1.0 Build Provenance for Frontend Image"
+        uses: actions/attest-build-provenance@c074443f1a5fb4a4829734d23ec30b41c8880825 # v2.2.3
+        with:
+          subject-name: ${{ env.IMAGE_FRONTEND }}
+          subject-digest: ${{ steps.build-frontend.outputs.digest }}
+          push-to-registry: true
+
+      - name: "Install Cosign"
+        uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da # v3.7.0
+
+      - name: "Sign Container Images via Keyless GitHub OIDC"
+        run: |
+          cosign sign --yes "${{ env.IMAGE_BACKEND }}@${{ steps.build-backend.outputs.digest }}"
+          cosign sign --yes "${{ env.IMAGE_FRONTEND }}@${{ steps.build-frontend.outputs.digest }}"
+
+      - name: "Execute Fail-Closed Release Verification Utility"
+        run: |
+          python scripts/security/verify_release.py \
+            --image-backend "${{ env.IMAGE_BACKEND }}@${{ steps.build-backend.outputs.digest }}" \
+            --image-frontend "${{ env.IMAGE_FRONTEND }}@${{ steps.build-frontend.outputs.digest }}" \
+            --commit-sha "${{ github.sha }}" \
+            --sbom-dir ./release-artifacts \
+            --expected-repo "${{ github.repository }}" \
+            --require-signatures \
+            --require-provenance
+
+      - name: "Archive Release Evidence Artifacts"
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        with:
+          name: "privguard-release-evidence-${{ github.ref_name }}"
+          path: ./release-artifacts/
+          retention-days: 90
+
+  # ----------------------------------------------------------------------------
+  # Stage 2: Deploy to Staging Environment
+  # ----------------------------------------------------------------------------
+  deploy-staging:
+    name: "Deploy to Staging Environment"
+    needs: build-and-attest
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging.privguard.internal
+
+    steps:
+      - name: "Staging deployment execution"
+        run: |
+          echo "Deploying verified release ${{ github.ref_name }} to Staging"
+
+  # ----------------------------------------------------------------------------
+  # Stage 3: Protected Manual Approval Gate for Production
+  # ----------------------------------------------------------------------------
+  deploy-production:
+    name: "Deploy to Production Environment (Gated)"
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://privguard.internal
+
+    steps:
+      - name: "Production deployment execution (Approved)"
+        run: |
+          echo "Deploying verified release ${{ github.ref_name }} to Production with formal sign-off"

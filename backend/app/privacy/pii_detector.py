@@ -6,6 +6,7 @@ from typing import List, NamedTuple, Optional
 
 class PIIMatch(NamedTuple):
     """Details of a detected PII entity."""
+
     entity_type: str
     text: str
     start: int
@@ -37,7 +38,6 @@ PII_REGEX_PATTERNS = [
         re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b"),
         0.95,
     ),
-
     # Phone numbers (North America, UK, India, and international E.164)
     (
         "PHONE_NUMBER",
@@ -49,30 +49,24 @@ PII_REGEX_PATTERNS = [
         ),
         0.85,
     ),
-
     # US Social Security Numbers
     (
         "SSN",
         re.compile(r"\b(?!000|666|9\d{2})\d{3}-(?!00)\d{2}-(?!0000)\d{4}\b"),
         0.90,
     ),
-
     # IPv4 Addresses
     (
         "IP_ADDRESS",
-        re.compile(
-            r"\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b"
-        ),
+        re.compile(r"\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b"),
         0.80,
     ),
-
     # Credit / Debit Cards (with Luhn pre-match)
     (
         "CREDIT_CARD",
         re.compile(r"\b(?:\d{4}[-\s]?){3}\d{4}\b|\b\d{15,16}\b"),
         0.95,
     ),
-
     # Bank Account Numbers / Identifiers
     (
         "ACCOUNT_NUMBER",
@@ -92,6 +86,7 @@ class PIIDetector:
         if self.use_presidio:
             try:
                 from presidio_analyzer import AnalyzerEngine
+
                 self._presidio_analyzer = AnalyzerEngine()
             except Exception:
                 # Graceful fallback to pure regex if presidio / spacy is unavailable
@@ -153,7 +148,7 @@ class PIIDetector:
                         matches.append(
                             PIIMatch(
                                 entity_type=res.entity_type,
-                                text=text[res.start:res.end],
+                                text=text[res.start : res.end],
                                 start=res.start,
                                 end=res.end,
                                 score=res.score,
@@ -170,4 +165,3 @@ class PIIDetector:
 
 # Default shared PII detector
 pii_detector = PIIDetector(use_presidio=False)
-

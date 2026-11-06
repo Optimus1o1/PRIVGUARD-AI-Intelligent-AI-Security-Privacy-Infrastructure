@@ -50,6 +50,7 @@ end
 @dataclass
 class RateLimitPolicy:
     """Rate limit configuration for an endpoint or resource category."""
+
     max_requests: int
     window_seconds: int
 
@@ -73,6 +74,7 @@ RATE_LIMIT_QUOTAS = DEFAULT_POLICIES
 @dataclass
 class RateLimitResult:
     """Outcome of rate limit evaluation."""
+
     allowed: bool
     limit: int
     remaining: int
@@ -110,6 +112,7 @@ class DistributedRateLimiter:
         redis_key = format_redis_key(RedisNamespace.RATE_LIMIT, tenant_id, category.lower(), subject_hash)
 
         from app.core.config import settings
+
         is_strict = (
             strict_fail_closed
             if strict_fail_closed is not None
@@ -171,9 +174,7 @@ class DistributedRateLimiter:
                 )
             return self._fallback_local_rate_limit(redis_key, category, policy)
 
-    def _fallback_local_rate_limit(
-        self, key: str, category: str, policy: RateLimitPolicy
-    ) -> RateLimitResult:
+    def _fallback_local_rate_limit(self, key: str, category: str, policy: RateLimitPolicy) -> RateLimitResult:
         """
         Process-local sliding window fallback when Redis is offline.
         Sensitive authentication and admin mutations fail closed if degraded limits exceeded.

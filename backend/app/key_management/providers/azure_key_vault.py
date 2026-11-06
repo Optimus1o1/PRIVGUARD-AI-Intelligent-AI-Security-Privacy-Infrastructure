@@ -77,6 +77,7 @@ class AzureKeyVaultProvider(KMSProvider):
         crypto_client = self._get_crypto_client(key_id)
         try:
             from azure.keyvault.keys.crypto import KeyWrapAlgorithm
+
             result = crypto_client.wrap_key(KeyWrapAlgorithm.rsa_oaep_256, plaintext_key)
             return WrappedKeyResult(
                 wrapped_key=result.encrypted_key,
@@ -85,7 +86,9 @@ class AzureKeyVaultProvider(KMSProvider):
                 provider="azure_key_vault",
             )
         except Exception as e:
-            raise PrivGuardException(f"Azure Key Vault wrap_key failed: {e}", status_code=502, error_code="KMS_ENCRYPT_FAILED")
+            raise PrivGuardException(
+                f"Azure Key Vault wrap_key failed: {e}", status_code=502, error_code="KMS_ENCRYPT_FAILED"
+            )
 
     async def unwrap_key(
         self,
@@ -98,10 +101,13 @@ class AzureKeyVaultProvider(KMSProvider):
         crypto_client = self._get_crypto_client(key_id)
         try:
             from azure.keyvault.keys.crypto import KeyWrapAlgorithm
+
             result = crypto_client.unwrap_key(KeyWrapAlgorithm.rsa_oaep_256, wrapped_key)
             return result.key
         except Exception as e:
-            raise PrivGuardException(f"Azure Key Vault unwrap_key failed: {e}", status_code=502, error_code="KMS_DECRYPT_FAILED")
+            raise PrivGuardException(
+                f"Azure Key Vault unwrap_key failed: {e}", status_code=502, error_code="KMS_DECRYPT_FAILED"
+            )
 
     async def rewrap_key(
         self,

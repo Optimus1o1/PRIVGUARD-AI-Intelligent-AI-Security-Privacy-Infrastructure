@@ -107,4 +107,3 @@ class AgentIdentityManager:
 
 # Shared identity manager instance
 agent_identity_manager = AgentIdentityManager()
-

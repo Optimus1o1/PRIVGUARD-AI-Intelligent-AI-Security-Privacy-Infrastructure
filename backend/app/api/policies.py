@@ -48,9 +48,7 @@ async def list_policies(
     db: AsyncSession = Depends(get_db_session),
 ):
     """Lists active baseline and application-specific security policies."""
-    query = select(PolicyRule).where(
-        (PolicyRule.app_id == current_app.id) | (PolicyRule.app_id.is_(None))
-    )
+    query = select(PolicyRule).where((PolicyRule.app_id == current_app.id) | (PolicyRule.app_id.is_(None)))
     result = await db.execute(query)
     custom_rules = result.scalars().all()
 
@@ -145,9 +143,7 @@ async def update_policy_rule(
     db: AsyncSession = Depends(get_db_session),
 ) -> PolicyRuleResponse:
     """Updates an existing application-specific policy rule."""
-    stmt = select(PolicyRule).where(
-        PolicyRule.id == rule_id, PolicyRule.app_id == current_app.id
-    )
+    stmt = select(PolicyRule).where(PolicyRule.id == rule_id, PolicyRule.app_id == current_app.id)
     res = await db.execute(stmt)
     rule = res.scalar_one_or_none()
     if not rule:
@@ -204,9 +200,7 @@ async def delete_policy_rule(
     db: AsyncSession = Depends(get_db_session),
 ):
     """Deletes an application-specific custom policy rule."""
-    stmt = select(PolicyRule).where(
-        PolicyRule.id == rule_id, PolicyRule.app_id == current_app.id
-    )
+    stmt = select(PolicyRule).where(PolicyRule.id == rule_id, PolicyRule.app_id == current_app.id)
     res = await db.execute(stmt)
     rule = res.scalar_one_or_none()
     if not rule:

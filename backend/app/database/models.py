@@ -46,7 +46,7 @@ class Agent(Base):
     name = Column(String(100), nullable=False)
     description = Column(String(255), nullable=True)
     status = Column(String(20), default="ACTIVE", nullable=False)  # ACTIVE, DISABLED, REVOKED
-    allowed_tools = Column(Text, default="[]", nullable=False)    # JSON string list of tool names
+    allowed_tools = Column(Text, default="[]", nullable=False)  # JSON string list of tool names
     created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
     last_activity_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
 
@@ -83,8 +83,8 @@ class PolicyRule(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     app_id = Column(String(36), ForeignKey("applications.id"), nullable=True, index=True)
     category = Column(String(50), nullable=False)  # PUBLIC, INTERNAL, PERSONAL, CONFIDENTIAL, CRITICAL
-    action = Column(String(30), nullable=False)    # ALLOW, REDACT, BLOCK, REQUIRE_APPROVAL
-    risk_level = Column(String(20), nullable=False) # LOW, MEDIUM, HIGH, CRITICAL
+    action = Column(String(30), nullable=False)  # ALLOW, REDACT, BLOCK, REQUIRE_APPROVAL
+    risk_level = Column(String(20), nullable=False)  # LOW, MEDIUM, HIGH, CRITICAL
     is_enabled = Column(Boolean, default=True, nullable=False)
     description = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
@@ -171,14 +171,12 @@ class AuditEvent(Base):
     data_category = Column(String(50), nullable=True)
     action_taken = Column(String(30), nullable=False)
     risk_level = Column(String(20), nullable=False)
-    entity_counts = Column(Text, nullable=True)       # Serialized JSON
-    content_fingerprint = Column(String(64), nullable=True) # SHA-256 hash (no raw text!)
+    entity_counts = Column(Text, nullable=True)  # Serialized JSON
+    content_fingerprint = Column(String(64), nullable=True)  # SHA-256 hash (no raw text!)
     status = Column(String(20), nullable=False, default="SUCCESS")
     timestamp = Column(DateTime(timezone=True), default=utcnow, nullable=False, index=True)
 
-    __table_args__ = (
-        Index("idx_audit_app_timestamp", "app_id", "timestamp"),
-    )
+    __table_args__ = (Index("idx_audit_app_timestamp", "app_id", "timestamp"),)
 
 
 class ThreatEvent(Base):
@@ -196,7 +194,9 @@ class ThreatEvent(Base):
     severity = Column(String(20), nullable=False, index=True)  # LOW, MEDIUM, HIGH, CRITICAL
     confidence = Column(Float, nullable=False, default=1.0)
     rule_id = Column(String(100), nullable=False)
-    action_taken = Column(String(30), nullable=False)  # ALLOW, FLAG, QUARANTINE, REQUIRE_APPROVAL, BLOCK, REVOKE, TERMINATE
+    action_taken = Column(
+        String(30), nullable=False
+    )  # ALLOW, FLAG, QUARANTINE, REQUIRE_APPROVAL, BLOCK, REVOKE, TERMINATE
     content_hash = Column(String(64), nullable=False)  # SHA-256 fingerprint (strictly no raw text)
     created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False, index=True)
 
@@ -361,6 +361,7 @@ class MemoryAuditEvent(Base):
 # STAGE 8: MCP SECURITY GATEWAY MODELS
 # ==============================================================================
 
+
 class MCPServer(Base):
     """Registered upstream Model Context Protocol (MCP) server configuration."""
 
@@ -383,6 +384,7 @@ class MCPServer(Base):
     @url.setter
     def url(self, value: str):
         self.endpoint_url = value
+
     command = Column(String(255), nullable=True)
     args = Column(Text, default="[]", nullable=False)  # JSON list
     env_vars = Column(Text, default="{}", nullable=False)  # JSON dict with encrypted or secret references
@@ -460,10 +462,10 @@ class MCPAuditEvent(Base):
     timestamp = Column(DateTime(timezone=True), default=utcnow, nullable=False, index=True)
 
 
-
 # ==========================================
 # ENTERPRISE GOVERNANCE & MULTI-TENANCY (STAGE 9)
 # ==========================================
+
 
 class Organization(Base):
     """Enterprise tenant boundary defining security, SSO, and compliance policies."""
@@ -554,7 +556,9 @@ class PolicyBundle(Base):
     organization_id = Column(String(64), ForeignKey("organizations.id"), nullable=False, index=True)
     workspace_id = Column(String(64), nullable=True, index=True)
     version = Column(Integer, nullable=False)
-    status = Column(String(32), default="DRAFT", nullable=False)  # DRAFT, VALIDATED, APPROVED, STAGED, ACTIVE, ROLLED_BACK, REPLACED
+    status = Column(
+        String(32), default="DRAFT", nullable=False
+    )  # DRAFT, VALIDATED, APPROVED, STAGED, ACTIVE, ROLLED_BACK, REPLACED
     policy_hash = Column(String(64), nullable=False)  # SHA-256 of canonical JSON
     bundle_json = Column(Text, nullable=False)
     signature_ed25519 = Column(Text, nullable=False)
@@ -671,7 +675,9 @@ class OutboxEvent(Base):
     aggregate_id = Column(String(64), nullable=False, index=True)
     aggregate_version = Column(Integer, default=1, nullable=False)
     payload = Column(Text, nullable=False, default="{}")  # Sanitized JSON metadata (content-free)
-    status = Column(String(20), default="PENDING", nullable=False, index=True)  # PENDING, PUBLISHED, FAILED, DEAD_LETTER
+    status = Column(
+        String(20), default="PENDING", nullable=False, index=True
+    )  # PENDING, PUBLISHED, FAILED, DEAD_LETTER
     retry_count = Column(Integer, default=0, nullable=False)
     last_attempt_at = Column(DateTime(timezone=True), nullable=True)
     published_at = Column(DateTime(timezone=True), nullable=True)
@@ -681,6 +687,7 @@ class OutboxEvent(Base):
 # ==============================================================================
 # Stage 10.5 — Key Management & Secrets Lifecycle Models
 # ==============================================================================
+
 
 class ManagedKey(Base):
     """Central registry for encryption and signing keys."""

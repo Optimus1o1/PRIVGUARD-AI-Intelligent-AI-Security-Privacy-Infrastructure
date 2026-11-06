@@ -28,6 +28,7 @@ class LocalMockProvider(BaseProvider):
 
     async def stream(self, request_payload: Dict[str, Any]):
         import json
+
         messages = request_payload.get("messages", [])
         last_content = messages[-1].get("content", "") if messages else ""
         chunks = [

@@ -18,6 +18,7 @@ from app.threat_detection.schemas import ThreatAction
 
 class InspectionVerdict(BaseModel):
     """Full outcome of inspecting a payload."""
+
     original_text: str = Field(exclude=True)  # Never serialized in audit logs!
     sanitized_text: str
     action: PolicyAction
@@ -95,7 +96,8 @@ class InspectionPipeline:
                 category=DataCategory.CRITICAL,
                 risk_level=RiskLevel.CRITICAL,
                 is_blocked=True,
-                blocking_reason=threat_eval.reason or (f"Threat blocked: {first_sig.description}" if first_sig else "Adversarial input"),
+                blocking_reason=threat_eval.reason
+                or (f"Threat blocked: {first_sig.description}" if first_sig else "Adversarial input"),
                 detected_secrets=[],
                 detected_pii=[],
                 threat_signals=[s.model_dump() for s in threat_eval.signals],
@@ -103,7 +105,6 @@ class InspectionPipeline:
                 redaction_mapping={},
                 content_fingerprint=fingerprint,
             )
-
 
         # 2. Second Defense: PII Detection
         pii_matches = self.pii_detector.detect(text)
@@ -130,10 +131,7 @@ class InspectionPipeline:
                 is_blocked=True,
                 blocking_reason=decision.reason,
                 detected_secrets=[],
-                detected_pii=[
-                    {"type": m.entity_type, "start": m.start, "end": m.end}
-                    for m in pii_matches
-                ],
+                detected_pii=[{"type": m.entity_type, "start": m.start, "end": m.end} for m in pii_matches],
                 entity_counts=classification.entity_counts,
                 redaction_mapping={},
                 content_fingerprint=fingerprint,
@@ -152,10 +150,7 @@ class InspectionPipeline:
                 risk_level=classification.highest_risk,
                 is_blocked=False,
                 detected_secrets=[],
-                detected_pii=[
-                    {"type": m.entity_type, "start": m.start, "end": m.end}
-                    for m in pii_matches
-                ],
+                detected_pii=[{"type": m.entity_type, "start": m.start, "end": m.end} for m in pii_matches],
                 entity_counts=redaction_res.entity_counts,
                 redaction_mapping=redaction_res.mapping,
                 content_fingerprint=fingerprint,
@@ -235,4 +230,3 @@ class InspectionPipeline:
 
 # Shared pipeline instance
 inspection_pipeline = InspectionPipeline()
-

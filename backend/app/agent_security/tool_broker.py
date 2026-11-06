@@ -45,7 +45,6 @@ class ToolBroker:
         self.exfiltration_detector = exfiltration_detector
         self.threat_response = threat_response_engine
 
-
     async def execute(
         self,
         db: AsyncSession,
@@ -77,11 +76,7 @@ class ToolBroker:
         self.perms.check_agent_tool_permission(agent, tool_name)
 
         # Extract target resource for scope checks
-        target_resource = (
-            parameters.get("path")
-            or parameters.get("domain")
-            or parameters.get("recipient")
-        )
+        target_resource = parameters.get("path") or parameters.get("domain") or parameters.get("recipient")
 
         # 5. Capability Token Verification (Validate bounds & quota before approval check)
         grant = await self.caps.validate_and_consume(
@@ -153,7 +148,6 @@ class ToolBroker:
                 status_code=403,
                 error_code="DATA_EXFILTRATION_BLOCKED",
             )
-
 
         # 6. Human-in-the-Loop Approval Check (for High/Critical risk actions)
         if tool.requires_approval:
@@ -293,7 +287,6 @@ class ToolBroker:
             tool_name=tool_name,
             resource=target_resource,
         )
-
 
         return {
             "execution_id": exec_record.id,

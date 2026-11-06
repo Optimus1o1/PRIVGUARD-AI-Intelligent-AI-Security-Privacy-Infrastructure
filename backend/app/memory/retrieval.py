@@ -61,13 +61,10 @@ class MemoryRetrievalService:
 
         # 2. Query active records strictly scoped to app and owner
         now = datetime.now(timezone.utc)
-        stmt = (
-            select(MemoryRecord)
-            .where(
-                MemoryRecord.app_id == app_id,
-                MemoryRecord.owner_id == owner_id,
-                MemoryRecord.status == "ACTIVE",
-            )
+        stmt = select(MemoryRecord).where(
+            MemoryRecord.app_id == app_id,
+            MemoryRecord.owner_id == owner_id,
+            MemoryRecord.status == "ACTIVE",
         )
         if categories:
             clean_cats = [c.strip().upper() for c in categories]
@@ -133,14 +130,16 @@ class MemoryRetrievalService:
             if threat_eval.is_threat and threat_eval.action.value in ("BLOCK", "QUARANTINE"):
                 continue
 
-            retrieved_items.append({
-                "memory_id": record.id,
-                "category": record.category,
-                "summary": record.summary,
-                "content": decrypted,
-                "provenance": record.provenance,
-                "created_at": record.created_at.isoformat(),
-            })
+            retrieved_items.append(
+                {
+                    "memory_id": record.id,
+                    "category": record.category,
+                    "summary": record.summary,
+                    "content": decrypted,
+                    "provenance": record.provenance,
+                    "created_at": record.created_at.isoformat(),
+                }
+            )
 
             if len(retrieved_items) >= limit:
                 break
@@ -161,4 +160,3 @@ class MemoryRetrievalService:
 
 # Global singleton retrieval service
 memory_retrieval_service = MemoryRetrievalService()
-

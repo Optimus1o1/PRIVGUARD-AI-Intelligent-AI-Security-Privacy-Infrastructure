@@ -134,7 +134,9 @@ class ObservabilityMiddleware(BaseHTTPMiddleware):
 
                 # Record Prometheus metrics
                 HTTP_REQUESTS_TOTAL.labels(method=method, route=route, status_class=status_class).inc()
-                HTTP_REQUEST_DURATION_SECONDS.labels(method=method, route=route, status_class=status_class).observe(duration)
+                HTTP_REQUEST_DURATION_SECONDS.labels(method=method, route=route, status_class=status_class).observe(
+                    duration
+                )
 
                 # Propagate correlation headers back to client
                 response.headers["X-Request-ID"] = req_id

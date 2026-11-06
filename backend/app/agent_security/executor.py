@@ -29,12 +29,7 @@ def resolve_sandbox_path(user_path: str, app_id: Optional[str] = None) -> Path:
     raw = user_path.strip()
 
     # Reject absolute root paths, Windows drive paths, or traversal patterns BEFORE any stripping
-    if (
-        raw.startswith("/")
-        or raw.startswith("\\")
-        or bool(re.match(r"^[a-zA-Z]:", raw))
-        or ".." in raw
-    ):
+    if raw.startswith("/") or raw.startswith("\\") or bool(re.match(r"^[a-zA-Z]:", raw)) or ".." in raw:
         raise PrivGuardException(
             message=f"Path traversal rejected: '{user_path}' attempts to escape sandbox boundary.",
             status_code=403,
@@ -134,4 +129,3 @@ class ToolExecutor:
             status_code=403,
             error_code="TOOL_DISABLED",
         )
-

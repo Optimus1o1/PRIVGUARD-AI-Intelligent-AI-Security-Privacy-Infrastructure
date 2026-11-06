@@ -118,4 +118,3 @@ async def security_health_probe(response: Response):
         "security_ready": True,
         "checks": checks,
     }
-

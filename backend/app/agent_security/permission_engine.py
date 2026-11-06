@@ -51,4 +51,3 @@ class PermissionEngine:
 
 # Shared permission engine instance
 permission_engine = PermissionEngine()
-

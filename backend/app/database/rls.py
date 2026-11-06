@@ -53,19 +53,21 @@ def generate_rls_ddl() -> str:
     ]
 
     for table in TENANT_OWNED_TABLES:
-        ddl_statements.extend([
-            f"-- Table: {table}",
-            f"ALTER TABLE {table} ENABLE ROW LEVEL SECURITY;",
-            f"ALTER TABLE {table} FORCE ROW LEVEL SECURITY;",
-            f"DROP POLICY IF EXISTS tenant_isolation_{table} ON {table};",
-            f"CREATE POLICY tenant_isolation_{table} ON {table}",
-            "    AS RESTRICTIVE",
-            "    FOR ALL",
-            "    TO privguard_app",
-            "    USING (tenant_id = NULLIF(current_setting('app.current_tenant_id', true), ''))",
-            "    WITH CHECK (tenant_id = NULLIF(current_setting('app.current_tenant_id', true), ''));",
-            "",
-        ])
+        ddl_statements.extend(
+            [
+                f"-- Table: {table}",
+                f"ALTER TABLE {table} ENABLE ROW LEVEL SECURITY;",
+                f"ALTER TABLE {table} FORCE ROW LEVEL SECURITY;",
+                f"DROP POLICY IF EXISTS tenant_isolation_{table} ON {table};",
+                f"CREATE POLICY tenant_isolation_{table} ON {table}",
+                "    AS RESTRICTIVE",
+                "    FOR ALL",
+                "    TO privguard_app",
+                "    USING (tenant_id = NULLIF(current_setting('app.current_tenant_id', true), ''))",
+                "    WITH CHECK (tenant_id = NULLIF(current_setting('app.current_tenant_id', true), ''));",
+                "",
+            ]
+        )
 
     return "\n".join(ddl_statements)
 
@@ -93,4 +95,3 @@ async def reset_db_tenant_context(session: AsyncSession) -> None:
     if bind and "sqlite" in bind.dialect.name:
         return
     await session.execute(text("RESET app.current_tenant_id;"))
-

@@ -68,6 +68,7 @@ class KeyCompromiseManager:
             raise PrivGuardException(f"Memory record '{memory_id}' not found.", status_code=404)
 
         from app.memory.crypto import EncryptedMemoryPayload
+
         payload = EncryptedMemoryPayload(
             ciphertext_b64=record.encrypted_content,
             nonce_b64=record.nonce,

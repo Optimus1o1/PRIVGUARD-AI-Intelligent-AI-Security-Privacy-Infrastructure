@@ -22,7 +22,7 @@ from app.key_management.base import KeyAlgorithm, KeyPurpose, KeyStatus
 class SigningKeyManager:
     """
     Manages signing keys independently from data encryption keys.
-    
+
     Provides:
     - Ed25519 policy signing keypairs with versioned Key IDs (kid).
     - Historical public key lookup for policy verification.
@@ -43,6 +43,7 @@ class SigningKeyManager:
             # Deterministic derivation from master key using distinct domain separator
             from cryptography.hazmat.primitives.kdf.hkdf import HKDF
             from cryptography.hazmat.primitives import hashes
+
             hkdf = HKDF(
                 algorithm=hashes.SHA256(),
                 length=32,

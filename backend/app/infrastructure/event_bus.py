@@ -50,9 +50,7 @@ class EventBus:
             if "BUSYGROUP" not in str(exc):
                 logger.warning("Could not create consumer group: %s", exc)
 
-    async def read_and_dispatch(
-        self, stream_key: str, count: int = 10, block_ms: int = 1000
-    ) -> int:
+    async def read_and_dispatch(self, stream_key: str, count: int = 10, block_ms: int = 1000) -> int:
         """
         Pulls messages from the consumer group, executes registered handlers idempotently,
         and acknowledges (XACK) upon successful processing.
