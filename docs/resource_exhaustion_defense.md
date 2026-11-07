@@ -83,3 +83,4 @@ Located in [`backend/app/agent_security/tool_registry.py`](file:///c:/Users/ANIK
   raw_output = await asyncio.wait_for(handler(exec_params), timeout=tool.timeout_seconds)
   ```
 - If an upstream tool or MCP server fails to respond within the timeout, the connection is aborted and HTTP 504 `TOOL_EXECUTION_TIMEOUT` is returned to the agent without hanging the worker.
+

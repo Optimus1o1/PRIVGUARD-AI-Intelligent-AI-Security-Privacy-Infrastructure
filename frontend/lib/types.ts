@@ -405,3 +405,146 @@ export interface AlertsResponse {
   firing_alerts: AlertItem[];
   total_firing: number;
 }
+
+// =============================================================================
+// Compliance Evidence Engine (Stage 10.9)
+// =============================================================================
+
+export interface ComplianceRequirement {
+  id: string;
+  framework_id: string;
+  identifier: string;
+  title: string;
+  description: string;
+  domain: string;
+  commencement_status: "COMMENCED" | "PENDING_COMMENCEMENT" | "EXEMPTED";
+  commencement_date?: string;
+  phase_category?: string;
+  mandatory: boolean;
+}
+
+export interface ComplianceFramework {
+  id: string;
+  name: string;
+  version: string;
+  jurisdiction: string;
+  authority: string;
+  description: string;
+  official_reference: string;
+  status: string;
+  commenced_at?: string;
+  total_requirements: number;
+  commenced_requirements: number;
+  mapped_requirements: number;
+  requirements?: ComplianceRequirement[];
+}
+
+export interface ComplianceControlMapping {
+  id: string;
+  control_id: string;
+  requirement_id: string;
+  mapping_type: "DIRECT" | "PARTIAL" | "SUPPORTING" | "NOT_MAPPED";
+  rationale: string;
+  coverage_score: number;
+}
+
+export interface ComplianceControl {
+  id: string;
+  title: string;
+  domain: string;
+  description: string;
+  owner_role: string;
+  verification_method: string;
+  review_frequency_days: number;
+  criticality: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+  version: string;
+  implementation_status: "IMPLEMENTED" | "PARTIALLY_IMPLEMENTED" | "NOT_IMPLEMENTED" | "NOT_ASSESSED" | "NOT_APPLICABLE";
+  active: boolean;
+  mappings?: ComplianceControlMapping[];
+  latest_evidence?: {
+    id: string;
+    collector_name: string;
+    artifact_hash_sha256: string;
+    verification_status: string;
+    freshness_status: string;
+    assurance_status: string;
+    collected_at: string;
+    expires_at: string;
+    details: Record<string, any>;
+  };
+  current_assurance?: "HIGH" | "MEDIUM" | "LOW" | "INSUFFICIENT";
+}
+
+export interface ComplianceEvidenceRecord {
+  id: string;
+  tenant_id: string;
+  control_id: string;
+  collector_name: string;
+  artifact_type: string;
+  artifact_hash_sha256: string;
+  artifact_payload: Record<string, any>;
+  verification_status: "VERIFIED" | "FAILED" | "UNKNOWN" | "REQUIRES_REVIEW";
+  freshness_status: "CURRENT" | "STALE" | "EXPIRED";
+  assurance_status: "HIGH" | "MEDIUM" | "LOW" | "INSUFFICIENT";
+  collected_at: string;
+  expires_at: string;
+  signing_kid?: string;
+  signature_hex?: string;
+}
+
+export interface ComplianceGapItem {
+  gap_type: string;
+  severity: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+  requirement_id?: string;
+  control_id?: string;
+  title: string;
+  description: string;
+  remediation_action: string;
+}
+
+export interface ComplianceGapAnalysis {
+  tenant_id: string;
+  evaluated_at: string;
+  total_gaps: number;
+  critical_gaps: number;
+  high_gaps: number;
+  medium_gaps: number;
+  low_gaps: number;
+  items: ComplianceGapItem[];
+}
+
+export interface ComplianceApplicabilityRecord {
+  id: string;
+  tenant_id: string;
+  framework_id: string;
+  requirement_id?: string;
+  decision: "APPLICABLE" | "NOT_APPLICABLE" | "REQUIRES_REVIEW";
+  role: "DATA_FIDUCIARY" | "DATA_PROCESSOR" | "AI_DEPLOYER" | "AI_PROVIDER" | "CONTROLLER";
+  justification: string;
+  reviewed_by: string;
+  reviewed_at: string;
+}
+
+export interface CompliancePublicKey {
+  kid: string;
+  algorithm: string;
+  purpose: string;
+  public_key_hex: string;
+  public_key_pem: string;
+  fingerprint_sha256: string;
+  status: string;
+}
+
+export interface ComplianceExportResponse {
+  export_id: string;
+  tenant_id: string;
+  framework_id?: string;
+  export_format: "ZIP" | "JSON" | "CSV";
+  manifest_hash_sha256: string;
+  signing_kid: string;
+  signature_hex: string;
+  artifact_count: number;
+  package_size_bytes: number;
+  download_url: string;
+  created_at: string;
+}

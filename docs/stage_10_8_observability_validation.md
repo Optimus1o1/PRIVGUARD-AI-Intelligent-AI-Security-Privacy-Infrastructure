@@ -72,3 +72,4 @@ To prevent Denial-of-Service attacks targeting Prometheus metric storage via hig
   - `status_class`: `["2xx", "3xx", "4xx", "5xx"]`
   - `route`: Pre-registered route patterns.
 - High-volume malicious probes against non-existent paths are bucketed into `/404_unmatched`.
+

@@ -33,7 +33,29 @@ class SigningKeyManager:
     def __init__(self) -> None:
         self._local_hmac_keys: Dict[str, bytes] = {}
         self._active_hmac_kid: str = "hmac_v1"
+        self._local_evidence_keys: Dict[str, Tuple[str, str]] = {}  # kid -> (priv_hex, pub_hex)
+        self._active_evidence_kid: str = "evidence_v1"
         self._init_hmac_keys()
+        self._init_evidence_keys()
+
+    def _init_evidence_keys(self) -> None:
+        """Initializes dedicated Ed25519 evidence signing key from config/deterministic master derivation."""
+        from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+        from cryptography.hazmat.primitives import hashes
+
+        hkdf = HKDF(
+            algorithm=hashes.SHA256(),
+            length=32,
+            salt=b"privguard_msl_evidence_signing_salt_v1",
+            info=b"privguard_compliance_evidence_signing_key",
+        )
+        seed = hkdf.derive(settings.PRIVGUARD_MASTER_KEY.encode("utf-8"))
+        priv = ed25519.Ed25519PrivateKey.from_private_bytes(seed)
+        pub = priv.public_key()
+        self._local_evidence_keys[self._active_evidence_kid] = (
+            priv.private_bytes_raw().hex(),
+            pub.public_bytes_raw().hex(),
+        )
 
     def _init_hmac_keys(self) -> None:
         """Initializes default HMAC approval binding key from config or environment."""
@@ -166,6 +188,68 @@ class SigningKeyManager:
         """Immediately revokes an HMAC key ID, invalidating all requests signed under it."""
         if kid in self._local_hmac_keys:
             del self._local_hmac_keys[kid]
+
+    # --------------------------------------------------------------------------
+    # Ed25519 Dedicated Evidence Signing (Stage 10.9)
+    # --------------------------------------------------------------------------
+
+    def get_active_evidence_kid(self) -> str:
+        """Returns active Key ID for compliance evidence manifest signing."""
+        return self._active_evidence_kid
+
+    def get_active_evidence_keypair(self, kid: Optional[str] = None) -> Tuple[str, str, str]:
+        """Returns (kid, private_key_hex, public_key_hex) for designated or active evidence key."""
+        key_id = kid or self._active_evidence_kid
+        pair = self._local_evidence_keys.get(key_id)
+        if not pair:
+            raise PrivGuardException(f"Evidence signing key '{key_id}' not found.", status_code=500)
+        return key_id, pair[0], pair[1]
+
+    def sign_evidence(self, payload_bytes: bytes, kid: Optional[str] = None) -> Tuple[str, str]:
+        """
+        Signs canonical compliance payload bytes using dedicated Ed25519 evidence signing key.
+        Returns: (signature_hex, kid_used)
+        """
+        key_id, priv_hex, _ = self.get_active_evidence_keypair(kid)
+        priv_bytes = bytes.fromhex(priv_hex)
+        private_key = ed25519.Ed25519PrivateKey.from_private_bytes(priv_bytes)
+        sig = private_key.sign(payload_bytes)
+        return sig.hex(), key_id
+
+    def verify_evidence_signature(self, payload_bytes: bytes, signature_hex: str, public_key_hex: str) -> bool:
+        """Verifies Ed25519 signature of compliance evidence payload."""
+        try:
+            pub_bytes = bytes.fromhex(public_key_hex)
+            public_key = ed25519.Ed25519PublicKey.from_public_bytes(pub_bytes)
+            sig_bytes = bytes.fromhex(signature_hex)
+            public_key.verify(sig_bytes, payload_bytes)
+            return True
+        except (InvalidSignature, ValueError):
+            return False
+
+    def get_evidence_public_key_pem(self, kid: Optional[str] = None) -> str:
+        """Returns standard RFC 8410 SubjectPublicKeyInfo PEM string for public evidence verification."""
+        _, _, pub_hex = self.get_active_evidence_keypair(kid)
+        pub_bytes = bytes.fromhex(pub_hex)
+        public_key = ed25519.Ed25519PublicKey.from_public_bytes(pub_bytes)
+        return public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        ).decode("utf-8")
+
+    def export_evidence_public_key_metadata(self, kid: Optional[str] = None) -> Dict[str, Any]:
+        """Exports public key metadata for unauthenticated third-party audit verification."""
+        key_id, _, pub_hex = self.get_active_evidence_keypair(kid)
+        pem = self.get_evidence_public_key_pem(key_id)
+        return {
+            "kid": key_id,
+            "algorithm": KeyAlgorithm.ED25519.value,
+            "purpose": KeyPurpose.EVIDENCE_SIGNING.value,
+            "public_key_hex": pub_hex,
+            "public_key_pem": pem,
+            "fingerprint_sha256": hashlib.sha256(bytes.fromhex(pub_hex)).hexdigest(),
+            "status": KeyStatus.ACTIVE.value,
+        }
 
 
 # Global singleton signing key manager

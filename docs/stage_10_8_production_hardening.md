@@ -95,3 +95,4 @@ Located at [`backend/app/agent_security/tool_registry.py`](file:///c:/Users/ANIK
 - [x] Zero Ruff linter errors (`ruff check backend/app`)
 - [x] Zero Bandit medium/high security findings across 18,322 LOC (`bandit -r backend/app -ll -ii`)
 - [x] Next.js 15.5.29 frontend compiles 31/31 routes cleanly without errors (`npm run build --prefix frontend`)
+

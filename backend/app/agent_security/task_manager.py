@@ -5,6 +5,7 @@ from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from app.agent_security.identity import agent_identity_manager
+from app.core.config import settings
 from app.core.exceptions import PrivGuardException
 from app.database.models import AgentTask, ApprovalRequest, CapabilityGrant, ensure_utc, utcnow
 
@@ -19,11 +20,15 @@ class TaskManager:
         app_id: str,
         description: Optional[str] = None,
         ttl_seconds: int = 600,
-        max_steps: int = 50,
+        max_steps: Optional[int] = None,
     ) -> AgentTask:
         """Initializes a new task session bound to an active agent and caller app."""
         # Verify agent is active and owned by app
         await agent_identity_manager.validate_agent_active(db, agent_id, app_id)
+
+        # Policy-configurable execution budget with upper bound defense
+        configured_limit = max_steps if max_steps is not None else settings.DEFAULT_MAX_TASK_STEPS
+        bounded_max_steps = min(max(1, configured_limit), settings.MAX_TASK_STEPS_LIMIT)
 
         now = datetime.now(timezone.utc)
         expires_at = now + timedelta(seconds=ttl_seconds)
@@ -34,7 +39,7 @@ class TaskManager:
             status="RUNNING",
             description=description,
             step_count=0,
-            max_steps=max_steps,
+            max_steps=bounded_max_steps,
             created_at=now,
             expires_at=expires_at,
         )

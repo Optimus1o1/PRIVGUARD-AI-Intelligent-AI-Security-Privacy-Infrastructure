@@ -11,6 +11,7 @@ from app.api import (
     approvals,
     audit,
     capabilities,
+    compliance,
     dashboard,
     enterprise,
     fleet,
@@ -234,3 +235,4 @@ app.include_router(secrets.router)
 app.include_router(incidents.router)
 app.include_router(metrics.router)
 app.include_router(monitoring.router)
+app.include_router(compliance.router)

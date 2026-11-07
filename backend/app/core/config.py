@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     PRIVGUARD_MASTER_KEY_FILE: Optional[str] = None
     FAIL_CLOSED_MODE: bool = True
     MAX_REQUEST_SIZE_BYTES: int = 10 * 1024 * 1024  # 10 MB
+    DEFAULT_MAX_TASK_STEPS: int = 50
+    MAX_TASK_STEPS_LIMIT: int = 500
 
     # CORS Whitelist (Defaults to local Next.js frontend)
     CORS_ALLOWED_ORIGINS: List[str] = [

@@ -56,6 +56,13 @@ class Permission(str, Enum):
     THREAT_READ = "threat:read"
     THREAT_RESPOND = "threat:respond"
 
+    # Compliance Evidence Engine (Stage 10.9)
+    COMPLIANCE_READ = "compliance:read"
+    COMPLIANCE_COLLECT = "compliance:collect"
+    COMPLIANCE_REVIEW = "compliance:review"
+    COMPLIANCE_EXPORT = "compliance:export"
+    COMPLIANCE_ADMIN = "compliance:admin"
+
 
 # Authoritative Enterprise Role-to-Permissions Mapping
 ROLE_PERMISSIONS: dict[str, Set[str]] = {
@@ -82,6 +89,11 @@ ROLE_PERMISSIONS: dict[str, Set[str]] = {
         Permission.AUDIT_EXPORT.value,
         Permission.THREAT_READ.value,
         Permission.THREAT_RESPOND.value,
+        Permission.COMPLIANCE_READ.value,
+        Permission.COMPLIANCE_COLLECT.value,
+        Permission.COMPLIANCE_REVIEW.value,
+        Permission.COMPLIANCE_EXPORT.value,
+        Permission.COMPLIANCE_ADMIN.value,
     },
     EnterpriseRole.SECURITY_ADMIN.value: {
         Permission.ORG_READ.value,
@@ -96,6 +108,11 @@ ROLE_PERMISSIONS: dict[str, Set[str]] = {
         Permission.AUDIT_EXPORT.value,
         Permission.THREAT_READ.value,
         Permission.THREAT_RESPOND.value,
+        Permission.COMPLIANCE_READ.value,
+        Permission.COMPLIANCE_COLLECT.value,
+        Permission.COMPLIANCE_REVIEW.value,
+        Permission.COMPLIANCE_EXPORT.value,
+        Permission.COMPLIANCE_ADMIN.value,
     },
     EnterpriseRole.POLICY_ADMIN.value: {
         Permission.ORG_READ.value,
@@ -107,6 +124,8 @@ ROLE_PERMISSIONS: dict[str, Set[str]] = {
         Permission.POLICY_READ.value,
         Permission.FLEET_READ.value,
         Permission.AUDIT_READ.value,
+        Permission.COMPLIANCE_READ.value,
+        Permission.COMPLIANCE_REVIEW.value,
     },
     EnterpriseRole.FLEET_ADMIN.value: {
         Permission.ORG_READ.value,
@@ -126,6 +145,7 @@ ROLE_PERMISSIONS: dict[str, Set[str]] = {
         Permission.TOOL_EXECUTE.value,
         Permission.POLICY_READ.value,
         Permission.AUDIT_READ.value,
+        Permission.COMPLIANCE_READ.value,
     },
     EnterpriseRole.AGENT_OPERATOR.value: {
         Permission.ORG_READ.value,
@@ -134,6 +154,7 @@ ROLE_PERMISSIONS: dict[str, Set[str]] = {
         Permission.AGENT_RUN.value,
         Permission.APPROVAL_DECIDE.value,
         Permission.AUDIT_READ.value,
+        Permission.COMPLIANCE_READ.value,
     },
     EnterpriseRole.AUDITOR.value: {
         Permission.ORG_READ.value,
@@ -143,6 +164,8 @@ ROLE_PERMISSIONS: dict[str, Set[str]] = {
         Permission.AUDIT_READ.value,
         Permission.AUDIT_EXPORT.value,
         Permission.THREAT_READ.value,
+        Permission.COMPLIANCE_READ.value,
+        Permission.COMPLIANCE_EXPORT.value,
     },
     EnterpriseRole.VIEWER.value: {
         Permission.ORG_READ.value,
@@ -150,6 +173,7 @@ ROLE_PERMISSIONS: dict[str, Set[str]] = {
         Permission.FLEET_READ.value,
         Permission.POLICY_READ.value,
         Permission.AUDIT_READ.value,
+        Permission.COMPLIANCE_READ.value,
     },
 }
 

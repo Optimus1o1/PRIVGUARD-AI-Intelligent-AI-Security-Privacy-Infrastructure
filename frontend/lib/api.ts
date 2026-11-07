@@ -29,6 +29,14 @@ import {
   GatewayTelemetry,
   SecurityTelemetry,
   AlertsResponse,
+  ComplianceFramework,
+  ComplianceControl,
+  ComplianceControlMapping,
+  ComplianceEvidenceRecord,
+  ComplianceGapAnalysis,
+  ComplianceApplicabilityRecord,
+  CompliancePublicKey,
+  ComplianceExportResponse,
 } from "./types";
 
 const BASE_URL = "/api/backend";
@@ -338,5 +346,48 @@ export const api = {
   getGatewayTelemetry: () => fetchJson<GatewayTelemetry>("/monitoring/gateway"),
   getSecurityTelemetry: () => fetchJson<SecurityTelemetry>("/monitoring/security"),
   getActiveAlerts: () => fetchJson<AlertsResponse>("/monitoring/alerts"),
+
+  // Compliance Evidence Engine APIs (Stage 10.9)
+  getComplianceFrameworks: () => fetchJson<ComplianceFramework[]>("/compliance/frameworks"),
+  getComplianceFramework: (id: string) => fetchJson<ComplianceFramework>(`/compliance/frameworks/${id}`),
+  getComplianceControls: (domain?: string) =>
+    fetchJson<ComplianceControl[]>(domain ? `/compliance/controls?domain=${encodeURIComponent(domain)}` : "/compliance/controls"),
+  getComplianceControl: (id: string) => fetchJson<ComplianceControl>(`/compliance/controls/${id}`),
+  getComplianceMappings: (controlId?: string, requirementId?: string) => {
+    const params = new URLSearchParams();
+    if (controlId) params.append("control_id", controlId);
+    if (requirementId) params.append("requirement_id", requirementId);
+    const qs = params.toString();
+    return fetchJson<ComplianceControlMapping[]>(qs ? `/compliance/mappings?${qs}` : "/compliance/mappings");
+  },
+  collectComplianceEvidence: (collectors?: string[]) =>
+    fetchJson<any>("/compliance/evidence/collect", {
+      method: "POST",
+      body: JSON.stringify({ collectors: collectors || null }),
+    }),
+  getComplianceEvidence: (controlId?: string, collector?: string) => {
+    const params = new URLSearchParams();
+    if (controlId) params.append("control_id", controlId);
+    if (collector) params.append("collector", collector);
+    const qs = params.toString();
+    return fetchJson<ComplianceEvidenceRecord[]>(qs ? `/compliance/evidence?${qs}` : "/compliance/evidence");
+  },
+  verifyComplianceEvidence: (evidenceId: string) =>
+    fetchJson<any>(`/compliance/evidence/${evidenceId}/verify`),
+  getComplianceGaps: (frameworkId?: string) =>
+    fetchJson<ComplianceGapAnalysis>(frameworkId ? `/compliance/gaps?framework_id=${frameworkId}` : "/compliance/gaps"),
+  getComplianceApplicability: (frameworkId?: string) =>
+    fetchJson<ComplianceApplicabilityRecord[]>(frameworkId ? `/compliance/applicability?framework_id=${frameworkId}` : "/compliance/applicability"),
+  updateComplianceApplicability: (data: any) =>
+    fetchJson<ComplianceApplicabilityRecord>("/compliance/applicability", {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+  createComplianceExport: (data: any) =>
+    fetchJson<ComplianceExportResponse>("/compliance/exports", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  getCompliancePublicKey: () => fetchJson<CompliancePublicKey>("/compliance/signing-keys/public"),
 };
 

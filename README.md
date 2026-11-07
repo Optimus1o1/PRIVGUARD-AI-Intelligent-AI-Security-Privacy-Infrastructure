@@ -26,7 +26,8 @@ PRIVGUARD AI is an independent security and privacy enforcement layer positioned
 15. **Cloud-Neutral Kubernetes & Helm Deployment Packaging:** Turnkey deployment on AWS EKS, Google GKE, Azure AKS, and self-managed Kubernetes via hardened Helm v3/v4 charts (`deploy/helm/privguard/`). Enforces Kubernetes Restricted Pod Security Standard (`runAsNonRoot: true`, `readOnlyRootFilesystem: true`, capabilities drop `ALL`, runtime seccomp), default-deny micro-segmentation NetworkPolicies, external secret isolation (`existingSecret`), pre-rollout Alembic migration hook Jobs with isolated DDL credentials (`privguard_migrator`), zero-downtime PodDisruptionBudgets, and HPA v2 horizontal autoscaling.
 16. **Zero-Content Observability & Active Security Canaries:** Production-grade OpenTelemetry tracing, low-cardinality Prometheus metrics, Loki structured logging with inline credential scrubbing (`RedactionFilter`), and 8 active synthetic security canaries verifying that security controls continuously fail closed. Zero raw prompts, completions, memory plaintext, tool argument secrets, or API keys in telemetry. Includes 7 auto-provisioned Grafana dashboards, multi-window error budget burn rate alerting, SSRF-protected SIEM export (Splunk HEC, Elastic ECS, Microsoft Sentinel), and Next.js 15 Monitoring Control Center.
 17. **Software Supply-Chain Integrity & Verifiable Distribution:** SLSA v1.0 Level 3 build provenance, Sigstore Cosign keyless signing tied to GitHub OIDC workflow identities, machine-readable CycloneDX 1.6 SBOMs (94 backend, 173 frontend components), automated release integrity verifier (`scripts/security/verify_release.py`) operating fail-closed, Gitleaks secret leak prevention, zero unmitigated High/Critical dependency vulnerabilities (`pip-audit`, `npm audit`), immutable 40-character commit SHA pinning for all GitHub Actions, and protected manual production release gates.
-18. **Production Hardening & Deterministic Chaos Engineering:** Fail-closed resilience empirically verified under distributed outages, Redis/KMS failures, and worker crashes. Edge request size bounding (`RequestSizeLimitMiddleware`, 10 MB limit), streaming chunk byte quotas, runaway task step quotas with auto-revocation (`STEP_LIMIT_EXCEEDED`), upstream tool timeouts (HTTP 504), SQL Compare-and-Swap anti-replay protection, HMAC action hash anti-tampering verification, and 19 deterministic chaos & adversarial resilience tests (`backend/tests/chaos/`). Full suite of 374 passing backend tests and 31 compiled Next.js frontend routes.
+18. **Production Hardening & Deterministic Chaos Engineering:** Fail-closed resilience empirically verified under distributed outages, Redis/KMS failures, and worker crashes. Edge request size bounding (`RequestSizeLimitMiddleware`, 10 MB limit), streaming chunk byte quotas, runaway task step quotas with auto-revocation (`STEP_LIMIT_EXCEEDED`), upstream tool timeouts (HTTP 504), SQL Compare-and-Swap anti-replay protection, HMAC action hash anti-tampering verification, and 19 deterministic chaos & adversarial resilience tests (`backend/tests/chaos/`).
+19. **Compliance Evidence & Control-Mapping Engine:** Automated, cryptographically verifiable compliance evidence and control-mapping engine across 20 domains and 35 standardized controls (`PG-CONTROL-001` through `PG-CONTROL-035`), mapping them to India DPDP Act 2023 / Rules 2025 (3 phased tiers with Rule 3 Notice at 18 months), EU AI Act (6 phased milestones through 2028), NIST AI 100-1, NIST Privacy 1.0, ISO 27001:2022, and SOC 2 (all 5 categories). RFC 8785 canonical JSON hashing, dedicated `KeyPurpose.EVIDENCE_SIGNING` Ed25519 signing, unauthenticated public key export (`/v1/compliance/signing-keys/public`), defense-in-depth sanitization, and 5-state assurance separation. Total test suite of 406 passing backend tests and 32 compiled Next.js frontend routes.
 
 ---
 
@@ -177,7 +178,8 @@ The Control Center will be accessible at: `http://localhost:3000`
 PRIVGUARD-AI/
 ├── backend/
 │   ├── app/
-│   │   ├── api/              # Gateway, Privacy, Policies, Audit, Agents, Tasks, Capabilities, Approvals, Tools, Threats, Dashboard, Memory, MCP, Metrics, Monitoring
+│   │   ├── api/              # Gateway, Privacy, Policies, Audit, Agents, Tasks, Capabilities, Approvals, Tools, Threats, Dashboard, Memory, MCP, Metrics, Monitoring, Compliance
+│   │   ├── compliance/       # Compliance Evidence Engine: Framework Registry, 35 Controls, Mapping Engine, RFC 8785 Ed25519 Signing, Freshness, Exports
 │   │   ├── observability/    # OTel Tracing, Safe Attributes, Prometheus Low-Cardinality Registry, Redaction Logging, SLOs, 8 Synthetic Canaries
 │   │   ├── enterprise/       # SIEM Exporter (Splunk HEC, Elastic ECS, Sentinel) with SSRF Validation
 │   │   ├── agent_security/   # Identity, Task Manager, Capability Manager, Permission Engine, Tool Registry, Broker, Sandbox
@@ -193,9 +195,9 @@ PRIVGUARD-AI/
 │   │   ├── policies/         # Deterministic Policy Engine
 │   │   ├── monitoring/       # Content-free Audit Logger
 │   │   └── database/         # Async SQLite models, migrations, WAL mode
-│   └── tests/                # 346 automated security, red-team, adversarial, load, API, memory vault, MCP, and observability tests
-├── frontend/                 # Next.js 14 App Router, TypeScript, Tailwind CSS, BFF Security Proxy
-│   ├── app/                  # Security Overview, Approvals, Agents, Topology Map, Threats, Privacy, Memory Vault, MCP Gateway, Tasks, Activity, Diagnostics, Monitoring (Overview, Platform, Gateway, Security, Fleet, Canaries, Alerts)
+│   └── tests/                # 406 automated security, red-team, adversarial, load, API, memory vault, MCP, observability, chaos, and compliance tests
+├── frontend/                 # Next.js 15 App Router, TypeScript, Tailwind CSS, BFF Security Proxy
+│   ├── app/                  # Security Overview, Approvals, Agents, Topology Map, Threats, Privacy, Memory Vault, MCP Gateway, Tasks, Activity, Diagnostics, Monitoring, Compliance Control Center
 │   ├── components/           # Radial Segmented Protection Gauge, Metric Cards, Forecast Charts, Tables, Modals
 │   └── lib/                  # Type-safe API client, types, BFF handlers
 ├── observability/            # Standalone Observability Daemon Configurations
@@ -232,9 +234,10 @@ PRIVGUARD-AI/
 - [x] **Stage 10.4:** Kubernetes & Helm Deployment Packaging (Cloud-neutral Helm chart, Restricted PSS, NetworkPolicies, HPA v2, PDB, pre-upgrade migration Jobs, 286 Automated Tests)
 - [x] **Stage 10.5:** Enterprise Secrets & Cryptographic Key Management (Provider-independent KMS abstraction for AWS/GCP/Azure/Vault/Local, non-destructive legacy V1-to-V2 DEK rewrap, automated KEK rotation, Ed25519 signing key separation, decoupled approval HMAC, zero plaintext secret metadata, 314 Automated Tests)
 - [x] **Stage 10.6:** Production Observability, Monitoring, Security Telemetry & Intelligent Alerting (OpenTelemetry distributed tracing with safe exception scrubbing, low-cardinality Prometheus metrics, 7 provisioned Grafana dashboards, Loki structured JSON logging with regex credential scrubbing, Alertmanager multi-tier routing hierarchy, SSRF-validated SIEM export for Splunk HEC/Elastic ECS/Sentinel, 8 active synthetic security canaries verifying fail-closed controls, 346 Automated Tests)
-- [ ] **Stage 10.7:** Supply-Chain Security and CI/CD
-- [ ] **Stage 10.8:** Compliance Readiness and Evidence Engine
-- [ ] **Stage 10.9:** Python SDK Packaging and Distribution
-- [ ] **Stage 10.10:** Disaster Recovery and Production Validation
+- [x] **Stage 10.7:** Supply Chain Security & CI/CD Pipelines (SLSA v1.0 Level 3 build provenance, Sigstore Cosign keyless signing, CycloneDX 1.6 SBOMs, automated release verifier, Gitleaks, Next.js 15.5.29 zero-vulnerability upgrade, 355 Automated Tests)
+- [x] **Stage 10.8:** Production Hardening & Deterministic Chaos Engineering (19 deterministic chaos & resilience tests, failure containment under Redis/KMS outages, worker crashes, SQL CAS anti-replay, 374 Automated Tests)
+- [x] **Stage 10.9:** Compliance Evidence Engine (Automated evidence collection, 20 domains, 35 controls, DPDP Act & Rules phased commencement, EU AI Act milestones, RFC 8785 Ed25519 signing, verifiable export bundles, 406 Automated Tests)
+- [ ] **Stage 10.10:** Python SDK Packaging and Distribution
+- [ ] **Stage 10.11:** Disaster Recovery and Production Validation
 
 

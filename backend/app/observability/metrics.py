@@ -524,3 +524,41 @@ def set_stream_lag(stream_name: str, consumer_group: str, lag: int) -> None:
 
 def set_db_pool_connections(state: str, count: int) -> None:
     DATABASE_POOL_CONNECTIONS.labels(state=state).set(count)
+
+
+# ==============================================================================
+# Compliance Evidence Engine Metrics (Stage 10.9)
+# ==============================================================================
+COMPLIANCE_EVIDENCE_COLLECTED_TOTAL = Counter(
+    "privguard_compliance_evidence_collected_total",
+    "Total compliance evidence records collected",
+    ["collector_name", "status"],
+    registry=privguard_registry,
+)
+
+COMPLIANCE_EXPORTS_GENERATED_TOTAL = Counter(
+    "privguard_compliance_exports_generated_total",
+    "Total signed compliance evidence export packages generated",
+    ["export_format"],
+    registry=privguard_registry,
+)
+
+COMPLIANCE_GAPS_DETECTED = Gauge(
+    "privguard_compliance_gaps_detected",
+    "Current count of active compliance gaps by severity",
+    ["severity"],
+    registry=privguard_registry,
+)
+
+
+def record_evidence_collected(collector_name: str, status: str = "VERIFIED") -> None:
+    COMPLIANCE_EVIDENCE_COLLECTED_TOTAL.labels(collector_name=collector_name, status=status).inc()
+
+
+def record_compliance_export(export_format: str = "ZIP") -> None:
+    COMPLIANCE_EXPORTS_GENERATED_TOTAL.labels(export_format=export_format).inc()
+
+
+def set_compliance_gaps(severity: str, count: int) -> None:
+    COMPLIANCE_GAPS_DETECTED.labels(severity=severity).set(count)
+

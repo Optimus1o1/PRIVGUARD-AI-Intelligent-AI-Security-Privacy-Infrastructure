@@ -24,6 +24,7 @@ const ROUTE_POLICY: Record<string, string[]> = {
   secrets: ["GET", "POST"],
   incidents: ["GET", "POST"],
   monitoring: ["GET", "POST"],
+  compliance: ["GET", "POST", "PATCH"],
 };
 
 const HOP_BY_HOP_HEADERS = new Set([
