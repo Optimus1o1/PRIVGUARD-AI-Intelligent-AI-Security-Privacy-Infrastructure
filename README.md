@@ -24,6 +24,7 @@ See [examples/phase_1_mvp_demo/README.md](file:///c:/Users/ANIKET/OneDrive/Docum
 
 ## Phase 1 Documentation Index
 
+- [Phase 1 Final Closure Report](file:///c:/Users/ANIKET/OneDrive/Documents/RIVA_AI/docs/phase_1_closure_report.md): Formal sign-off, final qualification scorecard, Ollama redaction boundary verification, and Phase 2 transition roadmap.
 - [Phase 1 Final Qualification Report](file:///c:/Users/ANIKET/OneDrive/Documents/RIVA_AI/docs/phase_1_final_qualification.md): Empirical qualification report covering live networked HTTP execution, real Ollama local inference, upstream request capture, and policy lifecycle.
 - [Phase 1 MVP Assessment](file:///c:/Users/ANIKET/OneDrive/Documents/RIVA_AI/docs/phase_1_mvp_assessment.md): Complete repository mapping of the 5 capabilities across backend, frontend, models, tests, and endpoints.
 - [Phase 1 Acceptance Criteria](file:///c:/Users/ANIKET/OneDrive/Documents/RIVA_AI/docs/phase_1_mvp_acceptance_criteria.md): Objective, testable acceptance matrices covering positive/negative test cases and heuristic limits.

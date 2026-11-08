@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "model": "llama3.2:3b",
+  "raw_email_absent": true,
+  "raw_phone_absent": true,
+  "tokens_present": [
+    "<EMAIL_1>",
+    "<PHONE_NUMBER_1>"
+  ],
+  "mapping_isolated": true,
+  "inference_succeeded": true,
+  "completion_preview": "Here's a possible one-sentence welcome email:\n\n\"Hello [First Name], we're thrilled to welcome you to"
+}

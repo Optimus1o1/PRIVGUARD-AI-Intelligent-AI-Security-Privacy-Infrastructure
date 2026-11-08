@@ -12,7 +12,7 @@ class ProviderResponse(BaseModel):
     model: str
     content: str
     finish_reason: Optional[str] = "stop"
-    usage: Dict[str, int] = Field(
+    usage: Dict[str, Any] = Field(
         default_factory=lambda: {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
     )
     raw_response: Optional[Dict[str, Any]] = None

@@ -43,7 +43,7 @@ class ChatCompletionResponse(BaseModel):
     created: int
     model: str
     choices: List[ChatChoice]
-    usage: Dict[str, int]
+    usage: Dict[str, Any]
     privguard_meta: Dict[str, Any]
 
 

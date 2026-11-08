@@ -84,13 +84,13 @@ class ProviderRegistry:
         Resolves the appropriate server-side provider for the given model.
         Strictly prevents client-supplied arbitrary URLs or SSRF vectors.
         """
-        # Reject SSRF, path traversal, or port binding attempts immediately
+        # Reject SSRF, path traversal, or dangerous characters immediately
         if (
             not model
             or "://" in model
             or "/" in model
             or "\\" in model
-            or ":" in model
+            or model.count(":") > 1
             or ".." in model
             or any(c.isspace() for c in model)
         ):
@@ -105,7 +105,21 @@ class ProviderRegistry:
                 return provider
 
         # Allowed standard LLM prefix patterns for the default provider
-        allowed_default_prefixes = ("gpt-", "mock-", "text-", "claude-", "o1-", "o3-", "dall-e-")
+        allowed_default_prefixes = (
+            "gpt-",
+            "mock-",
+            "text-",
+            "claude-",
+            "o1-",
+            "o3-",
+            "dall-e-",
+            "llama",
+            "qwen",
+            "mistral",
+            "phi",
+            "gemma",
+            "ollama",
+        )
         if model == "default" or any(model.startswith(prefix) for prefix in allowed_default_prefixes):
             if self._default_provider:
                 return self._default_provider
