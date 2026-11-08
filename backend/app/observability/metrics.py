@@ -562,3 +562,100 @@ def record_compliance_export(export_format: str = "ZIP") -> None:
 def set_compliance_gaps(severity: str, count: int) -> None:
     COMPLIANCE_GAPS_DETECTED.labels(severity=severity).set(count)
 
+
+# ==============================================================================
+# Disaster Recovery & Production Validation Metrics (Stage 10.11)
+# ==============================================================================
+DR_BASE_BACKUP_AGE_SECONDS = Gauge(
+    "privguard_dr_base_backup_age_seconds",
+    "Age of most recent verified PostgreSQL physical base backup in seconds",
+    registry=privguard_registry,
+)
+
+DR_WAL_ARCHIVE_LAG_SECONDS = Gauge(
+    "privguard_dr_wal_archive_lag_seconds",
+    "Lag between primary WAL write and secondary archival persistence in seconds",
+    registry=privguard_registry,
+)
+
+DR_BACKUP_VERIFICATION_STATUS = Gauge(
+    "privguard_dr_backup_verification_status",
+    "Signature and integrity verification status of latest backup (1=verified, 0=failed)",
+    ["backup_type"],
+    registry=privguard_registry,
+)
+
+DR_SECURITY_EPOCH = Gauge(
+    "privguard_dr_security_epoch",
+    "Current active monotonic security recovery epoch",
+    registry=privguard_registry,
+)
+
+DR_ERASURE_TOMBSTONES_TOTAL = Gauge(
+    "privguard_dr_erasure_tombstones_total",
+    "Total active memory erasure tombstones tracked in independent ledger",
+    registry=privguard_registry,
+)
+
+DR_RECONCILED_ERASURES_TOTAL = Counter(
+    "privguard_dr_reconciled_erasures_total",
+    "Total resurrected ciphertexts scrubbed during post-recovery reconciliation",
+    registry=privguard_registry,
+)
+
+DR_RECONCILED_REVOCATIONS_TOTAL = Counter(
+    "privguard_dr_reconciled_revocations_total",
+    "Total resurrected capabilities re-revoked during post-recovery reconciliation",
+    registry=privguard_registry,
+)
+
+DR_DRILL_DURATION_SECONDS = Gauge(
+    "privguard_dr_drill_duration_seconds",
+    "Duration of most recent automated disaster recovery drill execution in seconds",
+    ["status"],
+    registry=privguard_registry,
+)
+
+DR_SAFE_RESTRICTION_MODE_ACTIVE = Gauge(
+    "privguard_dr_safe_restriction_mode_active",
+    "Indicates if cold-start Safe Restriction Mode is active (1=active, 0=normal)",
+    registry=privguard_registry,
+)
+
+
+def set_dr_backup_age(seconds: float) -> None:
+    DR_BASE_BACKUP_AGE_SECONDS.set(seconds)
+
+
+def set_dr_wal_lag(seconds: float) -> None:
+    DR_WAL_ARCHIVE_LAG_SECONDS.set(seconds)
+
+
+def set_dr_backup_verification_status(backup_type: str, verified: bool) -> None:
+    DR_BACKUP_VERIFICATION_STATUS.labels(backup_type=backup_type).set(1.0 if verified else 0.0)
+
+
+def set_dr_security_epoch(epoch: int) -> None:
+    DR_SECURITY_EPOCH.set(epoch)
+
+
+def set_dr_erasure_tombstones(count: int) -> None:
+    DR_ERASURE_TOMBSTONES_TOTAL.set(count)
+
+
+def record_dr_reconciled_erasure() -> None:
+    DR_RECONCILED_ERASURES_TOTAL.inc()
+
+
+def record_dr_reconciled_revocation() -> None:
+    DR_RECONCILED_REVOCATIONS_TOTAL.inc()
+
+
+def record_dr_drill_result(duration_seconds: float, status: str = "passed") -> None:
+    DR_DRILL_DURATION_SECONDS.labels(status=status).set(duration_seconds)
+
+
+def set_dr_safe_restriction_mode(active: bool) -> None:
+    DR_SAFE_RESTRICTION_MODE_ACTIVE.set(1.0 if active else 0.0)
+
+

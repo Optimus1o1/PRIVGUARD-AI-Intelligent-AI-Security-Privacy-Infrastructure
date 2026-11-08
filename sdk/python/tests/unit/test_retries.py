@@ -51,4 +51,3 @@ def test_compute_delay():
 
     d1 = policy.compute_delay(attempt=1)
     assert 0.7 <= d1 <= 1.3  # 0.5 * 2^1 * [0.75, 1.25]
-

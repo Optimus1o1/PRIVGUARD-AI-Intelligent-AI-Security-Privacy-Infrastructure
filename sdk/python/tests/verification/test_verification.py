@@ -57,30 +57,33 @@ def create_test_audit_zip() -> tuple[bytes, ed25519.Ed25519PrivateKey, str]:
 def test_authentic_package_verification():
     zip_bytes, _, pub_pem = create_test_audit_zip()
 
-    # Verify with trusted public key
+    # Verify with explicit trusted public key
     result = verify_export_package(zip_bytes, trusted_public_key=pub_pem)
     assert result.is_valid is True
     assert result.manifest_valid is True
     assert result.signature_valid is True
+    assert result.trust_verified is True
     assert result.artifacts_verified == 2
     assert result.total_artifacts == 2
     assert result.signing_kid == "kid_ed25519_2026"
     assert len(result.errors) == 0
 
 
-def test_embedded_key_warning():
+def test_embedded_key_untrusted_identity():
     zip_bytes, _, _ = create_test_audit_zip()
 
     # Disallow embedded key by default -> must fail
     res_default = verify_export_package(zip_bytes, allow_embedded_key=False)
     assert res_default.is_valid is False
+    assert res_default.trust_verified is False
     assert any("No trusted_public_key provided" in e for e in res_default.errors)
 
-    # Allow embedded key -> succeeds with warning
+    # Allow embedded key -> signature is self-consistent but identity is UNTRUSTED (is_valid must be False)
     res_allow = verify_export_package(zip_bytes, allow_embedded_key=True)
-    assert res_allow.is_valid is True
-    assert len(res_allow.warnings) > 0
-    assert any("loaded from archive" in w for w in res_allow.warnings)
+    assert res_allow.is_valid is False
+    assert res_allow.signature_valid is True
+    assert res_allow.trust_verified is False
+    assert any("Identity is UNTRUSTED" in e for e in res_allow.errors)
 
 
 def test_tampered_artifact_fails_verification():
@@ -138,3 +141,52 @@ def test_untrusted_public_key_fails_signature():
     result = verify_export_package(zip_bytes, trusted_public_key=other_pem)
     assert result.is_valid is False
     assert result.signature_valid is False
+
+
+def test_path_traversal_rejected():
+    zip_bytes, _, pub_pem = create_test_audit_zip()
+
+    # Add a path traversal entry into the ZIP archive
+    zf_in = zipfile.ZipFile(io.BytesIO(zip_bytes))
+    traversal_buffer = io.BytesIO()
+    with zipfile.ZipFile(traversal_buffer, "w") as zf_out:
+        for item in zf_in.namelist():
+            zf_out.writestr(item, zf_in.read(item))
+        zf_out.writestr("../../etc/passwd", "root:x:0:0:root:/root:/bin/bash")
+
+    result = verify_export_package(traversal_buffer.getvalue(), trusted_public_key=pub_pem)
+    assert result.is_valid is False
+    assert any("path traversal sequence detected" in e for e in result.errors)
+
+
+def test_unmanifested_extraneous_file_rejected():
+    zip_bytes, _, pub_pem = create_test_audit_zip()
+
+    # Inject an unmanifested extra file into the archive
+    zf_in = zipfile.ZipFile(io.BytesIO(zip_bytes))
+    trojan_buffer = io.BytesIO()
+    with zipfile.ZipFile(trojan_buffer, "w") as zf_out:
+        for item in zf_in.namelist():
+            zf_out.writestr(item, zf_in.read(item))
+        zf_out.writestr("artifacts/unmanifested_trojan.sh", "#!/bin/bash\necho evil")
+
+    result = verify_export_package(trojan_buffer.getvalue(), trusted_public_key=pub_pem)
+    assert result.is_valid is False
+    assert any("Unmanifested extraneous artifact" in e for e in result.errors)
+
+
+def test_decompression_bomb_rejected():
+    zip_bytes, _, pub_pem = create_test_audit_zip()
+
+    # Inject an archive entry with extreme compression ratio (> 100:1 ratio)
+    zf_in = zipfile.ZipFile(io.BytesIO(zip_bytes))
+    bomb_buffer = io.BytesIO()
+    with zipfile.ZipFile(bomb_buffer, "w", compression=zipfile.ZIP_DEFLATED) as zf_out:
+        for item in zf_in.namelist():
+            zf_out.writestr(item, zf_in.read(item))
+        # 500,000 bytes of zeros compresses to ~350 bytes (> 1000:1 ratio)
+        zf_out.writestr("artifacts/huge_repetitive.dat", b"0" * 500000)
+
+    result = verify_export_package(bomb_buffer.getvalue(), trusted_public_key=pub_pem)
+    assert result.is_valid is False
+    assert any("decompression bomb" in e for e in result.errors)

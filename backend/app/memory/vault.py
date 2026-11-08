@@ -326,6 +326,11 @@ class MemoryVault:
         Validates ownership, permission, status, expiration, and cryptographic tag.
         """
         # 1. Fetch memory record with strict application & owner filtering
+        from app.recovery.erasure_ledger import is_memory_tombstoned
+
+        if is_memory_tombstoned(memory_id):
+            raise MemoryNotFoundError(memory_id)
+
         stmt = select(MemoryRecord).where(
             MemoryRecord.id == memory_id,
             MemoryRecord.app_id == app_id,
@@ -548,7 +553,31 @@ class MemoryVault:
             category=record.category,
         )
 
-        # Cryptographic wipe
+        # 1. Step 1 & 2: Persist immutable tombstone to independent erasure ledger
+        import hashlib
+        from app.recovery.erasure_ledger import record_erasure_tombstone
+
+        del_digest = hashlib.sha256(
+            f"{memory_id}:{app_id}:{owner_id}:{datetime.now(timezone.utc).isoformat()}".encode("utf-8")
+        ).hexdigest()
+
+        try:
+            record_erasure_tombstone(
+                memory_id=memory_id,
+                tenant_id=getattr(record, "tenant_id", "default_tenant"),
+                audit_digest=del_digest,
+                reason="GDPR_DPDP_RIGHT_TO_ERASURE",
+                operator=owner_id,
+            )
+        except Exception as exc:
+            import logging
+            logging.getLogger("privguard.memory").error(
+                "CRITICAL: Failed to write to independent erasure ledger: %s. Aborting deletion.",
+                exc,
+            )
+            raise
+
+        # 2. Step 3 & 4: Cryptographic wipe of active record and historical versions
         record.status = "DELETED"
         record.encrypted_content = "[CRYPTOGRAPHICALLY_ERASED]"
         record.wrapped_dek = "[DEK_DESTROYED]"

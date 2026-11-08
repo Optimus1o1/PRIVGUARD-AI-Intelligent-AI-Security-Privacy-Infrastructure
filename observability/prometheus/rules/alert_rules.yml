@@ -54,3 +54,40 @@ groups:
         annotations:
           summary: "Redis distributed state cluster connection errors"
           description: "PRIVGUARD backend is failing to reach Redis distributed cache and rate limiter."
+
+      - alert: PrivguardWalArchiveLagHigh
+        expr: privguard_dr_wal_archive_lag_seconds > 300
+        for: 5m
+        labels:
+          severity: high
+        annotations:
+          summary: "WAL archive lag exceeds 5 minutes (RPO breach risk)"
+          description: "PostgreSQL WAL archiving lag to secondary durable storage is above 300 seconds, risking data loss outside recovery targets."
+
+      - alert: PrivguardBaseBackupStale
+        expr: privguard_dr_base_backup_age_seconds > 86400
+        for: 1h
+        labels:
+          severity: high
+        annotations:
+          summary: "PostgreSQL physical base backup is older than 24 hours"
+          description: "No verified physical base backup has been completed within the required 24-hour cycle."
+
+      - alert: PrivguardBackupVerificationFailed
+        expr: privguard_dr_backup_verification_status == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backup manifest cryptographic verification or checksum failed"
+          description: "A backup manifest failed Ed25519 signature verification or sha256 checksum validation, indicating corruption or tampering."
+
+      - alert: PrivguardRecoveryDrillFailed
+        expr: privguard_dr_drill_duration_seconds{status="failed"} > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Automated disaster recovery drill failed"
+          description: "An automated disaster recovery drill failed invariant validation (epoch invalidation, erasure ledger, or PITR continuity)."
+

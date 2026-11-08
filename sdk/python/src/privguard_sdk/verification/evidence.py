@@ -16,6 +16,11 @@ from privguard_sdk.verification.manifests import (
     verify_ed25519_signature,
 )
 
+# Safety thresholds for archive inspection (decompression bomb protection)
+MAX_TOTAL_UNCOMPRESSED_BYTES = 100 * 1024 * 1024  # 100 MB
+MAX_SINGLE_FILE_UNCOMPRESSED_BYTES = 50 * 1024 * 1024  # 50 MB
+MAX_COMPRESSION_RATIO = 100.0
+
 
 @dataclass
 class VerificationResult:
@@ -24,6 +29,7 @@ class VerificationResult:
     is_valid: bool
     manifest_valid: bool
     signature_valid: bool
+    trust_verified: bool
     artifacts_verified: int
     total_artifacts: int
     signing_kid: str | None = None
@@ -32,12 +38,19 @@ class VerificationResult:
     warnings: list[str] = field(default_factory=list)
 
     def __str__(self) -> str:
-        status_str = "VALID" if self.is_valid else "INVALID"
+        if self.is_valid:
+            status_str = "VALID (TRUSTED & VERIFIED)"
+        elif self.signature_valid and not self.trust_verified:
+            status_str = "INVALID (SELF-CONSISTENT BUT UNTRUSTED IDENTITY)"
+        else:
+            status_str = "INVALID"
+
         lines = [
             f"PRIVGUARD Audit Package Verification: {status_str}",
-            f"  Artifacts Verified: {self.artifacts_verified}/{self.total_artifacts}",
-            f"  Manifest Format: {'VALID' if self.manifest_valid else 'INVALID'}",
+            f"  Trust Verified: {'YES (Explicit Trusted Key)' if self.trust_verified else 'NO (Untrusted Identity)'}",
             f"  Signature Valid: {'VALID' if self.signature_valid else 'INVALID'}",
+            f"  Manifest Format: {'VALID' if self.manifest_valid else 'INVALID'}",
+            f"  Artifacts Verified: {self.artifacts_verified}/{self.total_artifacts}",
         ]
         if self.signing_kid:
             lines.append(f"  Signing Key ID: {self.signing_kid}")
@@ -61,17 +74,26 @@ def verify_export_package(
 ) -> VerificationResult:
     """Independently verifies a PRIVGUARD compliance export ZIP package.
 
+    Security & Trust Invariant:
+    - An embedded public key inside an untrusted ZIP archive proves only self-consistency;
+      it CANNOT prove authenticity or identity trust.
+    - An archive is considered `is_valid=True` ONLY when verified against an explicit
+      `trusted_public_key`. Using an embedded key sets `trust_verified=False` and `is_valid=False`.
+
     Verification Steps:
-    1. Inspects archive contents and parses manifest.json.
-    2. Validates SHA-256 digests of all bundled artifacts against manifest.artifact_hashes.
-    3. Canonicalizes manifest.json using RFC 8785 JSON Canonicalization Scheme (JCS).
-    4. Resolves the Ed25519 public verification key (trusted key or embedded public_key.pem).
-    5. Cryptographically verifies the Ed25519 digital signature over canonical manifest bytes.
+    1. Pre-flight archive security audit: checks duplicate names, path traversal,
+       decompression bomb ratios, and size quotas.
+    2. Locates and parses manifest.json.
+    3. Closed-world check: verifies that no unmanifested extraneous artifacts exist.
+    4. Validates SHA-256 digests of all bundled artifacts against manifest.artifact_hashes.
+    5. Canonicalizes manifest.json using RFC 8785 JSON Canonicalization Scheme (JCS).
+    6. Resolves public key, verifies mathematical Ed25519 signature, and checks identity trust.
 
     Args:
         zip_path_or_bytes: Path to .zip file or raw bytes of ZIP archive.
         trusted_public_key: PEM string, hex string, or raw bytes of trusted public key.
-        allow_embedded_key: If True, uses the embedded public_key.pem if trusted_public_key is not supplied.
+        allow_embedded_key: If True, evaluates mathematical signature with embedded key
+                            for self-consistency check, but marks identity as untrusted.
 
     Returns:
         VerificationResult with detailed cryptographic validation breakdown.
@@ -82,6 +104,7 @@ def verify_export_package(
     total_artifacts = 0
     manifest_valid = False
     signature_valid = False
+    trust_verified = False
     signing_kid: str | None = None
     pub_key_fingerprint: str | None = None
 
@@ -93,15 +116,100 @@ def verify_export_package(
             is_valid=False,
             manifest_valid=False,
             signature_valid=False,
+            trust_verified=False,
             artifacts_verified=0,
             total_artifacts=0,
             errors=[f"Failed to open ZIP archive: {exc}"],
         )
 
     with zf:
-        namelist = set(zf.namelist())
+        raw_names = zf.namelist()
+        # 1. Check for duplicate filenames in archive header
+        if len(raw_names) != len(set(raw_names)):
+            return VerificationResult(
+                is_valid=False,
+                manifest_valid=False,
+                signature_valid=False,
+                trust_verified=False,
+                artifacts_verified=0,
+                total_artifacts=0,
+                errors=["Malicious archive: duplicate filename entries detected in ZIP header."],
+            )
 
-        # 1. Locate manifest.json
+        # 2. Inspect archive entries for path traversal and decompression bombs
+        total_uncompressed = 0
+        for info in zf.infolist():
+            filename = info.filename
+
+            # Path traversal check
+            normalized = filename.replace("\\", "/")
+            if ".." in normalized.split("/"):
+                return VerificationResult(
+                    is_valid=False,
+                    manifest_valid=False,
+                    signature_valid=False,
+                    trust_verified=False,
+                    artifacts_verified=0,
+                    total_artifacts=0,
+                    errors=[f"Malicious archive: path traversal sequence detected in '{filename}'."],
+                )
+            if normalized.startswith("/") or (len(normalized) > 1 and normalized[1] == ":"):
+                return VerificationResult(
+                    is_valid=False,
+                    manifest_valid=False,
+                    signature_valid=False,
+                    trust_verified=False,
+                    artifacts_verified=0,
+                    total_artifacts=0,
+                    errors=[f"Malicious archive: absolute path detected in '{filename}'."],
+                )
+
+            # Decompression bomb checks
+            total_uncompressed += info.file_size
+            if info.file_size > MAX_SINGLE_FILE_UNCOMPRESSED_BYTES:
+                return VerificationResult(
+                    is_valid=False,
+                    manifest_valid=False,
+                    signature_valid=False,
+                    trust_verified=False,
+                    artifacts_verified=0,
+                    total_artifacts=0,
+                    errors=[
+                        f"Malicious archive: file '{filename}' size ({info.file_size} bytes) exceeds limit ({MAX_SINGLE_FILE_UNCOMPRESSED_BYTES} bytes)."
+                    ],
+                )
+
+            if info.compress_size > 0:
+                ratio = info.file_size / info.compress_size
+                if ratio > MAX_COMPRESSION_RATIO:
+                    return VerificationResult(
+                        is_valid=False,
+                        manifest_valid=False,
+                        signature_valid=False,
+                        trust_verified=False,
+                        artifacts_verified=0,
+                        total_artifacts=0,
+                        errors=[
+                            f"Malicious archive: decompression bomb detected in '{filename}' (compression ratio {ratio:.1f}:1 exceeds {MAX_COMPRESSION_RATIO}:1 limit)."
+                        ],
+                    )
+
+        if total_uncompressed > MAX_TOTAL_UNCOMPRESSED_BYTES:
+            return VerificationResult(
+                is_valid=False,
+                manifest_valid=False,
+                signature_valid=False,
+                trust_verified=False,
+                artifacts_verified=0,
+                total_artifacts=0,
+                errors=[
+                    f"Malicious archive: total uncompressed size ({total_uncompressed} bytes) exceeds limit ({MAX_TOTAL_UNCOMPRESSED_BYTES} bytes)."
+                ],
+            )
+
+        namelist = set(raw_names)
+
+        # 3. Locate manifest.json
         manifest_filename = None
         for name in namelist:
             if name.endswith("manifest.json"):
@@ -113,6 +221,7 @@ def verify_export_package(
                 is_valid=False,
                 manifest_valid=False,
                 signature_valid=False,
+                trust_verified=False,
                 artifacts_verified=0,
                 total_artifacts=0,
                 errors=["Archive missing manifest.json."],
@@ -127,6 +236,7 @@ def verify_export_package(
                 is_valid=False,
                 manifest_valid=False,
                 signature_valid=False,
+                trust_verified=False,
                 artifacts_verified=0,
                 total_artifacts=0,
                 errors=[f"Failed to parse manifest.json: {exc}"],
@@ -137,8 +247,23 @@ def verify_export_package(
         artifact_hashes: dict[str, str] = manifest.get("artifact_hashes", {})
         total_artifacts = len(artifact_hashes)
 
-        # 2. Verify all artifact SHA-256 digests
         base_dir = manifest_filename[:-13]  # prefix if inside a folder
+
+        # 4. Closed-world check: reject unmanifested extraneous artifacts
+        allowed_archive_files = {manifest_filename}
+        for rel_path in artifact_hashes:
+            allowed_archive_files.add(f"{base_dir}{rel_path}" if base_dir else rel_path)
+
+        # Check for embedded public key filename
+        for name in namelist:
+            if name.endswith("public_key.pem"):
+                allowed_archive_files.add(name)
+
+        unmanifested_files = [f for f in namelist if f not in allowed_archive_files and not f.endswith("/")]
+        if unmanifested_files:
+            errors.append(f"Unmanifested extraneous artifact(s) detected in archive: {unmanifested_files}")
+
+        # 5. Verify all artifact SHA-256 digests
         for relative_path, expected_hash in artifact_hashes.items():
             archive_path = f"{base_dir}{relative_path}" if base_dir else relative_path
             if archive_path not in namelist:
@@ -157,30 +282,33 @@ def verify_export_package(
             except Exception as exc:
                 errors.append(f"Failed to read artifact '{relative_path}': {exc}")
 
-        # 3. Resolve Public Key
-        resolved_key = trusted_public_key
-        if not resolved_key:
-            if allow_embedded_key:
-                # Find embedded public_key.pem
-                pk_filename = None
-                for name in namelist:
-                    if name.endswith("public_key.pem"):
-                        pk_filename = name
-                        break
-                if pk_filename:
-                    resolved_key = zf.read(pk_filename).decode("utf-8")
-                    warnings.append(
-                        "Public key was loaded from archive (unverified network origin). "
-                        "For high assurance, pass an independently trusted public key."
-                    )
-                else:
-                    errors.append("No trusted public key provided, and archive has no embedded public_key.pem.")
-            else:
+        # 6. Resolve Public Key & Enforce Identity Trust
+        resolved_key = None
+        if trusted_public_key:
+            resolved_key = trusted_public_key
+            trust_verified = True
+        elif allow_embedded_key:
+            # Find embedded public_key.pem for self-consistency only
+            pk_filename = None
+            for name in namelist:
+                if name.endswith("public_key.pem"):
+                    pk_filename = name
+                    break
+            if pk_filename:
+                resolved_key = zf.read(pk_filename).decode("utf-8")
+                trust_verified = False
                 errors.append(
-                    "No trusted_public_key provided. To verify with embedded key, set allow_embedded_key=True."
+                    "Identity is UNTRUSTED: Package was verified using an embedded public key from an untrusted archive. "
+                    "An explicit trusted_public_key is required for valid verification."
                 )
+            else:
+                errors.append("No trusted public key provided, and archive has no embedded public_key.pem.")
+        else:
+            errors.append(
+                "No trusted_public_key provided. To inspect mathematical self-consistency with embedded key, pass allow_embedded_key=True."
+            )
 
-        # 4. Verify Ed25519 signature
+        # 7. Cryptographically verify Ed25519 signature
         if resolved_key and signature_hex:
             try:
                 pub_obj = load_ed25519_public_key(resolved_key)
@@ -201,12 +329,20 @@ def verify_export_package(
         elif not signature_hex:
             errors.append("Manifest does not contain a signature field.")
 
-    is_valid = manifest_valid and signature_valid and (artifacts_verified == total_artifacts) and (len(errors) == 0)
+    # Package is valid ONLY if all digests match, signature is valid, AND identity trust is explicitly verified
+    is_valid = (
+        manifest_valid
+        and signature_valid
+        and trust_verified
+        and (artifacts_verified == total_artifacts)
+        and (len(errors) == 0)
+    )
 
     return VerificationResult(
         is_valid=is_valid,
         manifest_valid=manifest_valid,
         signature_valid=signature_valid,
+        trust_verified=trust_verified,
         artifacts_verified=artifacts_verified,
         total_artifacts=total_artifacts,
         signing_kid=signing_kid,

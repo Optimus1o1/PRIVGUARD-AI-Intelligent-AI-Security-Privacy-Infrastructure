@@ -1,5 +1,6 @@
 """Performance and latency benchmarks for Stage 3 Broker and Capabilities."""
 
+import gc
 import time
 import pytest
 from httpx import AsyncClient
@@ -12,6 +13,8 @@ async def test_stage_3_latency_benchmarks(
     client: AsyncClient, test_app_record: Application, auth_headers: dict
 ):
     """Benchmarks capability issuance, validation, and tool execution mediation."""
+    gc.collect()
+
     # 1. Action hash computation benchmark (pure CPU cryptographic operation)
     params = {"path": "document_123.pdf", "user": "alice", "action": "read"}
     hash_times = []
@@ -28,6 +31,14 @@ async def test_stage_3_latency_benchmarks(
     agent_id = res_ag.json()["id"]
     res_tsk = await client.post("/v1/tasks", json={"agent_id": agent_id}, headers=auth_headers)
     task_id = res_tsk.json()["id"]
+
+    # Warmup issuance
+    await client.post(
+        "/v1/capabilities/request",
+        json={"agent_id": agent_id, "task_id": task_id, "tool_name": "search_web", "max_uses": 100},
+        headers=auth_headers,
+    )
+    gc.collect()
 
     # 2. Capability issuance latency
     cap_times = []
@@ -53,6 +64,7 @@ async def test_stage_3_latency_benchmarks(
         headers=auth_headers,
     )
     assert warmup_res.status_code == 200
+    gc.collect()
 
     exec_times = []
     for i in range(20):
@@ -75,7 +87,7 @@ async def test_stage_3_latency_benchmarks(
         f"Cap Issuance P95: {cap_p95:.2f}ms | Tool Broker Exec P95: {exec_p95:.2f}ms"
     )
 
-    assert hash_p95 < 1.0  # sub-millisecond
-    assert cap_p95 < 600.0  # bounded capability issuance under full-suite load
-    assert exec_p95 < 800.0
+    assert hash_p95 < 1.0  # sub-millisecond (< 1.0 ms)
+    assert cap_p95 < 250.0  # strict sub-250ms issuance contract
+    assert exec_p95 < 400.0  # strict sub-400ms mediation contract
 

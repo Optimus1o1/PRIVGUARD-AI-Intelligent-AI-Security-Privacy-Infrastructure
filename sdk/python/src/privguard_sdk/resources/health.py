@@ -30,4 +30,3 @@ class AsyncHealthResource(AsyncResource):
         """Verifies infrastructure and dependency readiness via /ready."""
         data = await self._transport.request("GET", "/ready")
         return ReadinessResponse.model_validate(data)
-

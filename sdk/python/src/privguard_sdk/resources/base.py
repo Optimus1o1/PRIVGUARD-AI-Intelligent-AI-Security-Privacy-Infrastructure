@@ -16,4 +16,3 @@ class AsyncResource:
 
     def __init__(self, transport: AsyncTransport) -> None:
         self._transport = transport
-

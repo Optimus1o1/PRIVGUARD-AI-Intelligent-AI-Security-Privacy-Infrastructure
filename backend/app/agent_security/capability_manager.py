@@ -35,8 +35,11 @@ class CapabilityManager:
         Generates an opaque cryptographic capability token and stores only its SHA-256 hash.
         Returns the DB CapabilityGrant record and the one-time plaintext capability secret.
         """
-        # Generate cryptographically secure 256-bit token
-        raw_secret = f"pg_cap_{secrets.token_urlsafe(32)}"
+        # Generate cryptographically secure 256-bit token with current security epoch
+        from app.recovery.security_epoch import get_current_security_epoch
+
+        current_epoch = get_current_security_epoch()
+        raw_secret = f"pg_cap_e{current_epoch}_{secrets.token_urlsafe(32)}"
         token_hash = hash_capability_token(raw_secret)
 
         now = datetime.now(timezone.utc)
@@ -136,6 +139,30 @@ class CapabilityManager:
                 error_code="CAPABILITY_REVOKED",
             )
 
+        # Check security recovery epoch
+        from app.recovery.security_epoch import get_current_security_epoch
+
+        current_epoch = get_current_security_epoch()
+        if raw_secret.startswith("pg_cap_e"):
+            try:
+                parts = raw_secret.split("_")
+                if len(parts) >= 3 and parts[2].startswith("e") and parts[2][1:].isdigit():
+                    token_epoch = int(parts[2][1:])
+                    if token_epoch < current_epoch:
+                        raise PrivGuardException(
+                            message=f"Capability token security epoch ({token_epoch}) was invalidated by disaster recovery epoch ({current_epoch}).",
+                            status_code=403,
+                            error_code="CAPABILITY_EPOCH_INVALIDATED",
+                        )
+            except (ValueError, IndexError):
+                pass
+        elif current_epoch > 1:
+            raise PrivGuardException(
+                message="Legacy capability token invalidated by disaster recovery epoch advancement.",
+                status_code=403,
+                error_code="CAPABILITY_EPOCH_INVALIDATED",
+            )
+
         # Check expiration
         now = datetime.now(timezone.utc)
         if ensure_utc(grant.expires_at) < now:
@@ -221,6 +248,24 @@ class CapabilityManager:
             )
 
         grant.is_revoked = True
+
+        # Synchronously persist in the independent durable revocation journal
+        try:
+            from app.recovery.revocation_journal import record_revocation_entry
+
+            record_revocation_entry(
+                target_type="CAPABILITY",
+                target_id=grant.id,
+                tenant_id=getattr(grant, "tenant_id", "default_tenant"),
+                reason="EXPLICIT_REVOCATION",
+                operator=app_id,
+            )
+        except Exception as exc:
+            import logging
+
+            logging.getLogger("privguard.capabilities").warning(
+                "Failed to record revocation entry in journal: %s", exc
+            )
 
         # Emit transactional outbox event for distributed revocation
         from app.infrastructure.outbox import emit_outbox_event

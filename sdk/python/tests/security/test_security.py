@@ -50,4 +50,3 @@ def test_exception_representation_safety():
     assert "INTERNAL_ERROR" in repr_str
     assert "req_987" in repr_str
     assert "retryable" in repr_str
-

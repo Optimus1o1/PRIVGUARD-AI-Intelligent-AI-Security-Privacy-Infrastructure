@@ -68,4 +68,3 @@ def test_exception_from_response_mapping():
     e503 = exception_from_response(503, {"error": {"message": "Fail closed"}})
     assert isinstance(e503, ServerError)
     assert e503.retryable is True
-

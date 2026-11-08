@@ -14,4 +14,3 @@ __all__ = [
     "serialize_payload",
     "to_json_bytes",
 ]
-
