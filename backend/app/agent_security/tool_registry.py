@@ -84,7 +84,49 @@ class ToolRegistry:
             ToolExecutor.execute_delete_file,
         )
 
-        # 5. execute_code (Disabled by default in v0.1)
+        # 5. calculator (Phase 1 demonstration tool)
+        self.register(
+            RegisteredTool(
+                name="calculator",
+                description="Performs safe mathematical calculations on numeric expressions.",
+                required_parameters=["expression"],
+                optional_parameters=[],
+                risk_level="LOW",
+                requires_approval=False,
+                timeout_seconds=5.0,
+            ),
+            ToolExecutor.execute_calculator,
+        )
+
+        # 6. lookup_file_metadata (Phase 1 demonstration tool)
+        self.register(
+            RegisteredTool(
+                name="lookup_file_metadata",
+                description="Inspects read-only file metadata (size, extension) inside the sandbox.",
+                required_parameters=["filename"],
+                optional_parameters=[],
+                risk_level="LOW",
+                requires_approval=False,
+                timeout_seconds=5.0,
+            ),
+            ToolExecutor.execute_lookup_file_metadata,
+        )
+
+        # 7. search_mock_kb (Phase 1 demonstration tool)
+        self.register(
+            RegisteredTool(
+                name="search_mock_kb",
+                description="Searches an in-memory synthetic product FAQ database.",
+                required_parameters=["query"],
+                optional_parameters=[],
+                risk_level="LOW",
+                requires_approval=False,
+                timeout_seconds=5.0,
+            ),
+            ToolExecutor.execute_search_mock_kb,
+        )
+
+        # 8. execute_code (Disabled by default in v0.1)
         self.register(
             RegisteredTool(
                 name="execute_code",

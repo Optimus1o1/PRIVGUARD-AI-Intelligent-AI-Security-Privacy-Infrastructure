@@ -122,6 +122,64 @@ class ToolExecutor:
         return f"[EMAIL_DISPATCHED] Message to '{recipient}' queued for quarantine dispatch. Subject: '{subject}', Characters: {len(body)}"
 
     @staticmethod
+    async def execute_calculator(params: Dict[str, Any]) -> str:
+        """Safe arithmetic calculation tool."""
+        expression = params.get("expression")
+        if not expression:
+            raise PrivGuardException("Missing required parameter: 'expression'", status_code=400)
+
+        # Allow strictly numbers, whitespace, and basic arithmetic operators
+        clean_expr = str(expression).strip()
+        if not re.match(r"^[\d\s\+\-\*\/\(\)\.\%]+$", clean_expr):
+            raise PrivGuardException(
+                f"Invalid arithmetic expression: '{expression}'. Only numbers and basic operators are permitted.",
+                status_code=400,
+                error_code="INVALID_EXPRESSION",
+            )
+        try:
+            # Safe AST-based or limited eval of mathematical expression
+            # Python's eval with empty globals/locals is safe here because regex guarantees strictly numeric tokens
+            val = eval(clean_expr, {"__builtins__": None}, {})  # nosec B307
+            return str(val)
+        except Exception as exc:
+            raise PrivGuardException(f"Calculation failed: {exc}", status_code=400)
+
+    @staticmethod
+    async def execute_lookup_file_metadata(params: Dict[str, Any]) -> str:
+        """Inspects read-only file metadata (size, extension, exists) inside sandbox."""
+        filename = params.get("filename")
+        if not filename:
+            raise PrivGuardException("Missing required parameter: 'filename'", status_code=400)
+
+        app_id = params.get("_app_id")
+        target_file = resolve_sandbox_path(filename, app_id=app_id)
+        if not target_file.exists():
+            return f'{{"filename": "{filename}", "exists": false}}'
+
+        stat = target_file.stat()
+        return f'{{"filename": "{filename}", "exists": true, "size_bytes": {stat.st_size}, "extension": "{target_file.suffix}"}}'
+
+    @staticmethod
+    async def execute_search_mock_kb(params: Dict[str, Any]) -> str:
+        """Searches an in-memory synthetic product FAQ database."""
+        query = params.get("query")
+        if not query:
+            raise PrivGuardException("Missing required parameter: 'query'", status_code=400)
+
+        mock_kb = [
+            ("privacy policy", "PRIVGUARD automatically redacts PII before it reaches external LLMs."),
+            ("data retention", "Personal memories are stored with AES-256-GCM envelope encryption."),
+            ("pricing tiers", "PRIVGUARD Open Source is freely self-hostable under Apache 2.0."),
+            ("support hours", "Developer support is available Monday through Friday 09:00 - 18:00 IST."),
+        ]
+        q_lower = query.lower()
+        matches = [ans for topic, ans in mock_kb if any(w in topic for w in q_lower.split())]
+        if not matches:
+            matches = [mock_kb[0][1]]
+
+        return f"[KB_MATCHES] Top match: {matches[0]}"
+
+    @staticmethod
     async def execute_code(params: Dict[str, Any]) -> str:
         """Disabled in v0.1 pending micro-sandbox containerization."""
         raise PrivGuardException(
