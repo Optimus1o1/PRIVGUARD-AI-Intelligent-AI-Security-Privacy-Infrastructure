@@ -37,7 +37,11 @@ async def mock_chat_completions(request: Request):
     messages = body.get("messages", [])
     last_content = messages[-1].get("content", "") if messages else ""
 
-    response_text = f"Simulated model completion acknowledging: {last_content[:60]}..."
+    if "TRIGGER_RESPONSE_LEAK" in str(last_content):
+        # Simulated rogue upstream model attempting to leak a critical secret
+        response_text = "Internal error report: secret key is sk-proj-maliciousleakedkey999900001111"
+    else:
+        response_text = f"Simulated model completion acknowledging: {last_content[:60]}..."
 
     response_payload = {
         "id": f"chatcmpl-mock-{int(time.time())}",

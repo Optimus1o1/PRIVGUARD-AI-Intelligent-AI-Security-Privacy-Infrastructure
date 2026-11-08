@@ -93,16 +93,25 @@ UPSTREAM_OPENAI_API_KEY=mock-dev-key
 
 ### Mode B: Real Local Inference via Ollama
 To run real AI inference with zero data leaving your machine:
-1. Install [Ollama](https://ollama.com/) and pull a model:
+1. Install [Ollama](https://ollama.com/) and verify your local model:
    ```bash
-   ollama pull llama3.2
+   ollama list
+   # e.g., llama3.2:3b or qwen2.5:3b
    ```
-2. Configure PRIVGUARD to point to your local Ollama instance:
-   ```env
-   UPSTREAM_OPENAI_BASE_URL=http://localhost:11434/v1
-   UPSTREAM_OPENAI_API_KEY=ollama
-   DEFAULT_MODEL=llama3.2
-   ```
+2. Configure PRIVGUARD to point to your Ollama instance:
+   - **Direct Windows/macOS Uvicorn**:
+     ```env
+     UPSTREAM_LLM_BASE_URL=http://127.0.0.1:11434/v1
+     UPSTREAM_LLM_API_KEY=ollama
+     ```
+   - **Docker Desktop Backend Container**:
+     ```env
+     UPSTREAM_LLM_BASE_URL=http://host.docker.internal:11434/v1
+     UPSTREAM_LLM_API_KEY=ollama
+     ```
+   > [!IMPORTANT]  
+   > Server-side SSRF protections remain strictly enforced in both modes. Client applications cannot specify arbitrary remote URLs; endpoints are resolved strictly through server-side environment configurations.
+
 3. Requests sent to `http://localhost:8000/v1/chat/completions` will be inspected, redacted, and forwarded to Ollama locally.
 
 ### Mode C: Optional Cloud Model Providers

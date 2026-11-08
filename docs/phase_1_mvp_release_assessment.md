@@ -31,16 +31,22 @@ Each core capability is graded against the acceptance criteria defined in `docs/
 
 ---
 
-## 3. Operational & Infrastructure Assessment
+## 3. Operational, Infrastructure & Integration Assessment
 
 | Dimension | Scope | Grade | Evidence / Status |
-|---|---|---|:---:|
-| **Local Deployment** | Docker Compose / Standalone Uvicorn | **PASS** | Single-command Docker Compose setup verified in `docs/phase_1_local_deployment.md`. Standalone in-process demo passes with 0 infrastructure dependencies. |
-| **Model Compatibility** | Mode A (Mock) & Mode B (Ollama) | **PASS** | Upstream request capture verifies sanitized payloads reach the model. Drop-in OpenAI API compatibility supported via `/v1/chat/completions`. |
-| **Code Quality & Linting** | Python backend & SDK | **PASS** | Ruff clean, zero syntax errors, type annotations applied across public interfaces. |
-| **Security Scanning** | Static Application Security Testing | **PASS** | Bandit SAST reports 0 medium/high vulnerabilities. Fail-closed error handling verified. |
-| **Frontend Web Console** | Next.js 14 App Router | **PASS** | Clean build with 32 production routes. Policy configuration and activity audit views operational. |
-| **Disaster Recovery** | Point-in-time recovery & epoch isolation | **PASS** | Security epoch prevents capability replay. Incremental ledger verified (0.0911s local replay; enterprise RTO 5–15m marked `PENDING_OWNER_APPROVAL`). |
+|---|---|:---:|---|
+| **Networked HTTP Integration** | Real socket requests (:8000 -> :8001) | **PASS** | Validated via `test_networked_gateway.py`. Live requests across actual network boundaries. |
+| **Upstream Redaction Capture** | Captured payload inspection | **PASS** | Inspected raw payloads on mock server: zero raw emails/phones present, replaced with tokens. |
+| **Real Local Model (Ollama)** | Live inference (`llama3.2:3b`) | **PASS** | Probed `http://127.0.0.1:11434/api/tags`, executed live inference with `llama3.2:3b` over HTTP. |
+| **Docker Compose Config** | `docker compose config` | **PASS** | Schema, secrets mapping, and 3-tier network isolation evaluated and verified. |
+| **Docker Runtime Daemon** | Linux engine runtime containerization | **NOT VERIFIED** | Docker Desktop Linux engine was inactive on host during test session. Documented honestly. |
+| **Full Backend Regression** | Pytest backend test suite | **PASS** | 438 passed out of 438 tests (100% pass rate). |
+| **Python SDK Regression** | Pytest SDK test suite | **PASS** | 36 passed out of 36 tests (100% pass rate). |
+| **Frontend Web Console** | Next.js 15 App Router | **PASS** | Clean production build with 32 routes generated. |
+| **Code Quality & Linting** | Ruff linter | **PASS** | Clean (0 errors across backend, SDK, and examples). |
+| **Security SAST Scanning** | Bandit security scanner | **PASS** | 0 High / 0 Medium findings across entire codebase. |
+| **Disaster Recovery** | Point-in-time recovery & epoch isolation | **PASS** | Monotonic security recovery epoch prevents capability resurrection; 27 recovery tests passed. |
+| **External Security Certification** | Independent third-party audit | **NOT PERFORMED** | Internal qualification completed. No claim of external third-party certification is made. |
 
 ---
 
