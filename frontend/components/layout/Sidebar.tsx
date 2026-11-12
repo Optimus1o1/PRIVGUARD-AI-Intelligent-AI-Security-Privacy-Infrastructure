@@ -18,15 +18,19 @@ import {
   Settings,
   ShieldAlert,
   Sparkles,
+  Terminal,
+  Presentation,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 
 const NAV_ITEMS = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
-  { href: "/organization", label: "Enterprise Control", icon: Building2 },
+  { href: "/playground", label: "Security Playground", icon: Terminal, isHighlight: true },
+  { href: "/showcase", label: "Product Showcase", icon: Presentation },
   { href: "/threats", label: "Threat Monitor", icon: ShieldAlert, hasBadge: true },
   { href: "/privacy", label: "Privacy Center", icon: Lock },
+  { href: "/organization", label: "Enterprise Control", icon: Building2 },
   { href: "/memory", label: "Memory Vault", icon: Database },
   { href: "/mcp", label: "MCP Gateway", icon: Network },
   { href: "/agents", label: "Agent Management", icon: Bot },

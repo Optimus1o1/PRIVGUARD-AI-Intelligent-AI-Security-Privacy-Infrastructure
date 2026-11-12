@@ -7,6 +7,7 @@ import uuid
 from typing import Any, AsyncIterator, Dict, List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import (
+    PolicyViolationError,
     PrivGuardException,
     ResponseSecurityViolationError,
     SecretDetectedError,
@@ -18,6 +19,13 @@ from app.gateway.streaming import secure_stream_handler
 from app.monitoring.audit import audit_logger
 from app.privacy.pipeline import inspection_pipeline
 from app.providers.registry import provider_registry
+from app.threat_detection import threat_response_engine
+from app.threat_detection.schemas import (
+    ThreatAction,
+    ThreatAssessment,
+    ThreatSeverity,
+    ThreatSignal,
+)
 
 
 class UpstreamCoordinator:
@@ -45,8 +53,42 @@ class UpstreamCoordinator:
         # 1. Ingress Request Inspection
         sanitized_messages, verdict, redaction_mapping = self.pipeline.inspect_messages(raw_messages)
 
-        # 2. Hard Fail-Closed on Request Secrets
+        # 2. Hard Fail-Closed on Request Secrets & Threats
         if verdict.is_blocked:
+            if verdict.threat_signals:
+                await audit_logger.log_event(
+                    db=db,
+                    request_id=req_id,
+                    app_id=current_app.id,
+                    event_type="THREAT_BLOCKED",
+                    action_taken="BLOCK",
+                    risk_level=verdict.risk_level.value,
+                    data_category=verdict.category.value,
+                    entity_counts=verdict.entity_counts,
+                    content_fingerprint=verdict.content_fingerprint,
+                    status="BLOCKED",
+                )
+                signals = [ThreatSignal(**s) for s in verdict.threat_signals]
+                assessment = ThreatAssessment(
+                    is_threat=True,
+                    signals=signals,
+                    action=ThreatAction.BLOCK,
+                    highest_severity=signals[0].severity if signals else ThreatSeverity.HIGH,
+                    reason=verdict.blocking_reason or "Prompt injection detected",
+                )
+                await threat_response_engine.log_threat_event(
+                    db=db,
+                    application_id=current_app.id,
+                    assessment=assessment,
+                    content_for_hash=raw_messages[-1].get("content", "") if raw_messages else None,
+                )
+                raise PolicyViolationError(
+                    category="PROMPT_INJECTION",
+                    action="BLOCK",
+                    reason=verdict.blocking_reason or "Prompt injection detected and blocked fail-closed.",
+                    details={"rule_id": "INJ_OVERRIDE_001"},
+                )
+
             await audit_logger.log_event(
                 db=db,
                 request_id=req_id,
@@ -179,8 +221,42 @@ class UpstreamCoordinator:
         # 1. Ingress Request Inspection
         sanitized_messages, verdict, redaction_mapping = self.pipeline.inspect_messages(raw_messages)
 
-        # 2. Hard Fail-Closed on Request Secrets
+        # 2. Hard Fail-Closed on Request Secrets & Threats
         if verdict.is_blocked:
+            if verdict.threat_signals:
+                await audit_logger.log_event(
+                    db=db,
+                    request_id=req_id,
+                    app_id=current_app.id,
+                    event_type="THREAT_BLOCKED",
+                    action_taken="BLOCK",
+                    risk_level=verdict.risk_level.value,
+                    data_category=verdict.category.value,
+                    entity_counts=verdict.entity_counts,
+                    content_fingerprint=verdict.content_fingerprint,
+                    status="BLOCKED",
+                )
+                signals = [ThreatSignal(**s) for s in verdict.threat_signals]
+                assessment = ThreatAssessment(
+                    is_threat=True,
+                    signals=signals,
+                    action=ThreatAction.BLOCK,
+                    highest_severity=signals[0].severity if signals else ThreatSeverity.HIGH,
+                    reason=verdict.blocking_reason or "Prompt injection detected",
+                )
+                await threat_response_engine.log_threat_event(
+                    db=db,
+                    application_id=current_app.id,
+                    assessment=assessment,
+                    content_for_hash=raw_messages[-1].get("content", "") if raw_messages else None,
+                )
+                raise PolicyViolationError(
+                    category="PROMPT_INJECTION",
+                    action="BLOCK",
+                    reason=verdict.blocking_reason or "Prompt injection detected and blocked fail-closed.",
+                    details={"rule_id": "INJ_OVERRIDE_001"},
+                )
+
             await audit_logger.log_event(
                 db=db,
                 request_id=req_id,

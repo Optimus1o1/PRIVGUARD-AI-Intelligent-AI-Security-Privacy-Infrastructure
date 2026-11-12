@@ -19,6 +19,10 @@ from app.core.security import hash_api_key
 from app.database.connection import Base, get_db_session
 from app.database.models import Application
 from app.main import app
+from app.providers.registry import provider_registry, LocalMockProvider
+
+# Enforce local deterministic mock provider for isolated unit tests
+provider_registry.set_default(LocalMockProvider())
 
 TEST_DB_URL = "sqlite+aiosqlite:///./test_privguard.db"
 test_engine = create_async_engine(TEST_DB_URL, echo=False, poolclass=NullPool)
