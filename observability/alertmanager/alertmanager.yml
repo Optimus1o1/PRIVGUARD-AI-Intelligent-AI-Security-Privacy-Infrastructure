@@ -1,0 +1,57 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ['alertname', 'severity']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  receiver: 'ops-webhook'
+  routes:
+    - match:
+        severity: critical
+      receiver: 'critical-pager'
+      repeat_interval: 1h
+    - match:
+        severity: high
+      receiver: 'ops-webhook'
+      repeat_interval: 2h
+    - match:
+        severity: medium
+      receiver: 'ops-channel'
+      repeat_interval: 4h
+    - match:
+        severity: low
+      receiver: 'dashboard-only'
+      repeat_interval: 12h
+
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'high'
+    equal: ['alertname']
+  - source_match:
+      severity: 'high'
+    target_match:
+      severity: 'medium'
+    equal: ['alertname']
+
+receivers:
+  - name: 'critical-pager'
+    webhook_configs:
+      - url: 'http://localhost:9099/alerts/critical'
+        send_resolved: true
+
+  - name: 'ops-webhook'
+    webhook_configs:
+      - url: 'http://localhost:9099/alerts/ops'
+        send_resolved: true
+
+  - name: 'ops-channel'
+    webhook_configs:
+      - url: 'http://localhost:9099/alerts/ops-channel'
+        send_resolved: true
+
+  - name: 'dashboard-only'
+    # Absorbs low severity alerts without outbound dispatch

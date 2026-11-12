@@ -1,0 +1,17 @@
+groups:
+  - name: privguard_recording_rules
+    rules:
+      - record: job:privguard_http_requests:rate5m
+        expr: sum(rate(privguard_http_requests_total[5m])) by (method, route, status_class)
+
+      - record: job:privguard_http_errors:rate5m
+        expr: sum(rate(privguard_http_requests_total{status_class=~"5.."}[5m]))
+
+      - record: job:privguard_gateway_latency:p95
+        expr: histogram_quantile(0.95, sum(rate(privguard_gateway_request_duration_seconds_bucket[5m])) by (le, provider, model))
+
+      - record: job:privguard_gateway_latency:p99
+        expr: histogram_quantile(0.99, sum(rate(privguard_gateway_request_duration_seconds_bucket[5m])) by (le, provider, model))
+
+      - record: job:privguard_threat_detections:rate5m
+        expr: sum(rate(privguard_threat_detections_total[5m])) by (threat_category, severity)

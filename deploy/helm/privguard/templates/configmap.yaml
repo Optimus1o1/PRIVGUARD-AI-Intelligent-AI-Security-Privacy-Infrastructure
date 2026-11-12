@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "privguard.fullname" . }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "privguard.labels" . | nindent 4 }}
+data:
+  ENVIRONMENT: {{ .Values.global.environment | quote }}
+  DEBUG: {{ .Values.global.debug | default false | quote }}
+  FAIL_CLOSED_MODE: {{ .Values.global.failClosedMode | default true | quote }}
+  MAX_REQUEST_SIZE_BYTES: {{ .Values.global.maxRequestSizeBytes | default 10485760 | quote }}
+  CORS_ALLOWED_ORIGINS: {{ toJson .Values.global.corsAllowedOrigins | quote }}
+  UPSTREAM_LLM_BASE_URL: {{ .Values.externalLlm.baseUrl | quote }}
+  UPSTREAM_TIMEOUT_SECONDS: {{ .Values.externalLlm.timeoutSeconds | default 60.0 | quote }}
+  PRIVGUARD_BACKEND_URL: "http://{{ include "privguard.fullname" . }}-backend:{{ .Values.backend.service.port }}"
+  DATABASE_HOST: {{ .Values.database.host | quote }}
+  DATABASE_PORT: {{ .Values.database.port | default 5432 | quote }}
+  DATABASE_NAME: {{ .Values.database.database | quote }}
+  DATABASE_USER: {{ .Values.database.user | default "privguard_app" | quote }}
+  DATABASE_SSL_MODE: {{ .Values.database.sslMode | default "require" | quote }}
+  REDIS_HOST: {{ .Values.redis.host | quote }}
+  REDIS_PORT: {{ .Values.redis.port | default 6379 | quote }}
+  REDIS_DB: {{ .Values.redis.db | default 0 | quote }}
+  REDIS_SSL: {{ .Values.redis.ssl | default false | quote }}
+  KMS_PROVIDER: {{ .Values.kms.provider | default "local" | quote }}
+  KMS_KEY_ID: {{ .Values.kms.keyId | default "" | quote }}
+  KMS_REGION: {{ .Values.kms.region | default "us-east-1" | quote }}
+  KMS_ENDPOINT: {{ .Values.kms.endpoint | default "" | quote }}

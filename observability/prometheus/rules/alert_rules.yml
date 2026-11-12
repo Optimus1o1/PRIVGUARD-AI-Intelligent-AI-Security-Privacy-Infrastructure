@@ -1,0 +1,93 @@
+groups:
+  - name: privguard_security_and_operational_alerts
+    rules:
+      - alert: SyntheticSecurityCanaryFailed
+        expr: privguard_canary_status == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PRIVGUARD synthetic security canary failed: {{ $labels.canary_name }}"
+          description: "A security enforcement mechanism failed active canary verification. Immediate investigation required."
+
+      - alert: HighHttpErrorRate
+        expr: (sum(rate(privguard_http_requests_total{status_class=~"5.."}[5m])) / (sum(rate(privguard_http_requests_total[5m])) + 0.001)) > 0.05
+        for: 5m
+        labels:
+          severity: high
+        annotations:
+          summary: "High HTTP 5xx error rate (> 5%) on PRIVGUARD"
+          description: "More than 5% of API requests resulted in server errors over the last 5 minutes."
+
+      - alert: DatabasePoolSaturation
+        expr: privguard_database_pool_connections{state="overflow"} > 5
+        for: 2m
+        labels:
+          severity: high
+        annotations:
+          summary: "PostgreSQL async connection pool nearing exhaustion"
+          description: "Database connection pool overflow count has exceeded 5 connections for 2 minutes."
+
+      - alert: OutboxRelayLagSpike
+        expr: privguard_outbox_pending_events > 200
+        for: 5m
+        labels:
+          severity: medium
+        annotations:
+          summary: "Transactional outbox pending queue is backing up"
+          description: "Over 200 uncommitted or un-relayed events in outbox queue for over 5 minutes."
+
+      - alert: RepeatedPromptInjections
+        expr: sum(rate(privguard_prompt_injection_detections_total[5m])) > 10
+        for: 3m
+        labels:
+          severity: high
+        annotations:
+          summary: "High frequency of prompt injection attempts detected"
+          description: "Elevated rate of adversarial prompt injection attempts observed by threat detection engine."
+
+      - alert: RedisConnectionFailure
+        expr: sum(rate(privguard_redis_connection_errors_total[2m])) > 5
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis distributed state cluster connection errors"
+          description: "PRIVGUARD backend is failing to reach Redis distributed cache and rate limiter."
+
+      - alert: PrivguardWalArchiveLagHigh
+        expr: privguard_dr_wal_archive_lag_seconds > 300
+        for: 5m
+        labels:
+          severity: high
+        annotations:
+          summary: "WAL archive lag exceeds 5 minutes (RPO breach risk)"
+          description: "PostgreSQL WAL archiving lag to secondary durable storage is above 300 seconds, risking data loss outside recovery targets."
+
+      - alert: PrivguardBaseBackupStale
+        expr: privguard_dr_base_backup_age_seconds > 86400
+        for: 1h
+        labels:
+          severity: high
+        annotations:
+          summary: "PostgreSQL physical base backup is older than 24 hours"
+          description: "No verified physical base backup has been completed within the required 24-hour cycle."
+
+      - alert: PrivguardBackupVerificationFailed
+        expr: privguard_dr_backup_verification_status == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backup manifest cryptographic verification or checksum failed"
+          description: "A backup manifest failed Ed25519 signature verification or sha256 checksum validation, indicating corruption or tampering."
+
+      - alert: PrivguardRecoveryDrillFailed
+        expr: privguard_dr_drill_duration_seconds{status="failed"} > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Automated disaster recovery drill failed"
+          description: "An automated disaster recovery drill failed invariant validation (epoch invalidation, erasure ledger, or PITR continuity)."
+

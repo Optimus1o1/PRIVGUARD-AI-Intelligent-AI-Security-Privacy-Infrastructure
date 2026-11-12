@@ -1,0 +1,59 @@
+# ==============================================================================
+# PRIVGUARD AI - Development Environment Values
+# ==============================================================================
+
+global:
+  environment: "development"
+  debug: true
+  failClosedMode: false
+  corsAllowedOrigins:
+    - "http://localhost:3000"
+    - "http://127.0.0.1:3000"
+
+backend:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  podDisruptionBudget:
+    enabled: false
+
+frontend:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "250m"
+      memory: "256Mi"
+  podDisruptionBudget:
+    enabled: false
+
+worker:
+  enabled: true
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "250m"
+      memory: "256Mi"
+
+networkPolicy:
+  enabled: false
+
+database:
+  sslMode: "disable"
+
+
+kms:
+  provider: "local"
+  keyId: "dev-local-key"
+  region: "us-east-1"
+  endpoint: ""

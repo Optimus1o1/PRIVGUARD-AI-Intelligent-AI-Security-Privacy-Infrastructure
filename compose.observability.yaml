@@ -1,0 +1,132 @@
+# ==============================================================================
+# PRIVGUARD AI - Observability Stack Compose Extension
+# Moon Sanctum Labs - Decode. Build. Evolve.
+# Usage: docker compose -f compose.yaml -f compose.observability.yaml up -d
+# ==============================================================================
+
+services:
+  # ----------------------------------------------------------------------------
+  # 1. OpenTelemetry Collector (Telemetry Scrubbing & Fan-Out Pipeline)
+  # ----------------------------------------------------------------------------
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.96.0
+    container_name: privguard-otel-collector
+    restart: unless-stopped
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    volumes:
+      - ./observability/otel-collector/config.yaml:/etc/otelcol-contrib/config.yaml:ro
+    networks:
+      - application
+      - monitoring
+    ports:
+      - "127.0.0.1:4317:4317" # OTLP gRPC (loopback only)
+      - "127.0.0.1:4318:4318" # OTLP HTTP (loopback only)
+
+  # ----------------------------------------------------------------------------
+  # 2. Prometheus (Low-Cardinality Metrics & Alerting Engine)
+  # ----------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: privguard-prometheus
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+      - "--web.enable-lifecycle"
+    volumes:
+      - ./observability/prometheus:/etc/prometheus:ro
+      - prometheus_data:/prometheus
+    networks:
+      - application
+      - monitoring
+    ports:
+      - "127.0.0.1:9090:9090"
+
+  # ----------------------------------------------------------------------------
+  # 3. Grafana (Centralized Telemetry Dashboards)
+  # ----------------------------------------------------------------------------
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: privguard-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-privguard_admin_2026!}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_SERVE_FROM_SUB_PATH=false
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    networks:
+      - monitoring
+      - edge
+    ports:
+      - "${PORT_GRAFANA:-3001}:3000"
+    depends_on:
+      - prometheus
+
+  # ----------------------------------------------------------------------------
+  # 4. Grafana Loki (Log Aggregation & Redacted Audit Streams)
+  # ----------------------------------------------------------------------------
+  loki:
+    image: grafana/loki:2.9.4
+    container_name: privguard-loki
+    restart: unless-stopped
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    volumes:
+      - ./observability/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    networks:
+      - application
+      - monitoring
+    ports:
+      - "127.0.0.1:3100:3100"
+
+  # ----------------------------------------------------------------------------
+  # 5. Prometheus Alertmanager (Alert Deduplication & Routing)
+  # ----------------------------------------------------------------------------
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: privguard-alertmanager
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    volumes:
+      - ./observability/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    networks:
+      - monitoring
+    ports:
+      - "127.0.0.1:9093:9093"
+
+# ------------------------------------------------------------------------------
+# Observability Networks
+# ------------------------------------------------------------------------------
+networks:
+  monitoring:
+    name: privguard-monitoring
+    driver: bridge
+    internal: true
+  application:
+    external: true
+    name: privguard-application
+  edge:
+    external: true
+    name: privguard-edge
+
+# ------------------------------------------------------------------------------
+# Persistent Telemetry Storage
+# ------------------------------------------------------------------------------
+volumes:
+  prometheus_data:
+    name: privguard-prometheus-data
+  grafana_data:
+    name: privguard-grafana-data
+  loki_data:
+    name: privguard-loki-data
+  alertmanager_data:
+    name: privguard-alertmanager-data

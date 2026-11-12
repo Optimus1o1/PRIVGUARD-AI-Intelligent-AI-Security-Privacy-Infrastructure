@@ -1,0 +1,209 @@
+{{- if .Values.networkPolicy.enabled -}}
+# ------------------------------------------------------------------------------
+# 1. Default Deny All Traffic in Namespace
+# ------------------------------------------------------------------------------
+{{- if .Values.networkPolicy.defaultDeny }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "privguard.fullname" . }}-default-deny
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "privguard.labels" . | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+{{- end }}
+
+# ------------------------------------------------------------------------------
+# 2. Frontend Network Policy
+# ------------------------------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "privguard.fullname" . }}-frontend-netpol
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "privguard.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "privguard.selectorLabels" (dict "context" . "component" "frontend") | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Ingress from Ingress controller
+    - from:
+        {{- if .Values.networkPolicy.ingressController.namespaceSelector }}
+        - namespaceSelector:
+            {{- toYaml .Values.networkPolicy.ingressController.namespaceSelector | nindent 12 }}
+        {{- end }}
+        {{- if .Values.networkPolicy.ingressController.podSelector }}
+        - podSelector:
+            {{- toYaml .Values.networkPolicy.ingressController.podSelector | nindent 12 }}
+        {{- end }}
+        {{- if and (not .Values.networkPolicy.ingressController.namespaceSelector) (not .Values.networkPolicy.ingressController.podSelector) }}
+        - namespaceSelector: {}
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.frontend.service.port | default 3000 }}
+  egress:
+    # Egress to internal backend pods
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "privguard.selectorLabels" (dict "context" . "component" "backend") | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.backend.service.port | default 8000 }}
+    # Egress to CoreDNS
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+
+# ------------------------------------------------------------------------------
+# 3. Backend Network Policy
+# ------------------------------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "privguard.fullname" . }}-backend-netpol
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "privguard.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "privguard.selectorLabels" (dict "context" . "component" "backend") | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Ingress strictly from frontend pods
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "privguard.selectorLabels" (dict "context" . "component" "frontend") | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.backend.service.port | default 8000 }}
+    {{- if .Values.networkPolicy.monitoring.enabled }}
+    # Ingress from Prometheus / Monitoring
+    - from:
+        - namespaceSelector:
+            {{- toYaml .Values.networkPolicy.monitoring.namespaceSelector | nindent 12 }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.backend.service.port | default 8000 }}
+    {{- end }}
+  egress:
+    # Egress to CoreDNS
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Egress to external/managed PostgreSQL
+    - ports:
+        - protocol: TCP
+          port: {{ .Values.database.port | default 5432 }}
+      {{- with .Values.networkPolicy.egress.databaseCidrs }}
+      to:
+        {{- range . }}
+        - ipBlock:
+            cidr: {{ . | quote }}
+        {{- end }}
+      {{- end }}
+    # Egress to external/managed Redis
+    - ports:
+        - protocol: TCP
+          port: {{ .Values.redis.port | default 6379 }}
+      {{- with .Values.networkPolicy.egress.redisCidrs }}
+      to:
+        {{- range . }}
+        - ipBlock:
+            cidr: {{ . | quote }}
+        {{- end }}
+      {{- end }}
+    {{- with .Values.networkPolicy.egress.customEgressRules }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+---
+
+# ------------------------------------------------------------------------------
+# 4. Worker Network Policy
+# ------------------------------------------------------------------------------
+{{- if .Values.worker.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "privguard.fullname" . }}-worker-netpol
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "privguard.labels" . | nindent 4 }}
+    app.kubernetes.io/component: worker
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "privguard.selectorLabels" (dict "context" . "component" "worker") | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress: [] # Workers do not accept incoming application traffic
+  egress:
+    # Egress to CoreDNS
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Egress to PostgreSQL
+    - ports:
+        - protocol: TCP
+          port: {{ .Values.database.port | default 5432 }}
+      {{- with .Values.networkPolicy.egress.databaseCidrs }}
+      to:
+        {{- range . }}
+        - ipBlock:
+            cidr: {{ . | quote }}
+        {{- end }}
+      {{- end }}
+    # Egress to Redis
+    - ports:
+        - protocol: TCP
+          port: {{ .Values.redis.port | default 6379 }}
+      {{- with .Values.networkPolicy.egress.redisCidrs }}
+      to:
+        {{- range . }}
+        - ipBlock:
+            cidr: {{ . | quote }}
+        {{- end }}
+      {{- end }}
+{{- end }}
+{{- end }}
+

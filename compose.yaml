@@ -1,0 +1,241 @@
+# ==============================================================================
+# PRIVGUARD AI - Base Docker Compose Specification
+# Moon Sanctum Labs - Decode. Build. Evolve.
+# ==============================================================================
+
+name: privguard
+
+services:
+  # ----------------------------------------------------------------------------
+  # 1. Reverse Proxy (Edge TLS Termination & Security Headers)
+  # ----------------------------------------------------------------------------
+  reverse_proxy:
+    image: caddy:2-alpine
+    container_name: privguard-reverse-proxy
+    restart: unless-stopped
+    ports:
+      - "${PORT_HTTP:-80}:80"
+      - "${PORT_HTTPS:-443}:443"
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - edge
+    depends_on:
+      frontend:
+        condition: service_healthy
+    environment:
+      - PRIVGUARD_DOMAIN=${PRIVGUARD_DOMAIN:-localhost}
+
+  # ----------------------------------------------------------------------------
+  # 2. Frontend Control Center (Next.js 14 Standalone)
+  # ----------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: privguard/frontend:0.1.0
+    container_name: privguard-frontend
+    restart: unless-stopped
+    expose:
+      - "3000"
+    networks:
+      - edge
+      - application
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+      - PRIVGUARD_BACKEND_URL=http://backend:8000
+      - PRIVGUARD_API_KEY_FILE=/run/secrets/privguard_admin_api_key
+    secrets:
+      - privguard_admin_api_key
+
+  # ----------------------------------------------------------------------------
+  # 3. Backend Security Gateway (FastAPI ASGI)
+  # ----------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: privguard/backend:0.1.0
+    container_name: privguard-backend
+    restart: unless-stopped
+    expose:
+      - "8000"
+    networks:
+      - application
+      - data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    environment:
+      - ENVIRONMENT=production
+      - DEBUG=false
+      - DATABASE_URL=postgresql+asyncpg://privguard_app:${DATABASE_PASSWORD}@postgres:5432/privguard_db
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - PRIVGUARD_MASTER_KEY_FILE=/run/secrets/privguard_master_key
+      - DATABASE_PASSWORD_FILE=/run/secrets/postgres_password
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
+      - CORS_ALLOWED_ORIGINS=["http://localhost:3000","http://127.0.0.1:3000","https://${PRIVGUARD_DOMAIN:-localhost}"]
+    secrets:
+      - privguard_master_key
+      - postgres_password
+      - redis_password
+
+  # ----------------------------------------------------------------------------
+  # 4. Database Schema Migration Service (One-shot Alembic runner)
+  # ----------------------------------------------------------------------------
+  migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: privguard/backend:0.1.0
+    container_name: privguard-migration-runner
+    networks:
+      - data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql+asyncpg://privguard_migrator:${MIGRATION_PASSWORD}@postgres:5432/privguard_db
+      - DATABASE_PASSWORD_FILE=/run/secrets/migration_password
+    secrets:
+      - migration_password
+
+  # ----------------------------------------------------------------------------
+  # 4b. Background Event Worker (Distributed Outbox & Stream Processing)
+  # ----------------------------------------------------------------------------
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: privguard/backend:0.1.0
+    container_name: privguard-worker
+    restart: unless-stopped
+    command: ["python", "-m", "app.infrastructure.event_worker"]
+    networks:
+      - application
+      - data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    environment:
+      - ENVIRONMENT=production
+      - DEBUG=false
+      - DATABASE_URL=postgresql+asyncpg://privguard_app:${DATABASE_PASSWORD}@postgres:5432/privguard_db
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - PRIVGUARD_MASTER_KEY_FILE=/run/secrets/privguard_master_key
+      - DATABASE_PASSWORD_FILE=/run/secrets/postgres_password
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
+    secrets:
+      - privguard_master_key
+      - postgres_password
+      - redis_password
+
+  # ----------------------------------------------------------------------------
+  # 5. Database Tier: PostgreSQL 16 with Row-Level Security
+  # ----------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: privguard-postgres
+    restart: unless-stopped
+    expose:
+      - "5432"
+    networks:
+      - data
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init_roles.sql:/docker-entrypoint-initdb.d/01_init_roles.sql:ro
+    environment:
+      - POSTGRES_DB=privguard_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
+    secrets:
+      - postgres_password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d privguard_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ----------------------------------------------------------------------------
+  # 6. Cache Tier: Redis 7.x (Isolated Cache & Coordination)
+  # ----------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: privguard-redis
+    restart: unless-stopped
+    expose:
+      - "6379"
+    networks:
+      - data
+    volumes:
+      - redis_data:/data
+    command: >
+      sh -c 'redis-server --requirepass "$$(cat /run/secrets/redis_password)" --appendonly yes'
+    secrets:
+      - redis_password
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$(cat /run/secrets/redis_password)\" ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+# ------------------------------------------------------------------------------
+# Network Isolation Architecture
+# ------------------------------------------------------------------------------
+networks:
+  edge:
+    name: privguard-edge
+    driver: bridge
+  application:
+    name: privguard-application
+    driver: bridge
+    internal: true
+  data:
+    name: privguard-data
+    driver: bridge
+    internal: true
+
+# ------------------------------------------------------------------------------
+# Persistent Volume Declarations
+# ------------------------------------------------------------------------------
+volumes:
+  postgres_data:
+    name: privguard-postgres-data
+  redis_data:
+    name: privguard-redis-data
+  caddy_data:
+    name: privguard-caddy-data
+  caddy_config:
+    name: privguard-caddy-config
+
+# ------------------------------------------------------------------------------
+# Secrets Configuration
+# ------------------------------------------------------------------------------
+secrets:
+  privguard_master_key:
+    file: ./secrets/privguard_master_key.txt
+  postgres_password:
+    file: ./secrets/postgres_password.txt
+  migration_password:
+    file: ./secrets/migration_password.txt
+  redis_password:
+    file: ./secrets/redis_password.txt
+  privguard_admin_api_key:
+    file: ./secrets/privguard_admin_api_key.txt

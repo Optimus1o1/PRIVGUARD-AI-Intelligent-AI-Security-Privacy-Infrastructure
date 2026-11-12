@@ -1,0 +1,36 @@
+================================================================================
+PRIVGUARD AI — Enterprise Security & Privacy Enforcement Layer
+Moon Sanctum Labs — Decode. Build. Evolve.
+================================================================================
+
+Release '{{ .Release.Name }}' deployed successfully to namespace '{{ .Release.Namespace }}'.
+
+1. Check workload rollout status:
+   kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}
+
+2. Verify backend and frontend liveness/readiness:
+   kubectl get deployment -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}
+
+3. Database migration status:
+{{- if .Values.migration.enabled }}
+   kubectl get job -n {{ .Release.Namespace }} -l app.kubernetes.io/component=migration
+{{- else }}
+   (Automated migration Job is disabled; ensure Alembic migrations were applied externally.)
+{{- end }}
+
+4. Access the PRIVGUARD Control Center:
+{{- if .Values.ingress.enabled }}
+   {{- range .Values.ingress.hosts }}
+   https://{{ .host }}
+   {{- end }}
+{{- else }}
+   Run port-forward to access the frontend locally:
+   kubectl port-forward svc/{{ include "privguard.fullname" . }}-frontend -n {{ .Release.Namespace }} 3000:{{ .Values.frontend.service.port | default 3000 }}
+   Visit: http://localhost:3000
+{{- end }}
+
+================================================================================
+Security reminder: All database, Redis, and encryption keys are consumed via
+external Kubernetes Secrets. Plaintext credentials are never rendered in manifests.
+================================================================================
+

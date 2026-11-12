@@ -1,0 +1,58 @@
+# ==============================================================================
+# PRIVGUARD AI - Edge Reverse Proxy Configuration (Caddy)
+# Moon Sanctum Labs - Decode. Build. Evolve.
+# ==============================================================================
+
+{
+    # Global options
+    admin off
+    auto_https disable_redirects
+}
+
+# Production Domain Endpoint (Override via environment variable or volume mount)
+{$PRIVGUARD_DOMAIN:localhost} {
+    # Request body size limit (10MB matching gateway configuration)
+    request_body {
+        max_size 10MB
+    }
+
+    # Security Headers
+    header {
+        # Enforce HTTPS
+        Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+        # Prevent clickjacking
+        X-Frame-Options "DENY"
+        # Prevent MIME type sniffing
+        X-Content-Type-Options "nosniff"
+        # Referrer Policy
+        Referrer-Policy "strict-origin-when-cross-origin"
+        # Content Security Policy (strict script and frame controls)
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self';"
+        # Permissions Policy
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        # Remove server signature
+        -Server
+    }
+
+    # Strictly route all public traffic to the frontend container
+    # Direct access to the backend API or databases is strictly forbidden from edge
+    reverse_proxy frontend:3000 {
+        # Proxy timeouts
+        transport http {
+            response_header_timeout 60s
+            dial_timeout 5s
+        }
+
+        # Header hygiene
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Logging
+    log {
+        output stdout
+        format json
+    }
+}

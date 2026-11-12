@@ -1,0 +1,66 @@
+# ==============================================================================
+# PRIVGUARD AI - Staging Environment Values
+# ==============================================================================
+
+global:
+  environment: "staging"
+  debug: false
+  failClosedMode: true
+  corsAllowedOrigins:
+    - "https://staging.privguard.internal"
+
+backend:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1024Mi"
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+frontend:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+worker:
+  enabled: true
+  replicaCount: 1
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-staging"
+  hosts:
+    - host: "staging.privguard.internal"
+      paths:
+        - path: "/"
+          pathType: "Prefix"
+  tls:
+    - secretName: "staging-privguard-tls"
+      hosts:
+        - "staging.privguard.internal"
+
+networkPolicy:
+  enabled: true
+  defaultDeny: true
+
+
+kms:
+  provider: "aws_kms"
+  keyId: "arn:aws:kms:us-east-1:123456789012:key/privguard-staging-kek"
+  region: "us-east-1"
+  endpoint: ""

@@ -1,0 +1,21 @@
+apiVersion: v2
+name: privguard
+description: Enterprise Security & Privacy Enforcement Layer for Agentic AI
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - security
+  - privacy
+  - ai
+  - llm-gateway
+  - mcp
+  - agent-security
+  - zero-trust
+home: https://github.com/moonsanctumlabs/privguard
+sources:
+  - https://github.com/moonsanctumlabs/privguard
+maintainers:
+  - name: Moon Sanctum Labs
+    email: security@moonsanctumlabs.com
+
