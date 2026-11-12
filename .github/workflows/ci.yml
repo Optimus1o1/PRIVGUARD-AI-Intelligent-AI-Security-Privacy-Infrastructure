@@ -136,7 +136,7 @@ jobs:
           fetch-depth: 1
 
       - name: "Set up Helm"
-        uses: azure/setup-helm@b7246b12e77f7134765d507119f390886e0018b1 # v4.3.0
+        uses: azure/setup-helm@v4.3.0
         with:
           version: "v3.14.0"
 
