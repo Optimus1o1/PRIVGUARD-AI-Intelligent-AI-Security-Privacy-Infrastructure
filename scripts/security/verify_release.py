@@ -69,9 +69,9 @@ def verify_sbom(sbom_path: Path, label: str) -> dict:
         )
 
     spec_version = str(data.get("specVersion"))
-    if spec_version not in ["1.4", "1.5", "1.6"]:
+    if spec_version not in ["1.4", "1.5", "1.6", "1.7"]:
         raise ReleaseVerificationError(
-            f"UNSUPPORTED CYCLONEDX SPEC: Expected 1.4, 1.5, or 1.6, got '{spec_version}' in {sbom_path}"
+            f"UNSUPPORTED CYCLONEDX SPEC: Expected 1.4, 1.5, 1.6, or 1.7, got '{spec_version}' in {sbom_path}"
         )
 
     components = data.get("components", [])

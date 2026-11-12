@@ -136,14 +136,14 @@ def test_05_sbom_generation_cyclonedx_compliance():
         with open(backend_sbom, "r", encoding="utf-8") as f:
             b_data = json.load(f)
         assert b_data.get("bomFormat") == "CycloneDX"
-        assert b_data.get("specVersion") in ["1.4", "1.5", "1.6"]
+        assert b_data.get("specVersion") in ["1.4", "1.5", "1.6", "1.7"]
         assert len(b_data.get("components", [])) > 0
 
         # Check frontend SBOM
         with open(frontend_sbom, "r", encoding="utf-8") as f:
             f_data = json.load(f)
         assert f_data.get("bomFormat") == "CycloneDX"
-        assert f_data.get("specVersion") in ["1.4", "1.5", "1.6"]
+        assert f_data.get("specVersion") in ["1.4", "1.5", "1.6", "1.7"]
         assert len(f_data.get("components", [])) > 0
 
         # Check manifest

@@ -95,7 +95,7 @@ def generate_frontend_sbom(output_path: Path, repo_root: Path) -> dict:
 
     # Run cyclonedx-npm via npx in frontend directory
     # On Windows, npx must be run with shell=True
-    cmd = f'npx --yes @cyclonedx/cyclonedx-npm --package-lock-only -o "{output_path.resolve()}"'
+    cmd = f'npx --yes @cyclonedx/cyclonedx-npm --spec-version 1.6 --package-lock-only -o "{output_path.resolve()}"'
     res = subprocess.run(cmd, cwd=frontend_dir, shell=True, capture_output=True, text=True)
     
     if res.returncode != 0:
