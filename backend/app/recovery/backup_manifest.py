@@ -150,4 +150,3 @@ def verify_backup_manifest(
         return False, errors
 
     return True, []
-

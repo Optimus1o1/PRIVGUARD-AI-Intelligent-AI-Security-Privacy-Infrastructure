@@ -205,7 +205,9 @@ class ComplianceService:
             ev = res.scalar_one_or_none()
 
             if ev:
-                payload = json.loads(ev.artifact_payload) if isinstance(ev.artifact_payload, str) else ev.artifact_payload
+                payload = (
+                    json.loads(ev.artifact_payload) if isinstance(ev.artifact_payload, str) else ev.artifact_payload
+                )
                 freshness = freshness_evaluator.evaluate_freshness(ev.collected_at, ev.expires_at)
                 v_status = EvidenceVerificationStatus(ev.verification_status)
                 current_assurance = freshness_evaluator.evaluate_assurance_level(
@@ -270,6 +272,7 @@ class ComplianceService:
             # Sign artifact payload
             canonical_bytes = evidence_integrity_service.hash_structured_payload(art.payload).encode("utf-8")
             from app.key_management.signing import signing_key_manager
+
             sig_hex, kid_used = signing_key_manager.sign_evidence(canonical_bytes)
 
             freshness = freshness_evaluator.evaluate_freshness(art.collected_at, art.expires_at)
@@ -333,9 +336,11 @@ class ComplianceService:
         collector_name: Optional[str] = None,
     ) -> List[ComplianceEvidenceResponse]:
         """Lists evidence records with verified freshness."""
-        stmt = select(ComplianceEvidenceRecord).where(
-            ComplianceEvidenceRecord.tenant_id == tenant_id
-        ).order_by(ComplianceEvidenceRecord.collected_at.desc())
+        stmt = (
+            select(ComplianceEvidenceRecord)
+            .where(ComplianceEvidenceRecord.tenant_id == tenant_id)
+            .order_by(ComplianceEvidenceRecord.collected_at.desc())
+        )
 
         if control_id:
             stmt = stmt.where(ComplianceEvidenceRecord.control_id == control_id.strip().upper())
@@ -502,4 +507,3 @@ class ComplianceService:
 
 # Global singleton compliance service
 compliance_service = ComplianceService()
-

@@ -96,7 +96,6 @@ STANDARD_MAPPINGS: List[MappingDefinition] = [
         rationale="Tamper-evident hash-chained audit log provides verifiable forensics for breach investigation and board reporting.",
         coverage_score=0.3,
     ),
-
     # --------------------------------------------------------------------------
     # DPDP Rules, 2025 Mappings
     # --------------------------------------------------------------------------
@@ -128,7 +127,6 @@ STANDARD_MAPPINGS: List[MappingDefinition] = [
         rationale="Outbound network sink filtering restricts network egress to allowlisted regional endpoints.",
         coverage_score=0.6,
     ),
-
     # --------------------------------------------------------------------------
     # EU AI Act Mappings
     # --------------------------------------------------------------------------
@@ -181,7 +179,6 @@ STANDARD_MAPPINGS: List[MappingDefinition] = [
         rationale="Execution step quotas and runaway task revocation mitigate high-risk AI loop exhaustion in Annex III critical workflows.",
         coverage_score=0.6,
     ),
-
     # --------------------------------------------------------------------------
     # NIST AI RMF 1.0 (NIST AI 100-1) Mappings
     # --------------------------------------------------------------------------
@@ -213,7 +210,6 @@ STANDARD_MAPPINGS: List[MappingDefinition] = [
         rationale="Revocable scoped capability tokens prioritize risk mitigation by enforcing fine-grained least-privilege tool execution.",
         coverage_score=1.0,
     ),
-
     # --------------------------------------------------------------------------
     # NIST Privacy Framework 1.0 Mappings
     # --------------------------------------------------------------------------
@@ -231,7 +227,6 @@ STANDARD_MAPPINGS: List[MappingDefinition] = [
         rationale="AES-256-GCM envelope encryption and KMS key lifecycle manage data-at-rest cryptographic protections.",
         coverage_score=1.0,
     ),
-
     # --------------------------------------------------------------------------
     # ISO/IEC 27001:2022 Mappings
     # --------------------------------------------------------------------------
@@ -270,7 +265,6 @@ STANDARD_MAPPINGS: List[MappingDefinition] = [
         rationale="SLSA Level 3 provenance and Cosign signature verification enforce secure coding and build supply chain integrity.",
         coverage_score=1.0,
     ),
-
     # --------------------------------------------------------------------------
     # SOC 2 Trust Services Criteria Mappings (5 Categories)
     # --------------------------------------------------------------------------
@@ -383,4 +377,3 @@ class ControlMappingEngine:
 
 # Global singleton mapping engine
 control_mapping_engine = ControlMappingEngine()
-

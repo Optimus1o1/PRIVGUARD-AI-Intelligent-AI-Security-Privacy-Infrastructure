@@ -81,12 +81,14 @@ async def reconcile_redis_on_recovery(
         taints = res_taint.scalars().all()
         for t in taints:
             key = f"taint:{t.tenant_id}:{t.task_id}"
-            val = json.dumps({
-                "task_id": t.task_id,
-                "resource": t.resource,
-                "taint_level": t.taint_level,
-                "created_at": t.created_at.isoformat() if t.created_at else None,
-            })
+            val = json.dumps(
+                {
+                    "task_id": t.task_id,
+                    "resource": t.resource,
+                    "taint_level": t.taint_level,
+                    "created_at": t.created_at.isoformat() if t.created_at else None,
+                }
+            )
             await redis_client.set(key, val, ex=86400 * 7)
             summary["taint_records_reconstructed"] += 1
 
@@ -96,12 +98,14 @@ async def reconcile_redis_on_recovery(
         bundles = res_policy.scalars().all()
         for b in bundles:
             key = f"policy:{b.tenant_id}:bundle"
-            val = json.dumps({
-                "bundle_id": b.id,
-                "version": b.version,
-                "bundle_json": b.bundle_json,
-                "signature": b.signature_ed25519,
-            })
+            val = json.dumps(
+                {
+                    "bundle_id": b.id,
+                    "version": b.version,
+                    "bundle_json": b.bundle_json,
+                    "signature": b.signature_ed25519,
+                }
+            )
             await redis_client.set(key, val, ex=86400 * 30)
             summary["policy_bundles_reloaded"] += 1
 

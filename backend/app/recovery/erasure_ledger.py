@@ -179,7 +179,10 @@ def verify_ledger_integrity() -> tuple[bool, str]:
     for i, entry in enumerate(entries):
         expected_seq = i + 1
         if entry.get("sequence_number") != expected_seq:
-            return False, f"Sequence number mismatch at index {i}: expected {expected_seq}, got {entry.get('sequence_number')}"
+            return (
+                False,
+                f"Sequence number mismatch at index {i}: expected {expected_seq}, got {entry.get('sequence_number')}",
+            )
 
         if entry.get("prev_hash") != expected_prev:
             return False, f"Hash chain broken at seq {entry.get('sequence_number')}: prev_hash mismatch"
@@ -189,7 +192,10 @@ def verify_ledger_integrity() -> tuple[bool, str]:
         calc_payload = json.dumps(raw_entry, sort_keys=True, separators=(",", ":"))
         actual_hash = hashlib.sha256(calc_payload.encode("utf-8")).hexdigest()
         if actual_hash != recorded_hash:
-            return False, f"Tombstone hash tampered at seq {entry.get('sequence_number')}: {actual_hash} != {recorded_hash}"
+            return (
+                False,
+                f"Tombstone hash tampered at seq {entry.get('sequence_number')}: {actual_hash} != {recorded_hash}",
+            )
 
         expected_prev = recorded_hash
 
@@ -253,4 +259,3 @@ async def reconcile_database_erasures(db: AsyncSession) -> int:
     await db.commit()
     logger.info("ERASURE RECONCILIATION COMPLETE: Scrubbed %d resurrected memories.", scrubbed_count)
     return scrubbed_count
-

@@ -657,5 +657,3 @@ def record_dr_drill_result(duration_seconds: float, status: str = "passed") -> N
 
 def set_dr_safe_restriction_mode(active: bool) -> None:
     DR_SAFE_RESTRICTION_MODE_ACTIVE.set(1.0 if active else 0.0)
-
-

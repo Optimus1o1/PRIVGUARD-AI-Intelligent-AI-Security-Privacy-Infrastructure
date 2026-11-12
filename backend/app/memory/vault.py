@@ -571,6 +571,7 @@ class MemoryVault:
             )
         except Exception as exc:
             import logging
+
             logging.getLogger("privguard.memory").error(
                 "CRITICAL: Failed to write to independent erasure ledger: %s. Aborting deletion.",
                 exc,

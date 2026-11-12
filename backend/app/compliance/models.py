@@ -13,7 +13,9 @@ class ComplianceFramework(Base):
 
     __tablename__ = "compliance_frameworks"
 
-    id = Column(String(64), primary_key=True)  # e.g., "dpdp-2023", "dpdp-rules-2025", "eu-ai-act", "nist-ai-100-1", "nist-privacy-1-0", "iso-27001-2022", "soc2-tsc"
+    id = Column(
+        String(64), primary_key=True
+    )  # e.g., "dpdp-2023", "dpdp-rules-2025", "eu-ai-act", "nist-ai-100-1", "nist-privacy-1-0", "iso-27001-2022", "soc2-tsc"
     name = Column(String(128), nullable=False)
     version = Column(String(32), nullable=False)
     jurisdiction = Column(String(64), nullable=False)  # India, EU, US, Global
@@ -31,15 +33,23 @@ class ComplianceRequirement(Base):
 
     __tablename__ = "compliance_requirements"
 
-    id = Column(String(96), primary_key=True)  # e.g., "DPDP-SEC-4", "DPDP-R4-SAFEGUARDS", "EU-AI-ART-50", "NIST-AI-GV-1", "SOC2-CC6.1"
+    id = Column(
+        String(96), primary_key=True
+    )  # e.g., "DPDP-SEC-4", "DPDP-R4-SAFEGUARDS", "EU-AI-ART-50", "NIST-AI-GV-1", "SOC2-CC6.1"
     framework_id = Column(String(64), ForeignKey("compliance_frameworks.id"), nullable=False, index=True)
-    identifier = Column(String(64), nullable=False, index=True)  # e.g., "Section 4", "Rule 4", "Art. 50(2)", "A.8.24", "CC6.1"
+    identifier = Column(
+        String(64), nullable=False, index=True
+    )  # e.g., "Section 4", "Rule 4", "Art. 50(2)", "A.8.24", "CC6.1"
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=False)
     domain = Column(String(64), nullable=False, index=True)  # Security, Privacy, Governance, Transparency, etc.
-    commencement_status = Column(String(32), default="COMMENCED", nullable=False)  # COMMENCED, PENDING_COMMENCEMENT, EXEMPTED
+    commencement_status = Column(
+        String(32), default="COMMENCED", nullable=False
+    )  # COMMENCED, PENDING_COMMENCEMENT, EXEMPTED
     commencement_date = Column(DateTime(timezone=True), nullable=True)
-    phase_category = Column(String(64), nullable=True)  # e.g. "immediate_1_year", "one_year_rule4", "eighteen_months_rule3_etc", "feb_2025_prohibited", "aug_2025_gpai", "aug_2026_general", "dec_2026_standards", "dec_2027_annex3", "aug_2028_annex1"
+    phase_category = Column(
+        String(64), nullable=True
+    )  # e.g. "immediate_1_year", "one_year_rule4", "eighteen_months_rule3_etc", "feb_2025_prohibited", "aug_2025_gpai", "aug_2026_general", "dec_2026_standards", "dec_2027_annex3", "aug_2028_annex1"
     mandatory = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
 
@@ -58,7 +68,9 @@ class ComplianceControl(Base):
     review_frequency_days = Column(Integer, default=30, nullable=False)
     criticality = Column(String(16), default="HIGH", nullable=False)  # CRITICAL, HIGH, MEDIUM, LOW
     version = Column(String(16), default="1.0", nullable=False)
-    implementation_status = Column(String(32), default="IMPLEMENTED", nullable=False)  # IMPLEMENTED, PARTIALLY_IMPLEMENTED, NOT_IMPLEMENTED, NOT_ASSESSED, NOT_APPLICABLE
+    implementation_status = Column(
+        String(32), default="IMPLEMENTED", nullable=False
+    )  # IMPLEMENTED, PARTIALLY_IMPLEMENTED, NOT_IMPLEMENTED, NOT_ASSESSED, NOT_APPLICABLE
     active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
     updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
@@ -95,7 +107,9 @@ class ComplianceEvidenceRecord(Base):
     artifact_payload = Column(Text, nullable=False)  # Allowlisted JSON metadata (zero secrets/PII)
 
     # 5-State Assurance Model
-    verification_status = Column(String(32), default="VERIFIED", nullable=False)  # VERIFIED, FAILED, UNKNOWN, REQUIRES_REVIEW
+    verification_status = Column(
+        String(32), default="VERIFIED", nullable=False
+    )  # VERIFIED, FAILED, UNKNOWN, REQUIRES_REVIEW
     freshness_status = Column(String(32), default="CURRENT", nullable=False)  # CURRENT, STALE, EXPIRED
     assurance_status = Column(String(32), default="HIGH", nullable=False)  # HIGH, MEDIUM, LOW, INSUFFICIENT
 
@@ -118,11 +132,17 @@ class ComplianceAssessment(Base):
     control_id = Column(String(32), ForeignKey("compliance_controls.id"), nullable=False, index=True)
 
     # Five-State Assurance Separation
-    control_implementation_status = Column(String(32), default="IMPLEMENTED", nullable=False)  # IMPLEMENTED, PARTIALLY_IMPLEMENTED, etc.
-    evidence_verification_status = Column(String(32), default="VERIFIED", nullable=False)  # VERIFIED, FAILED, UNKNOWN, REQUIRES_REVIEW
+    control_implementation_status = Column(
+        String(32), default="IMPLEMENTED", nullable=False
+    )  # IMPLEMENTED, PARTIALLY_IMPLEMENTED, etc.
+    evidence_verification_status = Column(
+        String(32), default="VERIFIED", nullable=False
+    )  # VERIFIED, FAILED, UNKNOWN, REQUIRES_REVIEW
     evidence_freshness = Column(String(32), default="CURRENT", nullable=False)  # CURRENT, STALE, EXPIRED
     assurance_status = Column(String(32), default="HIGH", nullable=False)  # HIGH, MEDIUM, LOW, INSUFFICIENT
-    applicability_decision = Column(String(32), default="APPLICABLE", nullable=False)  # APPLICABLE, NOT_APPLICABLE, REQUIRES_REVIEW
+    applicability_decision = Column(
+        String(32), default="APPLICABLE", nullable=False
+    )  # APPLICABLE, NOT_APPLICABLE, REQUIRES_REVIEW
 
     assessed_by = Column(String(64), default="system", nullable=False)
     assessed_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
@@ -141,7 +161,9 @@ class ComplianceApplicabilityRecord(Base):
     framework_id = Column(String(64), ForeignKey("compliance_frameworks.id"), nullable=False, index=True)
     requirement_id = Column(String(96), nullable=True, index=True)  # None = entire framework level
     decision = Column(String(32), default="APPLICABLE", nullable=False)  # APPLICABLE, NOT_APPLICABLE, REQUIRES_REVIEW
-    role = Column(String(64), default="DATA_FIDUCIARY", nullable=False)  # DATA_FIDUCIARY, DATA_PROCESSOR, AI_DEPLOYER, AI_PROVIDER, CONTROLLER
+    role = Column(
+        String(64), default="DATA_FIDUCIARY", nullable=False
+    )  # DATA_FIDUCIARY, DATA_PROCESSOR, AI_DEPLOYER, AI_PROVIDER, CONTROLLER
     justification = Column(Text, nullable=False)
     reviewed_by = Column(String(64), default="compliance_officer", nullable=False)
     reviewed_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
@@ -166,4 +188,3 @@ class ComplianceExportSnapshot(Base):
     storage_path = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
     created_by = Column(String(64), default="system", nullable=False)
-

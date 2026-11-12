@@ -89,4 +89,3 @@ class EvidenceFreshnessEvaluator:
 
 # Global singleton evaluator
 freshness_evaluator = EvidenceFreshnessEvaluator()
-

@@ -52,6 +52,7 @@ class CollectedArtifact:
 
         # RFC 8785 Canonical JSON Hashing
         from app.compliance.evidence_integrity import evidence_integrity_service
+
         self.artifact_hash_sha256 = evidence_integrity_service.hash_structured_payload(payload)
 
 
@@ -87,6 +88,7 @@ class CanaryEvidenceCollector(BaseEvidenceCollector):
 
         try:
             from app.observability.canary.runner import get_canary_runner
+
             runner = get_canary_runner()
             batch = await runner.run_all_canaries()
             overall_passed = batch.all_passed
@@ -178,6 +180,7 @@ class PolicyGovernanceCollector(BaseEvidenceCollector):
                 try:
                     from app.database.models import PolicyBundle
                     from sqlalchemy import select, desc
+
                     stmt = select(PolicyBundle).order_by(desc(PolicyBundle.version))
                     res = await db.execute(stmt)
                     bundle = res.scalar_one_or_none()
@@ -198,7 +201,11 @@ class PolicyGovernanceCollector(BaseEvidenceCollector):
                 "details": bundle_info,
             }
 
-            v_status = EvidenceVerificationStatus.VERIFIED if bundle_info["has_signature"] else EvidenceVerificationStatus.REQUIRES_REVIEW
+            v_status = (
+                EvidenceVerificationStatus.VERIFIED
+                if bundle_info["has_signature"]
+                else EvidenceVerificationStatus.REQUIRES_REVIEW
+            )
             a_status = AssuranceLevel.HIGH if bundle_info["has_signature"] else AssuranceLevel.MEDIUM
 
             artifacts.append(
@@ -279,9 +286,7 @@ class PostgreSQLRLSCollector(BaseEvidenceCollector):
         if db and is_postgres:
             try:
                 # 1. Check table rowsecurity
-                res = await db.execute(
-                    text("SELECT tablename, rowsecurity FROM pg_tables WHERE schemaname = 'public'")
-                )
+                res = await db.execute(text("SELECT tablename, rowsecurity FROM pg_tables WHERE schemaname = 'public'"))
                 rows = res.fetchall()
                 rls_tables = {r[0]: r[1] for r in rows}
                 checks["row_security_enabled"] = any(rls_tables.values())
@@ -289,9 +294,7 @@ class PostgreSQLRLSCollector(BaseEvidenceCollector):
 
                 # 2. Check connection role settings
                 role_res = await db.execute(
-                    text(
-                        "SELECT current_user, rolsuper, rolbypassrls FROM pg_roles WHERE rolname = current_user"
-                    )
+                    text("SELECT current_user, rolsuper, rolbypassrls FROM pg_roles WHERE rolname = current_user")
                 )
                 role_info = role_res.fetchone()
                 if role_info:
@@ -311,6 +314,7 @@ class PostgreSQLRLSCollector(BaseEvidenceCollector):
         else:
             # SQLite / Development environment verification
             from app.core.tenant import TenantContext
+
             ctx = TenantContext(tenant_id=tenant_id, organization_id=f"org_{tenant_id}")
             checks["row_security_enabled"] = True  # Logical context scoping verified
             checks["role_is_superuser"] = False
@@ -394,6 +398,7 @@ class KMSCollector(BaseEvidenceCollector):
                 try:
                     from app.database.models import KeyRotationJob
                     from sqlalchemy import select, func
+
                     res = await db.execute(select(func.count(KeyRotationJob.id)))
                     rotation_jobs_count = res.scalar() or 0
                 except Exception:
@@ -631,9 +636,7 @@ class EvidenceCollectorEngine:
     """Coordinator for invoking registered evidence collectors."""
 
     def __init__(self) -> None:
-        self._collectors: Dict[str, BaseEvidenceCollector] = {
-            c.name: c for c in ALL_COLLECTORS
-        }
+        self._collectors: Dict[str, BaseEvidenceCollector] = {c.name: c for c in ALL_COLLECTORS}
 
     def list_collectors(self) -> List[str]:
         """Returns names of all registered collectors."""

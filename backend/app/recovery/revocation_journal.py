@@ -150,11 +150,17 @@ def verify_journal_integrity() -> tuple[bool, str]:
         # 1. Check sequence number
         expected_seq = i + 1
         if entry.get("sequence_number") != expected_seq:
-            return False, f"Sequence number mismatch at index {i}: expected {expected_seq}, got {entry.get('sequence_number')}"
+            return (
+                False,
+                f"Sequence number mismatch at index {i}: expected {expected_seq}, got {entry.get('sequence_number')}",
+            )
 
         # 2. Check previous hash continuity
         if entry.get("prev_hash") != expected_prev:
-            return False, f"Hash chain broken at seq {entry.get('sequence_number')}: prev_hash does not match previous entry"
+            return (
+                False,
+                f"Hash chain broken at seq {entry.get('sequence_number')}: prev_hash does not match previous entry",
+            )
 
         # 3. Check entry hash computation
         recorded_hash = entry.get("entry_hash")
@@ -162,7 +168,10 @@ def verify_journal_integrity() -> tuple[bool, str]:
         calc_payload = json.dumps(raw_entry, sort_keys=True, separators=(",", ":"))
         actual_hash = hashlib.sha256(calc_payload.encode("utf-8")).hexdigest()
         if actual_hash != recorded_hash:
-            return False, f"Entry hash tampered at seq {entry.get('sequence_number')}: computed {actual_hash} != {recorded_hash}"
+            return (
+                False,
+                f"Entry hash tampered at seq {entry.get('sequence_number')}: computed {actual_hash} != {recorded_hash}",
+            )
 
         expected_prev = recorded_hash
 
@@ -235,4 +244,3 @@ async def replay_revocations_into_db(db: AsyncSession, redis_client: Any = None)
     await db.commit()
     logger.info("REVOCATION REPLAY COMPLETED: Replayed %d records into database.", replayed_count)
     return replayed_count
-

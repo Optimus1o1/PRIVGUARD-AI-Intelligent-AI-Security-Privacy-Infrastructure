@@ -248,37 +248,41 @@ class EvidenceExportPackager:
         """Generates tabular CSV export for external spreadsheet review."""
         output = io.StringIO()
         writer = csv.writer(output)
-        writer.writerow([
-            "Evidence ID",
-            "Tenant ID",
-            "Control ID",
-            "Control Title",
-            "Collector",
-            "Artifact Type",
-            "SHA-256 Digest",
-            "Verification Status",
-            "Freshness Status",
-            "Assurance Status",
-            "Collected At",
-            "Expires At",
-        ])
+        writer.writerow(
+            [
+                "Evidence ID",
+                "Tenant ID",
+                "Control ID",
+                "Control Title",
+                "Collector",
+                "Artifact Type",
+                "SHA-256 Digest",
+                "Verification Status",
+                "Freshness Status",
+                "Assurance Status",
+                "Collected At",
+                "Expires At",
+            ]
+        )
 
         for e in evidence_records:
             ctrl = control_catalog.get_control(e.control_id)
-            writer.writerow([
-                e.id,
-                e.tenant_id,
-                e.control_id,
-                ctrl.title if ctrl else "",
-                e.collector_name,
-                e.artifact_type,
-                e.artifact_hash_sha256,
-                e.verification_status,
-                e.freshness_status,
-                e.assurance_status,
-                e.collected_at.isoformat() if e.collected_at else "",
-                e.expires_at.isoformat() if e.expires_at else "",
-            ])
+            writer.writerow(
+                [
+                    e.id,
+                    e.tenant_id,
+                    e.control_id,
+                    ctrl.title if ctrl else "",
+                    e.collector_name,
+                    e.artifact_type,
+                    e.artifact_hash_sha256,
+                    e.verification_status,
+                    e.freshness_status,
+                    e.assurance_status,
+                    e.collected_at.isoformat() if e.collected_at else "",
+                    e.expires_at.isoformat() if e.expires_at else "",
+                ]
+            )
 
         return output.getvalue()
 
@@ -309,9 +313,7 @@ class EvidenceExportPackager:
             # 2. Public Key PEM
             pem_str = public_key_meta["public_key_pem"]
             zf.writestr("public_key.pem", pem_str)
-            artifact_hashes["public_key.pem"] = evidence_integrity_service.hash_binary_data(
-                pem_str.encode("utf-8")
-            )
+            artifact_hashes["public_key.pem"] = evidence_integrity_service.hash_binary_data(pem_str.encode("utf-8"))
 
             # 3. Summary JSON
             summary_bytes = json.dumps(summary, indent=2).encode("utf-8")
@@ -349,7 +351,9 @@ class EvidenceExportPackager:
 
             # 7. Evidence Artifacts
             for ev in evidence_records:
-                payload = json.loads(ev.artifact_payload) if isinstance(ev.artifact_payload, str) else ev.artifact_payload
+                payload = (
+                    json.loads(ev.artifact_payload) if isinstance(ev.artifact_payload, str) else ev.artifact_payload
+                )
                 sanitized = sanitize_payload(payload)
                 ev_record_dict = {
                     "id": ev.id,

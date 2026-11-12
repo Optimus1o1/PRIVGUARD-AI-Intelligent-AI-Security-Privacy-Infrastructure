@@ -30,4 +30,3 @@ __all__ = [
     "sign_backup_manifest",
     "verify_backup_manifest",
 ]
-

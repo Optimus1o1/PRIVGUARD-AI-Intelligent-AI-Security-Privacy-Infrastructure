@@ -108,4 +108,3 @@ def validate_capability_epoch(token_epoch: int | None) -> bool:
         return False
     current_epoch = get_current_security_epoch()
     return token_epoch == current_epoch
-

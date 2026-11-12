@@ -263,9 +263,7 @@ class CapabilityManager:
         except Exception as exc:
             import logging
 
-            logging.getLogger("privguard.capabilities").warning(
-                "Failed to record revocation entry in journal: %s", exc
-            )
+            logging.getLogger("privguard.capabilities").warning("Failed to record revocation entry in journal: %s", exc)
 
         # Emit transactional outbox event for distributed revocation
         from app.infrastructure.outbox import emit_outbox_event

@@ -10,8 +10,10 @@ from pydantic import BaseModel, ConfigDict, Field
 # 5-State Assurance Separation Enums
 # ------------------------------------------------------------------------------
 
+
 class ControlImplementationStatus(str, Enum):
     """Whether the underlying technical mechanism is built and enabled in code."""
+
     IMPLEMENTED = "IMPLEMENTED"
     PARTIALLY_IMPLEMENTED = "PARTIALLY_IMPLEMENTED"
     NOT_IMPLEMENTED = "NOT_IMPLEMENTED"
@@ -21,6 +23,7 @@ class ControlImplementationStatus(str, Enum):
 
 class EvidenceVerificationStatus(str, Enum):
     """Whether recent cryptographic and operational validation tests passed."""
+
     VERIFIED = "VERIFIED"
     FAILED = "FAILED"
     UNKNOWN = "UNKNOWN"
@@ -29,6 +32,7 @@ class EvidenceVerificationStatus(str, Enum):
 
 class EvidenceFreshness(str, Enum):
     """Whether evidence is within its operational Time-To-Live (TTL)."""
+
     CURRENT = "CURRENT"
     STALE = "STALE"
     EXPIRED = "EXPIRED"
@@ -36,6 +40,7 @@ class EvidenceFreshness(str, Enum):
 
 class AssuranceLevel(str, Enum):
     """Overall operational audit assurance derived from implementation + verified freshness."""
+
     HIGH = "HIGH"
     MEDIUM = "MEDIUM"
     LOW = "LOW"
@@ -44,6 +49,7 @@ class AssuranceLevel(str, Enum):
 
 class ApplicabilityDecision(str, Enum):
     """Scoped organizational applicability determination."""
+
     APPLICABLE = "APPLICABLE"
     NOT_APPLICABLE = "NOT_APPLICABLE"
     REQUIRES_REVIEW = "REQUIRES_REVIEW"
@@ -51,6 +57,7 @@ class ApplicabilityDecision(str, Enum):
 
 class MappingType(str, Enum):
     """Degree of satisfaction between internal control and regulatory requirement."""
+
     DIRECT = "DIRECT"
     PARTIAL = "PARTIAL"
     SUPPORTING = "SUPPORTING"
@@ -59,6 +66,7 @@ class MappingType(str, Enum):
 
 class CommencementStatus(str, Enum):
     """Statutory enforceability status for a requirement or rule provision."""
+
     COMMENCED = "COMMENCED"
     PENDING_COMMENCEMENT = "PENDING_COMMENCEMENT"
     EXEMPTED = "EXEMPTED"
@@ -66,6 +74,7 @@ class CommencementStatus(str, Enum):
 
 class ExportFormat(str, Enum):
     """Export package format."""
+
     ZIP = "ZIP"
     JSON = "JSON"
     CSV = "CSV"
@@ -73,6 +82,7 @@ class ExportFormat(str, Enum):
 
 class OrganizationRole(str, Enum):
     """Regulated role played by the deploying entity."""
+
     DATA_FIDUCIARY = "DATA_FIDUCIARY"
     DATA_PROCESSOR = "DATA_PROCESSOR"
     AI_DEPLOYER = "AI_DEPLOYER"
@@ -83,6 +93,7 @@ class OrganizationRole(str, Enum):
 # ------------------------------------------------------------------------------
 # Framework & Requirement Schemas
 # ------------------------------------------------------------------------------
+
 
 class ComplianceRequirementResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -124,6 +135,7 @@ class ComplianceFrameworkDetailResponse(ComplianceFrameworkResponse):
 # Control & Mapping Schemas
 # ------------------------------------------------------------------------------
 
+
 class ComplianceControlMappingResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -162,6 +174,7 @@ class ComplianceControlDetailResponse(ComplianceControlResponse):
 # Evidence & Verification Schemas
 # ------------------------------------------------------------------------------
 
+
 class ComplianceEvidenceResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -197,6 +210,7 @@ class EvidenceCollectionResult(BaseModel):
 # 5-State Assessment Schemas
 # ------------------------------------------------------------------------------
 
+
 class ComplianceAssessmentResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -216,6 +230,7 @@ class ComplianceAssessmentResponse(BaseModel):
 # ------------------------------------------------------------------------------
 # Applicability Schemas
 # ------------------------------------------------------------------------------
+
 
 class ApplicabilityRecordResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -243,6 +258,7 @@ class ApplicabilityUpdateRequest(BaseModel):
 # Gap Analysis Schemas
 # ------------------------------------------------------------------------------
 
+
 class ComplianceGapItem(BaseModel):
     gap_type: str  # UNMAPPED_REQUIREMENT, MISSING_EVIDENCE, FAILED_EVIDENCE, STALE_EVIDENCE, PARTIAL_MAPPING
     severity: str  # CRITICAL, HIGH, MEDIUM, LOW
@@ -268,6 +284,7 @@ class ComplianceGapAnalysisResponse(BaseModel):
 # Public Key & Signing Schemas
 # ------------------------------------------------------------------------------
 
+
 class EvidencePublicKeyResponse(BaseModel):
     kid: str
     algorithm: str
@@ -281,6 +298,7 @@ class EvidencePublicKeyResponse(BaseModel):
 # ------------------------------------------------------------------------------
 # Export Schemas & Signed Manifest
 # ------------------------------------------------------------------------------
+
 
 class EvidenceExportRequest(BaseModel):
     framework_id: Optional[str] = None
@@ -325,8 +343,10 @@ class EvidenceExportResponse(BaseModel):
 # Strict Allowlisted Evidence Metadata Schemas (Defense-in-Depth)
 # ------------------------------------------------------------------------------
 
+
 class AllowlistedEvidencePayload(BaseModel):
     """Base schema enforcing zero secret / PII leakage."""
+
     model_config = ConfigDict(extra="forbid")
 
     collector: str
@@ -335,4 +355,3 @@ class AllowlistedEvidencePayload(BaseModel):
     verification_passed: bool
     details: Dict[str, Any]
     evaluated_at: str
-

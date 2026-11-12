@@ -632,9 +632,7 @@ class FrameworkRegistry:
     """Registry facade for discovering and querying compliance frameworks."""
 
     def __init__(self) -> None:
-        self._frameworks_by_id: Dict[str, FrameworkDefinition] = {
-            f.id: f for f in ALL_FRAMEWORKS
-        }
+        self._frameworks_by_id: Dict[str, FrameworkDefinition] = {f.id: f for f in ALL_FRAMEWORKS}
         self._requirements_by_id: Dict[str, RequirementDefinition] = {}
         for f in ALL_FRAMEWORKS:
             for req in f.requirements:
@@ -660,4 +658,3 @@ class FrameworkRegistry:
 
 # Global singleton registry
 framework_registry = FrameworkRegistry()
-

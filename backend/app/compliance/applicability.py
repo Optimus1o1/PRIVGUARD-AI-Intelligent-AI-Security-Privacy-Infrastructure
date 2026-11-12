@@ -28,9 +28,7 @@ class ApplicabilityManager:
         framework_id: Optional[str] = None,
     ) -> List[ComplianceApplicabilityRecord]:
         """Queries applicability records for a tenant with optional framework filter."""
-        stmt = select(ComplianceApplicabilityRecord).where(
-            ComplianceApplicabilityRecord.tenant_id == tenant_id
-        )
+        stmt = select(ComplianceApplicabilityRecord).where(ComplianceApplicabilityRecord.tenant_id == tenant_id)
         if framework_id:
             stmt = stmt.where(ComplianceApplicabilityRecord.framework_id == framework_id.strip().lower())
 
@@ -80,4 +78,3 @@ class ApplicabilityManager:
 
 # Global singleton manager
 applicability_manager = ApplicabilityManager()
-

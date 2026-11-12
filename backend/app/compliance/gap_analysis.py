@@ -43,9 +43,11 @@ class ComplianceGapAnalyzer:
         # 1. Fetch latest evidence per control for this tenant if db provided
         evidence_by_control: Dict[str, ComplianceEvidenceRecord] = {}
         if db:
-            stmt = select(ComplianceEvidenceRecord).where(
-                ComplianceEvidenceRecord.tenant_id == tenant_id
-            ).order_by(ComplianceEvidenceRecord.collected_at.desc())
+            stmt = (
+                select(ComplianceEvidenceRecord)
+                .where(ComplianceEvidenceRecord.tenant_id == tenant_id)
+                .order_by(ComplianceEvidenceRecord.collected_at.desc())
+            )
             res = await db.execute(stmt)
             all_records = res.scalars().all()
             for r in all_records:
@@ -68,7 +70,11 @@ class ComplianceGapAnalyzer:
 
                 # Gap 1: Unmapped requirement
                 if not mappings:
-                    severity = "CRITICAL" if req.commencement_status == CommencementStatus.COMMENCED and req.mandatory else "MEDIUM"
+                    severity = (
+                        "CRITICAL"
+                        if req.commencement_status == CommencementStatus.COMMENCED and req.mandatory
+                        else "MEDIUM"
+                    )
                     items.append(
                         ComplianceGapItem(
                             gap_type="UNMAPPED_REQUIREMENT",
@@ -118,7 +124,9 @@ class ComplianceGapAnalyzer:
                         )
 
                     # Gap 4: Stale / Expired Evidence
-                    exp_at = ev.expires_at.replace(tzinfo=timezone.utc) if ev.expires_at.tzinfo is None else ev.expires_at
+                    exp_at = (
+                        ev.expires_at.replace(tzinfo=timezone.utc) if ev.expires_at.tzinfo is None else ev.expires_at
+                    )
                     if now > exp_at:
                         items.append(
                             ComplianceGapItem(
@@ -166,4 +174,3 @@ class ComplianceGapAnalyzer:
 
 # Global singleton analyzer
 gap_analyzer = ComplianceGapAnalyzer()
-

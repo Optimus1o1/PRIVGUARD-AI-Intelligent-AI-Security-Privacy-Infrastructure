@@ -70,9 +70,7 @@ class EvidenceIntegrityService:
         signable_dict.pop("signature", None)
 
         canonical_bytes = canonical_json_bytes(signable_dict)
-        return signing_key_manager.verify_evidence_signature(
-            canonical_bytes, signature_hex, public_key_hex
-        )
+        return signing_key_manager.verify_evidence_signature(canonical_bytes, signature_hex, public_key_hex)
 
     @staticmethod
     def get_public_verification_key(kid: Optional[str] = None) -> Dict[str, Any]:

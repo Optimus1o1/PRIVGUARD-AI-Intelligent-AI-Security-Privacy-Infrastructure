@@ -55,6 +55,7 @@ router = APIRouter(prefix="/v1/compliance", tags=["Compliance Evidence Engine"])
 # 1. Frameworks & Requirements (Strictly Read-Only)
 # ------------------------------------------------------------------------------
 
+
 @router.get("/frameworks", response_model=List[ComplianceFrameworkResponse])
 async def list_frameworks(
     current_app: Application = Depends(get_current_app),
@@ -79,6 +80,7 @@ async def get_framework(
 # 2. Controls & Mappings (Strictly Read-Only)
 # ------------------------------------------------------------------------------
 
+
 @router.get("/controls", response_model=List[ComplianceControlResponse])
 async def list_controls(
     domain: Optional[str] = Query(None, description="Filter controls by functional domain"),
@@ -96,9 +98,7 @@ async def get_control(
     current_app: Application = Depends(get_current_app),
 ) -> ComplianceControlDetailResponse:
     """Retrieves control details, framework crosswalk mappings, and current 5-state assurance."""
-    ctrl = await compliance_service.get_control_detail(
-        control_id=control_id, db=db, tenant_id=current_app.tenant_id
-    )
+    ctrl = await compliance_service.get_control_detail(control_id=control_id, db=db, tenant_id=current_app.tenant_id)
     if not ctrl:
         raise HTTPException(status_code=404, detail=f"Control '{control_id}' not found.")
     return ctrl
@@ -133,6 +133,7 @@ async def list_mappings(
 # ------------------------------------------------------------------------------
 # 3. Evidence Vault & Automated Collection
 # ------------------------------------------------------------------------------
+
 
 @router.post("/evidence/collect", response_model=EvidenceCollectionResult)
 async def collect_evidence(
@@ -182,7 +183,10 @@ async def verify_evidence_artifact(
         raise HTTPException(status_code=404, detail=f"Evidence artifact '{evidence_id}' not found.")
 
     import json
-    payload = json.loads(record.artifact_payload) if isinstance(record.artifact_payload, str) else record.artifact_payload
+
+    payload = (
+        json.loads(record.artifact_payload) if isinstance(record.artifact_payload, str) else record.artifact_payload
+    )
     computed_hash = evidence_integrity_service.hash_structured_payload(payload)
     is_valid = computed_hash == record.artifact_hash_sha256
 
@@ -202,6 +206,7 @@ async def verify_evidence_artifact(
 # 4. Gap Analysis (Strictly Read-Only)
 # ------------------------------------------------------------------------------
 
+
 @router.get("/gaps", response_model=ComplianceGapAnalysisResponse)
 async def get_compliance_gaps(
     framework_id: Optional[str] = Query(None, description="Optional target framework filter"),
@@ -209,14 +214,13 @@ async def get_compliance_gaps(
     current_app: Application = Depends(get_current_app),
 ) -> ComplianceGapAnalysisResponse:
     """Executes multi-dimensional compliance gap analysis across statutory frameworks."""
-    return await compliance_service.run_gap_analysis(
-        db=db, tenant_id=current_app.tenant_id, framework_id=framework_id
-    )
+    return await compliance_service.run_gap_analysis(db=db, tenant_id=current_app.tenant_id, framework_id=framework_id)
 
 
 # ------------------------------------------------------------------------------
 # 5. Applicability Layer
 # ------------------------------------------------------------------------------
+
 
 @router.get("/applicability", response_model=List[ApplicabilityRecordResponse])
 async def get_applicability(
@@ -225,9 +229,7 @@ async def get_applicability(
     current_app: Application = Depends(get_current_app),
 ) -> List[ApplicabilityRecordResponse]:
     """Retrieves tenant applicability decisions and role determinations."""
-    return await compliance_service.get_applicability(
-        db=db, tenant_id=current_app.tenant_id, framework_id=framework_id
-    )
+    return await compliance_service.get_applicability(db=db, tenant_id=current_app.tenant_id, framework_id=framework_id)
 
 
 @router.patch("/applicability", response_model=ApplicabilityRecordResponse)
@@ -245,6 +247,7 @@ async def update_applicability(
 # ------------------------------------------------------------------------------
 # 6. Cryptographic Export Packaging
 # ------------------------------------------------------------------------------
+
 
 @router.post("/exports", response_model=EvidenceExportResponse)
 async def create_compliance_export(
@@ -290,6 +293,7 @@ async def download_compliance_export(
 # 7. Unauthenticated Third-Party Auditor Public Key Export
 # ------------------------------------------------------------------------------
 
+
 @router.get("/signing-keys/public", response_model=EvidencePublicKeyResponse)
 async def get_public_signing_key() -> EvidencePublicKeyResponse:
     """
@@ -297,4 +301,3 @@ async def get_public_signing_key() -> EvidencePublicKeyResponse:
     Unauthenticated to allow independent third-party audit verification without PRIVGUARD access.
     """
     return compliance_service.get_public_signing_key()
-

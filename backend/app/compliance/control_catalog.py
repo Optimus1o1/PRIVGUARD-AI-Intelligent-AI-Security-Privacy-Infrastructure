@@ -43,7 +43,6 @@ PRIVGUARD_CONTROLS: List[ControlDefinition] = [
         review_frequency_days=30,
         criticality="HIGH",
     ),
-
     # Domain 2: Authorization & RBAC
     ControlDefinition(
         id="PG-CONTROL-003",
@@ -65,7 +64,6 @@ PRIVGUARD_CONTROLS: List[ControlDefinition] = [
         review_frequency_days=30,
         criticality="HIGH",
     ),
-
     # Domain 3: Multi-Tenancy & Data Isolation
     ControlDefinition(
         id="PG-CONTROL-005",
@@ -87,7 +85,6 @@ PRIVGUARD_CONTROLS: List[ControlDefinition] = [
         review_frequency_days=14,
         criticality="CRITICAL",
     ),
-
     # Domain 4: Privacy & PII Minimization
     ControlDefinition(
         id="PG-CONTROL-007",
@@ -109,7 +106,6 @@ PRIVGUARD_CONTROLS: List[ControlDefinition] = [
         review_frequency_days=14,
         criticality="HIGH",
     ),
-
     # Domain 5: Personal AI Memory Vault
     ControlDefinition(
         id="PG-CONTROL-009",
@@ -131,7 +127,6 @@ PRIVGUARD_CONTROLS: List[ControlDefinition] = [
         review_frequency_days=30,
         criticality="CRITICAL",
     ),
-
     # Domain 6: Consent & Proposal Staging
     ControlDefinition(
         id="PG-CONTROL-011",
@@ -153,7 +148,6 @@ PRIVGUARD_CONTROLS: List[ControlDefinition] = [
         review_frequency_days=14,
         criticality="CRITICAL",
     ),
-
     # Domain 7: Agent Execution Governance
     ControlDefinition(
         id="PG-CONTROL-013",
@@ -175,7 +169,6 @@ PRIVGUARD_CONTROLS: List[ControlDefinition] = [
         review_frequency_days=14,
         criticality="CRITICAL",
     ),
-
     # Domain 8: Human-in-the-Loop Approvals
     ControlDefinition(
         id="PG-CONTROL-015",
@@ -197,7 +190,6 @@ PRIVGUARD_CONTROLS: List[ControlDefinition] = [
         review_frequency_days=30,
         criticality="CRITICAL",
     ),
-
     # Domain 9: MCP Security Gateway
     ControlDefinition(
         id="PG-CONTROL-017",
@@ -219,7 +211,6 @@ PRIVGUARD_CONTROLS: List[ControlDefinition] = [
         review_frequency_days=14,
         criticality="HIGH",
     ),
-
     # Domain 10: Prompt Injection Defense
     ControlDefinition(
         id="PG-CONTROL-019",
@@ -241,7 +232,6 @@ PRIVGUARD_CONTROLS: List[ControlDefinition] = [
         review_frequency_days=14,
         criticality="HIGH",
     ),
-
     # Domain 11: Data Exfiltration Defense
     ControlDefinition(
         id="PG-CONTROL-021",
@@ -263,7 +253,6 @@ PRIVGUARD_CONTROLS: List[ControlDefinition] = [
         review_frequency_days=14,
         criticality="CRITICAL",
     ),
-
     # Domain 12: Audit Trail Integrity
     ControlDefinition(
         id="PG-CONTROL-023",
@@ -285,7 +274,6 @@ PRIVGUARD_CONTROLS: List[ControlDefinition] = [
         review_frequency_days=14,
         criticality="CRITICAL",
     ),
-
     # Domain 13: Cryptographic Key Management
     ControlDefinition(
         id="PG-CONTROL-025",
@@ -307,7 +295,6 @@ PRIVGUARD_CONTROLS: List[ControlDefinition] = [
         review_frequency_days=30,
         criticality="HIGH",
     ),
-
     # Domain 14: Policy Governance & Signing
     ControlDefinition(
         id="PG-CONTROL-027",
@@ -329,7 +316,6 @@ PRIVGUARD_CONTROLS: List[ControlDefinition] = [
         review_frequency_days=30,
         criticality="HIGH",
     ),
-
     # Domain 15: Software Supply Chain
     ControlDefinition(
         id="PG-CONTROL-029",
@@ -351,7 +337,6 @@ PRIVGUARD_CONTROLS: List[ControlDefinition] = [
         review_frequency_days=30,
         criticality="CRITICAL",
     ),
-
     # Domain 16: Vulnerability Management
     ControlDefinition(
         id="PG-CONTROL-031",
@@ -363,7 +348,6 @@ PRIVGUARD_CONTROLS: List[ControlDefinition] = [
         review_frequency_days=14,
         criticality="CRITICAL",
     ),
-
     # Domain 17: Zero-Content Observability
     ControlDefinition(
         id="PG-CONTROL-032",
@@ -375,7 +359,6 @@ PRIVGUARD_CONTROLS: List[ControlDefinition] = [
         review_frequency_days=7,
         criticality="CRITICAL",
     ),
-
     # Domain 18: Edge Resource Bounding
     ControlDefinition(
         id="PG-CONTROL-033",
@@ -387,7 +370,6 @@ PRIVGUARD_CONTROLS: List[ControlDefinition] = [
         review_frequency_days=30,
         criticality="HIGH",
     ),
-
     # Domain 19: Execution Budget & Runaway Defense
     ControlDefinition(
         id="PG-CONTROL-034",
@@ -399,7 +381,6 @@ PRIVGUARD_CONTROLS: List[ControlDefinition] = [
         review_frequency_days=14,
         criticality="CRITICAL",
     ),
-
     # Domain 20: Disaster Recovery & Outbox Durability
     ControlDefinition(
         id="PG-CONTROL-035",
@@ -418,9 +399,7 @@ class ControlCatalog:
     """Query and management facade for the 35 PRIVGUARD controls."""
 
     def __init__(self) -> None:
-        self._controls_by_id: Dict[str, ControlDefinition] = {
-            ctrl.id: ctrl for ctrl in PRIVGUARD_CONTROLS
-        }
+        self._controls_by_id: Dict[str, ControlDefinition] = {ctrl.id: ctrl for ctrl in PRIVGUARD_CONTROLS}
 
     def list_controls(
         self,
