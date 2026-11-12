@@ -20,7 +20,7 @@ regexes = [
     '''pg_live_test_api_key_valid_99999''',
     '''sk-proj-canary-dummy-key-for-testing-only-1234567890''',
     '''sk-ant-canary-dummy-key-for-testing-only-1234567890''',
-    '''ghp_canary000000000000000000000000000000''',
+    '''ghp_dummy_canary_token_placeholder''',
     '''<[A-Z0-9_]+>''',
     '''\[REDACTED[A-Z0-9_]*\]''',
 ]

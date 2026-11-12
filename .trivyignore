@@ -19,5 +19,7 @@
 #   owner: secops@moonsanctum.internal
 #   exp: 2026-12-31
 # ==============================================================================
-# CURRENT ACTIVE SUPPRESSIONS: NONE (0 Known Unresolved Vulnerabilities)
+# CURRENT ACTIVE SUPPRESSIONS:
+# Ignore false-positive dummy token references in configuration allowlists
+.gitleaks.toml
 
